@@ -123,13 +123,13 @@ Describe 'Get-GitLog basic usage' {
         $Commit = Get-GitLog -Path $script:RepoPath | Select-Object -First 1
 
         $Commit.Sha | Should -Match '^[0-9a-f]{40}$'
-        $Commit.ShortSha | Should -HaveLength 7
+        $Commit.ShortSha.Length | Should -Be 7
         $Commit.AuthorName | Should -BeExactly 'Test Author'
         $Commit.AuthorEmail | Should -BeExactly 'test@example.com'
-        $Commit.AuthorDate | Should -BeOfType [System.DateTimeOffset]
+        $Commit.AuthorDate | Should -BeOfType 'System.DateTimeOffset'
         $Commit.CommitterName | Should -BeExactly 'Test Author'
         $Commit.CommitterEmail | Should -BeExactly 'test@example.com'
-        $Commit.CommitDate | Should -BeOfType [System.DateTimeOffset]
+        $Commit.CommitDate | Should -BeOfType 'System.DateTimeOffset'
         $Commit.MessageShort | Should -BeExactly 'Initial commit'
         $Commit.Message | Should -Match 'Initial commit'
         $Commit.ParentShas | Should -HaveCount 0
