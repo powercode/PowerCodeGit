@@ -1,5 +1,5 @@
 using System.Collections;
-using System.Management.Automation;
+using PowerGit.Services;
 
 namespace PowerGit.Completers;
 
@@ -17,7 +17,22 @@ internal static class CompletionHelper
     /// The dictionary of parameters already bound on the command line.
     /// </param>
     /// <returns>The repository path to use for completion queries.</returns>
-    public static string ResolveRepositoryPath(IDictionary fakeBoundParameters)
+    public static string ResolveRepositoryPath(IDictionary fakeBoundParameters) =>
+        ResolveRepositoryPath(fakeBoundParameters, new PowerShellCurrentLocationProvider());
+
+    /// <summary>
+    /// Resolves the repository path from the bound parameters or falls back
+    /// to the supplied <paramref name="locationProvider"/>.
+    /// </summary>
+    /// <param name="fakeBoundParameters">
+    /// The dictionary of parameters already bound on the command line.
+    /// </param>
+    /// <param name="locationProvider">
+    /// Provider used to obtain the current file-system location when
+    /// <c>RepoPath</c> is not present in the bound parameters.
+    /// </param>
+    /// <returns>The repository path to use for completion queries.</returns>
+    internal static string ResolveRepositoryPath(IDictionary fakeBoundParameters, ICurrentLocationProvider locationProvider)
     {
         if (fakeBoundParameters is not null &&
             fakeBoundParameters.Contains("RepoPath") &&
@@ -27,11 +42,6 @@ internal static class CompletionHelper
             return path;
         }
 
-        // Fall back to the current PowerShell location.
-        using var ps = PowerShell.Create(RunspaceMode.CurrentRunspace);
-        ps.AddCommand("Get-Location");
-        var result = ps.Invoke<PathInfo>();
-
-        return result.Count > 0 ? result[0].Path : ".";
+        return locationProvider.GetCurrentFileSystemLocation();
     }
 }

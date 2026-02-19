@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using PowerGit.Services;
 
 namespace PowerGit.Cmdlets;
 
@@ -7,7 +8,7 @@ namespace PowerGit.Cmdlets;
 /// Provides a common <see cref="RepoPath"/> parameter that defaults to
 /// the current PowerShell working directory.
 /// </summary>
-public abstract class GitCmdlet : PSCmdlet
+public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
 {
     /// <summary>
     /// Gets or sets the path to the git repository. When omitted the current
@@ -32,6 +33,9 @@ public abstract class GitCmdlet : PSCmdlet
             return RepoPath!;
         }
 
-        return currentFileSystemPath ?? SessionState.Path.CurrentFileSystemLocation.Path;
+        return currentFileSystemPath ?? GetCurrentFileSystemLocation();
     }
+
+    /// <inheritdoc />
+    public string GetCurrentFileSystemLocation() => SessionState.Path.CurrentFileSystemLocation.Path;
 }
