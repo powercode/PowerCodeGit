@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using PowerGit.Abstractions.Services;
 
 namespace PowerGit.Completers;
 
@@ -23,10 +24,10 @@ public sealed class GitRemoteCompleterAttribute : ArgumentCompleterFactoryAttrib
     /// <inheritdoc/>
     public override IArgumentCompleter Create()
     {
-        return new RemoteCompleter();
+        return new RemoteCompleter(ServiceFactory.CreateGitRemoteService());
     }
 
-    private sealed class RemoteCompleter : IArgumentCompleter
+    internal sealed class RemoteCompleter(IGitRemoteService remoteService) : IArgumentCompleter
     {
         public IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -38,8 +39,7 @@ public sealed class GitRemoteCompleterAttribute : ArgumentCompleterFactoryAttrib
             try
             {
                 var repositoryPath = CompletionHelper.ResolveRepositoryPath(fakeBoundParameters);
-                var service = ServiceFactory.CreateGitRemoteService();
-                var remotes = service.GetRemotes(repositoryPath);
+                var remotes = remoteService.GetRemotes(repositoryPath);
 
                 return remotes
                     .Where(r => r.Name.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))

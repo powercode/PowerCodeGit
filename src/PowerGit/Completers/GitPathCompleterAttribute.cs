@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using PowerGit.Abstractions.Services;
 
 namespace PowerGit.Completers;
 
@@ -22,10 +23,10 @@ public sealed class GitPathCompleterAttribute : ArgumentCompleterFactoryAttribut
     /// <inheritdoc/>
     public override IArgumentCompleter Create()
     {
-        return new PathCompleter();
+        return new PathCompleter(ServiceFactory.CreateGitPathService());
     }
 
-    private sealed class PathCompleter : IArgumentCompleter
+    internal sealed class PathCompleter(IGitPathService pathService) : IArgumentCompleter
     {
         public IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -37,8 +38,7 @@ public sealed class GitPathCompleterAttribute : ArgumentCompleterFactoryAttribut
             try
             {
                 var repositoryPath = CompletionHelper.ResolveRepositoryPath(fakeBoundParameters);
-                var service = ServiceFactory.CreateGitPathService();
-                var paths = service.GetTrackedPaths(repositoryPath);
+                var paths = pathService.GetTrackedPaths(repositoryPath);
 
                 return paths
                     .Where(p => p.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))

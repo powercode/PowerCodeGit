@@ -5,6 +5,7 @@ using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using PowerGit.Abstractions.Models;
+using PowerGit.Abstractions.Services;
 
 namespace PowerGit.Completers;
 
@@ -48,10 +49,10 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
     /// <inheritdoc/>
     public override IArgumentCompleter Create()
     {
-        return new CommittishCompleter(MaxCount, AllBranches);
+        return new CommittishCompleter(MaxCount, AllBranches, ServiceFactory.CreateGitHistoryService());
     }
 
-    private sealed class CommittishCompleter(int maxCount, bool allBranches) : IArgumentCompleter
+    internal sealed class CommittishCompleter(int maxCount, bool allBranches, IGitHistoryService historyService) : IArgumentCompleter
     {
         public IEnumerable<CompletionResult> CompleteArgument(
             string commandName,
@@ -63,7 +64,6 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
             try
             {
                 var repositoryPath = CompletionHelper.ResolveRepositoryPath(fakeBoundParameters);
-                var service = ServiceFactory.CreateGitHistoryService();
 
                 var options = new GitLogOptions
                 {
@@ -72,7 +72,7 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
                     AllBranches = allBranches,
                 };
 
-                var commits = service.GetLog(options);
+                var commits = historyService.GetLog(options);
 
                 return commits
                     .Where(c => MatchesWord(c, wordToComplete))
