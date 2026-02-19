@@ -17,4 +17,31 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitHistoryService();
     }
+
+    /// <summary>
+    /// Creates a git working tree service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitWorkingTreeService"/> instance.</returns>
+    public static IGitWorkingTreeService CreateGitWorkingTreeService()
+    {
+        return DependencyContext.CreateGitWorkingTreeService();
+    }
+
+    /// <summary>
+    /// Creates a git branch service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitBranchService"/> instance.</returns>
+    public static IGitBranchService CreateGitBranchService()
+    {
+        return DependencyContext.CreateGitBranchService();
+    }
+
+    /// <summary>
+    /// Creates a git tag service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitTagService"/> instance.</returns>
+    public static IGitTagService CreateGitTagService()
+    {
+        return DependencyContext.CreateGitTagService();
+    }
 }

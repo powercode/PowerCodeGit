@@ -17,6 +17,9 @@ internal static class DependencyContext
     private const string DependenciesFolderName = "dependencies";
     private const string CoreAssemblyFileName = "PowerGit.Core.dll";
     private const string CoreServiceTypeName = "PowerGit.Core.Services.GitHistoryService";
+    private const string WorkingTreeServiceTypeName = "PowerGit.Core.Services.GitWorkingTreeService";
+    private const string BranchServiceTypeName = "PowerGit.Core.Services.GitBranchService";
+    private const string TagServiceTypeName = "PowerGit.Core.Services.GitTagService";
 
     private static readonly object Gate = new();
     private static PowerGitDependencyLoadContext? loadContext;
@@ -75,5 +78,62 @@ internal static class DependencyContext
                 $"Failed to create an instance of '{CoreServiceTypeName}'.");
 
         return (IGitHistoryService)instance;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IGitWorkingTreeService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitWorkingTreeService"/>.</returns>
+    public static IGitWorkingTreeService CreateGitWorkingTreeService()
+    {
+        EnsureInitialized();
+
+        var serviceType = coreAssembly!.GetType(WorkingTreeServiceTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{WorkingTreeServiceTypeName}' was not found in the loaded core assembly.");
+
+        var instance = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create an instance of '{WorkingTreeServiceTypeName}'.");
+
+        return (IGitWorkingTreeService)instance;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IGitBranchService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitBranchService"/>.</returns>
+    public static IGitBranchService CreateGitBranchService()
+    {
+        EnsureInitialized();
+
+        var serviceType = coreAssembly!.GetType(BranchServiceTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{BranchServiceTypeName}' was not found in the loaded core assembly.");
+
+        var instance = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create an instance of '{BranchServiceTypeName}'.");
+
+        return (IGitBranchService)instance;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IGitTagService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitTagService"/>.</returns>
+    public static IGitTagService CreateGitTagService()
+    {
+        EnsureInitialized();
+
+        var serviceType = coreAssembly!.GetType(TagServiceTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{TagServiceTypeName}' was not found in the loaded core assembly.");
+
+        var instance = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create an instance of '{TagServiceTypeName}'.");
+
+        return (IGitTagService)instance;
     }
 }

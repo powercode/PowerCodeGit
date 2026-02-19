@@ -9,7 +9,7 @@
     PowerShellVersion = '7.4'
     CompatiblePSEditions = @('Core')
     FormatsToProcess = @('PowerGit.Format.ps1xml')
-    CmdletsToExport = @('Get-GitLog')
+    CmdletsToExport = @('Get-GitLog', 'Get-GitStatus', 'Get-GitDiff', 'Get-GitBranch', 'Switch-GitBranch', 'Get-GitTag')
     FunctionsToExport = @()
     AliasesToExport = @()
 }
