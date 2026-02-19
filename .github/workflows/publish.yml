@@ -1,0 +1,157 @@
+name: Publish to PSGallery
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Unit Tests
+        run: dotnet test --configuration Release --no-build --logger trx --results-directory ./test-results
+
+      - name: Install Pester
+        shell: pwsh
+        run: |
+          $Existing = Get-Module -Name Pester -ListAvailable | Where-Object { $_.Version.Major -ge 5 } | Select-Object -First 1
+          if (-not $Existing) {
+              Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
+          }
+
+      - name: System Tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          ./scripts/Invoke-SystemTests.ps1 -Configuration Release -NoBuild
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results/
+          retention-days: 14
+
+      - name: Upload Module Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: powergit-module
+          path: artifacts/module/PowerGit/
+          retention-days: 30
+
+  publish:
+    name: Publish
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: psgallery
+
+    steps:
+      - name: Download Module Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: powergit-module
+          path: module/
+
+      - name: Determine Version from Tag
+        id: version
+        shell: pwsh
+        run: |
+          $Tag = '${{ github.ref_name }}'
+          Write-Host "Tag: $Tag"
+
+          # Strip leading 'v'
+          $VersionString = $Tag -replace '^v', ''
+
+          # Split on first '-' to separate version from prerelease label
+          if ($VersionString -match '^(?<version>\d+\.\d+\.\d+)(-(?<prerelease>.+))?$') {
+              $ModuleVersion = $Matches['version']
+              $PrereleaseLabel = $Matches['prerelease']
+
+              # PSGallery prerelease strings cannot contain dots or hyphens
+              if ($PrereleaseLabel) {
+                  $PrereleaseLabel = $PrereleaseLabel -replace '[.\-]', ''
+              }
+
+              Write-Host "ModuleVersion: $ModuleVersion"
+              Write-Host "Prerelease: $PrereleaseLabel"
+
+              "module-version=$ModuleVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+              "prerelease=$PrereleaseLabel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          }
+          else {
+              Write-Error "Tag '$Tag' does not match expected version pattern 'v<major>.<minor>.<patch>[-<prerelease>]'."
+          }
+
+      - name: Patch Module Manifest
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Find the versioned module directory
+          $VersionedDir = Get-ChildItem -Path './module' -Directory | Select-Object -First 1
+          if (-not $VersionedDir) {
+              Write-Error 'No versioned module folder found in downloaded artifact.'
+          }
+
+          $ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerGit.psd1'
+          if (-not (Test-Path -Path $ManifestPath)) {
+              Write-Error "Module manifest not found at '$ManifestPath'."
+          }
+
+          $ModuleVersion = '${{ steps.version.outputs.module-version }}'
+          $Prerelease = '${{ steps.version.outputs.prerelease }}'
+
+          Write-Host "Updating manifest at: $ManifestPath"
+          Write-Host "  ModuleVersion: $ModuleVersion"
+          Write-Host "  Prerelease:    $Prerelease"
+
+          $UpdateParams = @{
+              Path          = $ManifestPath
+              ModuleVersion = $ModuleVersion
+          }
+
+          if ($Prerelease) {
+              $UpdateParams['Prerelease'] = $Prerelease
+          }
+
+          Update-ModuleManifest @UpdateParams
+          Write-Host 'Manifest updated successfully.'
+
+          # Validate the manifest
+          $null = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
+          Write-Host 'Manifest validation passed.'
+
+      - name: Publish to PSGallery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $VersionedDir = Get-ChildItem -Path './module' -Directory | Select-Object -First 1
+          $ModulePath = $VersionedDir.FullName
+
+          Write-Host "Publishing module from: $ModulePath"
+
+          Publish-Module -Path $ModulePath -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}' -Verbose
+          Write-Host 'Module published successfully.'
