@@ -49,8 +49,15 @@ if (-not $NoBuild) {
     }
 }
 
-# Verify the module was produced
-$ModulePath = Join-Path -Path $RepoRoot -ChildPath "artifacts/bin/PowerGit/$Configuration/PowerGit.psd1"
+# Verify the module layout was produced
+$ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerGit'
+$VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $VersionedDir) {
+    Write-Error -Message "No versioned module folder found under '$ModuleLayoutDir'. Ensure the build succeeded."
+    return
+}
+
+$ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerGit.psd1'
 if (-not (Test-Path -Path $ModulePath)) {
     Write-Error -Message "Module manifest not found at '$ModulePath'. Ensure the build succeeded."
     return
@@ -62,8 +69,11 @@ Write-Host "Module:    $ModulePath" -ForegroundColor DarkGray
 
 # Launch a fresh pwsh.exe process to avoid binary module assembly locking.
 # Use -EncodedCommand to pass the script block safely without quoting issues.
+# Pass the module path via environment variable so the test file can locate it.
 $PesterScript = @"
 `$ErrorActionPreference = 'Stop'
+
+`$env:POWERGIT_MODULE_PATH = '$($ModulePath -replace "'", "''")'
 
 # Ensure Pester v5+ is available
 `$PesterModule = Get-Module -Name Pester -ListAvailable | Where-Object { `$_.Version.Major -ge 5 } | Select-Object -First 1

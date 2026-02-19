@@ -9,40 +9,24 @@
 #>
 
 BeforeAll {
-    $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-    $ModulePath = Join-Path -Path $RepoRoot -ChildPath 'artifacts/bin/PowerGit/debug/PowerGit.psd1'
+    # Resolve the module path from the environment variable set by Invoke-SystemTests.ps1,
+    # or fall back to discovering the versioned module layout under artifacts/module/.
+    if ($env:POWERGIT_MODULE_PATH -and (Test-Path -Path $env:POWERGIT_MODULE_PATH)) {
+        $ModulePath = $env:POWERGIT_MODULE_PATH
+    }
+    else {
+        $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
+        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerGit'
+        $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $VersionedDir) {
+            throw "No versioned module folder found under '$ModuleLayoutDir'. Build the solution before running system tests."
+        }
+        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerGit.psd1'
+    }
 
     if (-not (Test-Path -Path $ModulePath)) {
         throw "Module not found at '$ModulePath'. Build the solution before running system tests."
     }
-
-    # Preload platform-specific native LibGit2Sharp binaries from
-    # runtimes/{rid}/native without modifying global process PATH.
-    $ModuleDir = Split-Path -Path $ModulePath -Parent
-
-    $Rid = switch ([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture) {
-        'X64' { 'win-x64' }
-        'X86' { 'win-x86' }
-        'Arm64' { 'win-arm64' }
-        default { throw "Unsupported process architecture '$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)' for system tests." }
-    }
-
-    $NativePath = Join-Path -Path $ModuleDir -ChildPath "runtimes/$Rid/native"
-    if (-not (Test-Path -Path $NativePath)) {
-        throw "Native runtime directory not found: '$NativePath'."
-    }
-
-    $NativeSupportLibrary = Join-Path -Path $NativePath -ChildPath 'getfilesiginforedist.dll'
-    if (Test-Path -Path $NativeSupportLibrary) {
-        [System.Runtime.InteropServices.NativeLibrary]::Load($NativeSupportLibrary) | Out-Null
-    }
-
-    $Git2Library = Get-ChildItem -Path $NativePath -Filter 'git2-*.dll' | Select-Object -First 1
-    if ($null -eq $Git2Library) {
-        throw "Could not locate git2 native library in '$NativePath'."
-    }
-
-    [System.Runtime.InteropServices.NativeLibrary]::Load($Git2Library.FullName) | Out-Null
 
     Import-Module -Name $ModulePath -Force -ErrorAction Stop
 
