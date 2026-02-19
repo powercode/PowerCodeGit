@@ -153,5 +153,5 @@ jobs:
 
           Write-Host "Publishing module from: $ModulePath"
 
-          Publish-Module -Path $ModulePath -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}' -Verbose
+          Publish-Module -Path $ModulePath/PowerGit.psd1 -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}' -Verbose
           Write-Host 'Module published successfully.'
