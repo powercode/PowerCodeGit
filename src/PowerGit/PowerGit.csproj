@@ -63,7 +63,7 @@
     <!-- Dependencies folder: all transitive managed dependencies from Core output -->
     <ItemGroup>
       <CoreDependencyFiles Include="$(CoreOutputDir)**\*"
-                           Exclude="$(CoreOutputDir)PowerGit.Core.dll;$(CoreOutputDir)PowerGit.Core.deps.json;$(CoreOutputDir)PowerGit.Core.pdb;$(CoreOutputDir)PowerGit.Core.xml;$(CoreOutputDir)PowerGit.Abstractions.dll;$(CoreOutputDir)ref\**" />
+                           Exclude="$(CoreOutputDir)PowerGit.Core.dll;$(CoreOutputDir)PowerGit.Core.deps.json;$(CoreOutputDir)PowerGit.Core.pdb;$(CoreOutputDir)PowerGit.Core.xml;$(CoreOutputDir)PowerGit.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(CoreDependencyFiles)"
           DestinationFiles="@(CoreDependencyFiles->'$(ModuleDependenciesRoot)%(RecursiveDir)%(Filename)%(Extension)')"
