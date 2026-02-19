@@ -12,6 +12,7 @@
         "/^pwsh -NoProfile -ExecutionPolicy Bypass -File \\.\\\\scripts\\\\Invoke-SystemTests\\.ps1 -NoBuild$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        ".\\scripts\\Invoke-SystemTests.ps1": true
     }
 }
