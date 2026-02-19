@@ -143,6 +143,13 @@ jobs:
           $null = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
           Write-Host 'Manifest validation passed.'
 
+          # Rename directory to match the final module version
+          if ($VersionedDir.Name -ne $ModuleVersion) {
+              $NewDir = Join-Path -Path $VersionedDir.Parent.FullName -ChildPath $ModuleVersion
+              Rename-Item -Path $VersionedDir.FullName -NewName $ModuleVersion
+              Write-Host "Renamed module directory from '$($VersionedDir.Name)' to '$ModuleVersion'."
+          }
+
       - name: Publish to PSGallery
         shell: pwsh
         run: |
