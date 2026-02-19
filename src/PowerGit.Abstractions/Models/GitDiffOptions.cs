@@ -21,4 +21,15 @@ public sealed class GitDiffOptions
     /// the diff output.
     /// </summary>
     public string[]? Paths { get; set; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var mode = Staged ? "staged" : "unstaged";
+        var paths = Paths is { Length: > 0 }
+            ? $" paths=[{string.Join(", ", Paths)}]"
+            : string.Empty;
+
+        return $"GitDiffOptions({mode}{paths})";
+    }
 }

@@ -59,4 +59,7 @@ public sealed class GitDiffEntry
     /// Gets the unified diff patch text, or <see langword="null"/> if unavailable.
     /// </summary>
     public string? Patch { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{Status}: {NewPath} (+{LinesAdded} -{LinesDeleted})";
 }

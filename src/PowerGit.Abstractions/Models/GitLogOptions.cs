@@ -53,4 +53,22 @@ public sealed class GitLogOptions
     /// only commits that touch at least one of these paths are returned.
     /// </summary>
     public string[]? Paths { get; set; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var parts = new System.Collections.Generic.List<string>();
+        if (BranchName is not null) parts.Add($"branch={BranchName}");
+        if (AllBranches) parts.Add("all");
+        if (MaxCount.HasValue) parts.Add($"max={MaxCount}");
+        if (AuthorFilter is not null) parts.Add($"author={AuthorFilter}");
+        if (Since.HasValue) parts.Add($"since={Since:yyyy-MM-dd}");
+        if (Until.HasValue) parts.Add($"until={Until:yyyy-MM-dd}");
+        if (MessagePattern is not null) parts.Add($"grep={MessagePattern}");
+        if (Paths is { Length: > 0 }) parts.Add($"paths=[{string.Join(", ", Paths)}]");
+
+        return parts.Count > 0
+            ? $"GitLogOptions({string.Join(", ", parts)})"
+            : "GitLogOptions()";
+    }
 }

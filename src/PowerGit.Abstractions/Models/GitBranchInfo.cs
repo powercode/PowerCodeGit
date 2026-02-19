@@ -73,4 +73,15 @@ public sealed class GitBranchInfo
     /// Gets the number of commits behind the tracked branch, or <see langword="null"/>.
     /// </summary>
     public int? BehindBy { get; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        var head = IsHead ? "* " : "  ";
+        var tracking = TrackedBranchName is not null
+            ? $" [{TrackedBranchName}: ahead {AheadBy ?? 0}, behind {BehindBy ?? 0}]"
+            : string.Empty;
+
+        return $"{head}{Name} {TipShortSha}{tracking}";
+    }
 }

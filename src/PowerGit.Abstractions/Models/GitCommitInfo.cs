@@ -100,4 +100,7 @@ public sealed class GitCommitInfo
     /// Gets the parent commit SHAs.
     /// </summary>
     public IReadOnlyList<string> ParentShas { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{ShortSha} {MessageShort}";
 }

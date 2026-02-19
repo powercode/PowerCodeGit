@@ -75,4 +75,7 @@ public sealed class GitTagInfo
     /// Gets the tag message, or <see langword="null"/> for lightweight tags.
     /// </summary>
     public string? Message { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{Name} ({ShortSha})";
 }

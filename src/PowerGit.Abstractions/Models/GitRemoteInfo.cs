@@ -32,4 +32,7 @@ public sealed class GitRemoteInfo
     /// Gets the push URL.
     /// </summary>
     public string PushUrl { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{Name} ({FetchUrl})";
 }

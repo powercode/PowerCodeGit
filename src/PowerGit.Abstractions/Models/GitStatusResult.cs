@@ -61,4 +61,8 @@ public sealed class GitStatusResult
     /// Gets the number of untracked files.
     /// </summary>
     public int UntrackedCount { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"[{CurrentBranch}] staged: {StagedCount}, modified: {ModifiedCount}, untracked: {UntrackedCount}";
 }

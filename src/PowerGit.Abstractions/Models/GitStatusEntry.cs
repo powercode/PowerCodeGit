@@ -32,4 +32,7 @@ public sealed class GitStatusEntry
     /// Gets whether the change is staged or unstaged.
     /// </summary>
     public GitStagingState StagingState { get; }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"{StagingState}: {Status} {FilePath}";
 }
