@@ -8,6 +8,7 @@
     Description = 'PowerShell Git binary module implemented in C#.'
     PowerShellVersion = '7.4'
     CompatiblePSEditions = @('Core')
+    FormatsToProcess = @('PowerGit.Format.ps1xml')
     CmdletsToExport = @('Get-GitLog')
     FunctionsToExport = @()
     AliasesToExport = @()

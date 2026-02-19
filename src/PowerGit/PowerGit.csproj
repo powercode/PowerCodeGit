@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <None Include="PowerGit.psd1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="PowerGit.Format.ps1xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +54,13 @@
     </ItemGroup>
     <Copy SourceFiles="@(AbstractionsFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
 
+    <!-- Module root: PowerShell files (format, types, help, etc.) -->
+    <ItemGroup>
+      <PowerShellFiles Include="$(TargetDir)*.ps1xml" />
+      <PowerShellFiles Include="$(TargetDir)about_*.help.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PowerShellFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" Condition="'@(PowerShellFiles)' != ''" />
+
     <!-- Dependencies folder: Core assembly and its deps.json -->
     <ItemGroup>
       <CoreFiles Include="$(CoreOutputDir)PowerGit.Core.dll" />
@@ -63,7 +71,7 @@
     <!-- Dependencies folder: all transitive managed dependencies from Core output -->
     <ItemGroup>
       <CoreDependencyFiles Include="$(CoreOutputDir)**\*"
-                           Exclude="$(CoreOutputDir)PowerGit.Core.dll;$(CoreOutputDir)PowerGit.Core.deps.json;$(CoreOutputDir)PowerGit.Core.pdb;$(CoreOutputDir)PowerGit.Core.xml;$(CoreOutputDir)PowerGit.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll" />
+                           Exclude="$(CoreOutputDir)PowerGit.Core.dll;$(CoreOutputDir)PowerGit.Core.deps.json;$(CoreOutputDir)PowerGit.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll;$(CoreOutputDir)**\*.pdb;$(CoreOutputDir)**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(CoreDependencyFiles)"
           DestinationFiles="@(CoreDependencyFiles->'$(ModuleDependenciesRoot)%(RecursiveDir)%(Filename)%(Extension)')"
