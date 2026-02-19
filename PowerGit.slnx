@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/PowerGit.Abstractions/PowerGit.Abstractions.csproj" />
     <Project Path="src/PowerGit.Core/PowerGit.Core.csproj" />
     <Project Path="src/PowerGit/PowerGit.csproj" />
   </Folder>

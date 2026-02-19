@@ -1,6 +1,6 @@
 using System;
 
-namespace PowerGit.Core.Models;
+namespace PowerGit.Abstractions.Models;
 
 /// <summary>
 /// Represents supported filters for a git log query.

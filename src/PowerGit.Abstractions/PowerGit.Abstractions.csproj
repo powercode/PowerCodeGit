@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PowerGit.Abstractions</AssemblyName>
+    <RootNamespace>PowerGit.Abstractions</RootNamespace>
+  </PropertyGroup>
+
+</Project>

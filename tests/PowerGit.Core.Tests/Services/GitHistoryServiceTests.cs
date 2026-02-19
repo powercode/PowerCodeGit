@@ -1,5 +1,5 @@
 using LibGit2Sharp;
-using PowerGit.Core.Models;
+using PowerGit.Abstractions.Models;
 using PowerGit.Core.Services;
 using System.Threading;
 

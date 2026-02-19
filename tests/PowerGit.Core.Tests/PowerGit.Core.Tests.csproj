@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\PowerGit.Core\PowerGit.Core.csproj" />
+    <ProjectReference Include="..\..\src\PowerGit.Abstractions\PowerGit.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

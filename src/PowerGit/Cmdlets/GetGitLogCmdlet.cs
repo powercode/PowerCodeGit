@@ -1,7 +1,7 @@
 using System;
 using System.Management.Automation;
-using PowerGit.Core.Models;
-using PowerGit.Core.Services;
+using PowerGit.Abstractions.Models;
+using PowerGit.Abstractions.Services;
 
 namespace PowerGit.Cmdlets;
 

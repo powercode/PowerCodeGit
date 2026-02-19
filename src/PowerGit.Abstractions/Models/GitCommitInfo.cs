@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PowerGit.Core.Models;
+namespace PowerGit.Abstractions.Models;
 
 /// <summary>
 /// Represents commit data returned from the git history layer.
@@ -34,7 +34,7 @@ public sealed class GitCommitInfo
         IReadOnlyList<string> parentShas)
     {
         Sha = sha;
-        ShortSha = sha.Length > 7 ? sha.Substring(0, 7) : sha;
+        ShortSha = sha.Length > 7 ? sha[..7] : sha;
         AuthorName = authorName;
         AuthorEmail = authorEmail;
         AuthorDate = authorDate;

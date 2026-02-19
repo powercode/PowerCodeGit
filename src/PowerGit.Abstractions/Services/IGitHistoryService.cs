@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using PowerGit.Core.Models;
+using PowerGit.Abstractions.Models;
 
-namespace PowerGit.Core.Services;
+namespace PowerGit.Abstractions.Services;
 
 /// <summary>
 /// Defines operations for reading git history data.

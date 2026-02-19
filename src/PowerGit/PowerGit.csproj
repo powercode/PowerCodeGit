@@ -4,6 +4,10 @@
     <AssemblyName>PowerGit</AssemblyName>
     <RootNamespace>PowerGit</RootNamespace>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <ModuleManifestPath>$(MSBuildProjectDirectory)\PowerGit.psd1</ModuleManifestPath>
+    <ModuleVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(ModuleManifestPath)')), "ModuleVersion\s*=\s*'([^']+)'").Groups[1].Value)</ModuleVersion>
+    <ModuleLayoutRoot>$(ArtifactsPath)\module\PowerGit\$(ModuleVersion)\</ModuleLayoutRoot>
+    <ModuleDependenciesRoot>$(ModuleLayoutRoot)dependencies\</ModuleDependenciesRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,7 +19,57 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PowerGit.Core\PowerGit.Core.csproj" />
+    <ProjectReference Include="..\PowerGit.Abstractions\PowerGit.Abstractions.csproj" />
+    <!-- Build-only: Core is loaded at runtime from the dependencies folder via the custom ALC. -->
+    <ProjectReference Include="..\PowerGit.Core\PowerGit.Core.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <!--
+    Assembles the versioned PowerShell module layout after build:
+      artifacts/module/PowerGit/<version>/
+        PowerGit.dll
+        PowerGit.Abstractions.dll
+        PowerGit.psd1
+        dependencies/
+          PowerGit.Core.dll   (+ its .deps.json for AssemblyDependencyResolver)
+          LibGit2Sharp.dll
+          runtimes/...         (native libraries)
+  -->
+  <Target Name="BuildVersionedModuleLayout" AfterTargets="Build">
+    <PropertyGroup>
+      <CoreOutputDir>$(ArtifactsPath)\bin\PowerGit.Core\$(Configuration.ToLowerInvariant())\</CoreOutputDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(ModuleLayoutRoot)" />
+    <MakeDir Directories="$(ModuleLayoutRoot)" />
+    <MakeDir Directories="$(ModuleDependenciesRoot)" />
+
+    <!-- Module root: cmdlet assembly, abstractions, and manifest -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ModuleManifestPath)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <AbstractionsFiles Include="$(TargetDir)PowerGit.Abstractions.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AbstractionsFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+
+    <!-- Dependencies folder: Core assembly and its deps.json -->
+    <ItemGroup>
+      <CoreFiles Include="$(CoreOutputDir)PowerGit.Core.dll" />
+      <CoreFiles Include="$(CoreOutputDir)PowerGit.Core.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(ModuleDependenciesRoot)" SkipUnchangedFiles="true" />
+
+    <!-- Dependencies folder: all transitive managed dependencies from Core output -->
+    <ItemGroup>
+      <CoreDependencyFiles Include="$(CoreOutputDir)**\*"
+                           Exclude="$(CoreOutputDir)PowerGit.Core.dll;$(CoreOutputDir)PowerGit.Core.deps.json;$(CoreOutputDir)PowerGit.Core.pdb;$(CoreOutputDir)PowerGit.Core.xml;$(CoreOutputDir)PowerGit.Abstractions.dll;$(CoreOutputDir)ref\**" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CoreDependencyFiles)"
+          DestinationFiles="@(CoreDependencyFiles->'$(ModuleDependenciesRoot)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <Message Importance="High" Text="PowerGit module layout created at $(ModuleLayoutRoot)" />
+  </Target>
 
 </Project>

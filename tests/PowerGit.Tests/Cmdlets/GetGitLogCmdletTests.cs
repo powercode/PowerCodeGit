@@ -1,6 +1,6 @@
 using PowerGit.Cmdlets;
-using PowerGit.Core.Models;
-using PowerGit.Core.Services;
+using PowerGit.Abstractions.Models;
+using PowerGit.Abstractions.Services;
 
 namespace PowerGit.Tests.Cmdlets;
 
