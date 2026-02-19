@@ -74,91 +74,28 @@ jobs:
           name: powergit-module
           path: module/
 
+      - name: Checkout Scripts
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts
+          path: repo
+
       - name: Determine Version from Tag
         id: version
         shell: pwsh
-        run: |
-          $Tag = '${{ github.ref_name }}'
-          Write-Host "Tag: $Tag"
-
-          # Strip leading 'v'
-          $VersionString = $Tag -replace '^v', ''
-
-          # Split on first '-' to separate version from prerelease label
-          if ($VersionString -match '^(?<version>\d+\.\d+\.\d+)(-(?<prerelease>.+))?$') {
-              $ModuleVersion = $Matches['version']
-              $PrereleaseLabel = $Matches['prerelease']
-
-              # PSGallery prerelease strings cannot contain dots or hyphens
-              if ($PrereleaseLabel) {
-                  $PrereleaseLabel = $PrereleaseLabel -replace '[.\-]', ''
-              }
-
-              Write-Host "ModuleVersion: $ModuleVersion"
-              Write-Host "Prerelease: $PrereleaseLabel"
-
-              "module-version=$ModuleVersion" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-              "prerelease=$PrereleaseLabel" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          }
-          else {
-              Write-Error "Tag '$Tag' does not match expected version pattern 'v<major>.<minor>.<patch>[-<prerelease>]'."
-          }
+        run: ./repo/scripts/Get-ModuleVersionFromTag.ps1 -Tag '${{ github.ref_name }}'
 
       - name: Patch Module Manifest
         shell: pwsh
         run: |
-          $ErrorActionPreference = 'Stop'
-
-          # Find the versioned module directory
-          $VersionedDir = Get-ChildItem -Path './module' -Directory | Select-Object -First 1
-          if (-not $VersionedDir) {
-              Write-Error 'No versioned module folder found in downloaded artifact.'
+          $Params = @{
+              ModulePath    = './module'
+              ModuleVersion = '${{ steps.version.outputs.module-version }}'
           }
-
-          $ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerGit.psd1'
-          if (-not (Test-Path -Path $ManifestPath)) {
-              Write-Error "Module manifest not found at '$ManifestPath'."
-          }
-
-          $ModuleVersion = '${{ steps.version.outputs.module-version }}'
           $Prerelease = '${{ steps.version.outputs.prerelease }}'
-
-          Write-Host "Updating manifest at: $ManifestPath"
-          Write-Host "  ModuleVersion: $ModuleVersion"
-          Write-Host "  Prerelease:    $Prerelease"
-
-          $UpdateParams = @{
-              Path          = $ManifestPath
-              ModuleVersion = $ModuleVersion
-          }
-
-          if ($Prerelease) {
-              $UpdateParams['Prerelease'] = $Prerelease
-          }
-
-          Update-ModuleManifest @UpdateParams
-          Write-Host 'Manifest updated successfully.'
-
-          # Validate the manifest
-          $null = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
-          Write-Host 'Manifest validation passed.'
-
-          # Rename directory to match the final module version
-          if ($VersionedDir.Name -ne $ModuleVersion) {
-              $NewDir = Join-Path -Path $VersionedDir.Parent.FullName -ChildPath $ModuleVersion
-              Rename-Item -Path $VersionedDir.FullName -NewName $ModuleVersion
-              Write-Host "Renamed module directory from '$($VersionedDir.Name)' to '$ModuleVersion'."
-          }
+          if ($Prerelease) { $Params['Prerelease'] = $Prerelease }
+          ./repo/scripts/Update-PowerGitManifest.ps1 @Params
 
       - name: Publish to PSGallery
         shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-
-          $VersionedDir = Get-ChildItem -Path './module' -Directory | Select-Object -First 1
-          $ModulePath = $VersionedDir.FullName
-
-          Write-Host "Publishing module from: $ModulePath"
-
-          Publish-Module -Path $ModulePath/PowerGit.psd1 -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}' -Verbose
-          Write-Host 'Module published successfully.'
+        run: ./repo/scripts/Publish-PowerGitModule.ps1 -ModulePath './module' -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}'
