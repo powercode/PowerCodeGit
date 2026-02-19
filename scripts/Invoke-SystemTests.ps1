@@ -31,10 +31,10 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/..").Path
-$TestFile = Join-Path -Path $RepoRoot -ChildPath 'tests/PowerGit.SystemTests/Get-GitLog.Tests.ps1'
+$TestDir = Join-Path -Path $RepoRoot -ChildPath 'tests/PowerGit.SystemTests'
 
-if (-not (Test-Path -Path $TestFile)) {
-    Write-Error -Message "Test file not found: $TestFile"
+if (-not (Test-Path -Path $TestDir)) {
+    Write-Error -Message "System test directory not found: $TestDir"
     return
 }
 
@@ -64,7 +64,7 @@ if (-not (Test-Path -Path $ModulePath)) {
 }
 
 Write-Host "Running Pester system tests in a clean pwsh process..." -ForegroundColor Cyan
-Write-Host "Test file: $TestFile" -ForegroundColor DarkGray
+Write-Host "Test dir:  $TestDir" -ForegroundColor DarkGray
 Write-Host "Module:    $ModulePath" -ForegroundColor DarkGray
 
 # Launch a fresh pwsh.exe process to avoid binary module assembly locking.
@@ -85,7 +85,7 @@ if (-not `$PesterModule) {
 Import-Module -Name Pester -MinimumVersion 5.0.0 -Force
 
 `$Config = New-PesterConfiguration
-`$Config.Run.Path = '$($TestFile -replace "'", "''")'
+`$Config.Run.Path = '$($TestDir -replace "'", "''")'
 `$Config.Run.Exit = `$true
 `$Config.Output.Verbosity = 'Detailed'
 
