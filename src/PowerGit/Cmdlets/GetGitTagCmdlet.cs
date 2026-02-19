@@ -10,7 +10,7 @@ namespace PowerGit.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsCommon.Get, "GitTag")]
 [OutputType(typeof(GitTagInfo))]
-public sealed class GetGitTagCmdlet : PSCmdlet
+public sealed class GetGitTagCmdlet : GitCmdlet
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GetGitTagCmdlet"/> class.
@@ -32,17 +32,11 @@ public sealed class GetGitTagCmdlet : PSCmdlet
     private readonly IGitTagService tagService;
 
     /// <summary>
-    /// Gets or sets the repository path. Defaults to the current location.
-    /// </summary>
-    [Parameter]
-    public string? Path { get; set; }
-
-    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolvePath();
+        var repositoryPath = ResolveRepositoryPath();
 
         try
         {
@@ -63,20 +57,5 @@ public sealed class GetGitTagCmdlet : PSCmdlet
 
             WriteError(errorRecord);
         }
-    }
-
-    /// <summary>
-    /// Resolves the repository path from the <see cref="Path"/> parameter or the current location.
-    /// </summary>
-    /// <param name="currentFileSystemPath">The current PowerShell file system path.</param>
-    /// <returns>The resolved repository path.</returns>
-    internal string ResolvePath(string? currentFileSystemPath = null)
-    {
-        if (!string.IsNullOrWhiteSpace(Path))
-        {
-            return Path!;
-        }
-
-        return currentFileSystemPath ?? SessionState.Path.CurrentFileSystemLocation.Path;
     }
 }

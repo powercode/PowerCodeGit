@@ -2,6 +2,7 @@ using System;
 using System.Management.Automation;
 using PowerGit.Abstractions.Models;
 using PowerGit.Abstractions.Services;
+using PowerGit.Completers;
 
 namespace PowerGit.Cmdlets;
 
@@ -10,7 +11,7 @@ namespace PowerGit.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsCommon.Get, "GitLog")]
 [OutputType(typeof(GitCommitInfo))]
-public sealed class GetGitLogCmdlet : PSCmdlet
+public sealed class GetGitLogCmdlet : GitCmdlet
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GetGitLogCmdlet"/> class.
@@ -32,15 +33,18 @@ public sealed class GetGitLogCmdlet : PSCmdlet
     private readonly IGitHistoryService gitHistoryService;
 
     /// <summary>
-    /// Gets or sets the repository path. Defaults to the current location.
+    /// Gets or sets one or more repository-relative file paths to filter
+    /// the log to commits that touched those files.
     /// </summary>
     [Parameter]
-    public string? Path { get; set; }
+    [GitPathCompleter]
+    public string[]? Path { get; set; }
 
     /// <summary>
     /// Gets or sets the branch name used for log traversal.
     /// </summary>
     [Parameter]
+    [GitBranchCompleter]
     public string? Branch { get; set; }
 
     /// <summary>
@@ -109,22 +113,18 @@ public sealed class GetGitLogCmdlet : PSCmdlet
     /// <returns>A populated git log options object.</returns>
     internal GitLogOptions BuildOptions(string currentFileSystemPath)
     {
-        var repositoryPath = this.Path;
-
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            repositoryPath = currentFileSystemPath;
-        }
+        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
 
         return new GitLogOptions
         {
-            RepositoryPath = repositoryPath!,
+            RepositoryPath = repositoryPath,
             BranchName = Branch,
             MaxCount = MaxCount,
             AuthorFilter = Author,
             Since = Since,
             Until = Until,
             MessagePattern = MessagePattern,
+            Paths = Path,
         };
     }
 }

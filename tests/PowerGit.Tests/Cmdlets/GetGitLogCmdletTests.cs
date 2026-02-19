@@ -22,7 +22,7 @@ public sealed class GetGitLogCmdletTests
     {
         var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService())
         {
-            Path = "D:\\git",
+            RepoPath = "D:\\git",
             Branch = "main",
             MaxCount = 15,
             Author = "alice",

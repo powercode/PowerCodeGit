@@ -96,19 +96,19 @@ Describe 'Get-GitStatus clean repository' {
     }
 
     It 'Returns a GitStatusResult object' {
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status | Should -Not -BeNullOrEmpty
     }
 
     It 'Reports zero counts on a clean repository' {
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status.StagedCount | Should -Be 0
         $Status.ModifiedCount | Should -Be 0
         $Status.UntrackedCount | Should -Be 0
     }
 
     It 'Reports the current branch' {
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status.CurrentBranch | Should -BeExactly 'main'
     }
 }
@@ -124,14 +124,14 @@ Describe 'Get-GitStatus with changes' {
 
     It 'Reports untracked files' {
         Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'untracked.txt') -Value 'new'
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status.UntrackedCount | Should -BeGreaterOrEqual 1
     }
 
     It 'Reports modified files' {
         $ExistingFile = Get-ChildItem -Path $script:RepoPath -Filter 'file_*.txt' | Select-Object -First 1
         Set-Content -Path $ExistingFile.FullName -Value 'modified content'
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status.ModifiedCount | Should -BeGreaterOrEqual 1
     }
 
@@ -145,14 +145,14 @@ Describe 'Get-GitStatus with changes' {
             Pop-Location
         }
 
-        $Status = Get-GitStatus -Path $script:RepoPath
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
         $Status.StagedCount | Should -BeGreaterOrEqual 1
     }
 }
 
 Describe 'Get-GitStatus error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Get-GitStatus -Path 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Get-GitStatus -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

@@ -8,28 +8,28 @@ namespace PowerGit.Tests.Cmdlets;
 public sealed class SwitchGitBranchCmdletTests
 {
     [TestMethod]
-    public void ResolvePath_PathNotSpecified_UsesCurrentPath()
+    public void ResolveRepositoryPath_PathNotSpecified_UsesCurrentPath()
     {
         var cmdlet = new SwitchGitBranchCmdlet(new StubGitBranchService())
         {
             Name = "feature",
         };
 
-        var resolvedPath = cmdlet.ResolvePath("C:\\repo");
+        var resolvedPath = cmdlet.ResolveRepositoryPath("C:\\repo");
 
         Assert.AreEqual("C:\\repo", resolvedPath);
     }
 
     [TestMethod]
-    public void ResolvePath_PathSpecified_UsesProvidedPath()
+    public void ResolveRepositoryPath_PathSpecified_UsesProvidedPath()
     {
         var cmdlet = new SwitchGitBranchCmdlet(new StubGitBranchService())
         {
-            Path = "D:\\other-repo",
+            RepoPath = "D:\\other-repo",
             Name = "feature",
         };
 
-        var resolvedPath = cmdlet.ResolvePath("C:\\ignored");
+        var resolvedPath = cmdlet.ResolveRepositoryPath("C:\\ignored");
 
         Assert.AreEqual("D:\\other-repo", resolvedPath);
     }

@@ -44,4 +44,22 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitTagService();
     }
+
+    /// <summary>
+    /// Creates a git path service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitPathService"/> instance.</returns>
+    public static IGitPathService CreateGitPathService()
+    {
+        return DependencyContext.CreateGitPathService();
+    }
+
+    /// <summary>
+    /// Creates a git remote service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitRemoteService"/> instance.</returns>
+    public static IGitRemoteService CreateGitRemoteService()
+    {
+        return DependencyContext.CreateGitRemoteService();
+    }
 }

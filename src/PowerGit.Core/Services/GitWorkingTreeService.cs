@@ -74,7 +74,18 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
             ? repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index)
             : repository.Diff.Compare<Patch>();
 
-        return changes
+        var entries = changes.AsEnumerable();
+
+        if (options.Paths is { Length: > 0 })
+        {
+            var paths = options.Paths;
+            entries = entries.Where(change =>
+                paths.Any(p =>
+                    string.Equals(change.Path, p, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        return entries
             .Select(MapDiffEntry)
             .ToList();
     }

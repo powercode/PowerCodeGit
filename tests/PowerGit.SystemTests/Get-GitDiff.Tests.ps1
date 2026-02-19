@@ -96,7 +96,7 @@ Describe 'Get-GitDiff no changes' {
     }
 
     It 'Returns empty when there are no changes' {
-        $Diffs = @(Get-GitDiff -Path $script:RepoPath)
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath)
         $Diffs | Should -HaveCount 0
     }
 }
@@ -114,17 +114,17 @@ Describe 'Get-GitDiff unstaged changes' {
     }
 
     It 'Returns diff entries for modified files' {
-        $Diffs = @(Get-GitDiff -Path $script:RepoPath)
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath)
         $Diffs | Should -Not -BeNullOrEmpty
     }
 
     It 'Diff entry has LinesAdded or LinesDeleted populated' {
-        $Diff = Get-GitDiff -Path $script:RepoPath | Select-Object -First 1
+        $Diff = Get-GitDiff -RepoPath $script:RepoPath | Select-Object -First 1
         ($Diff.LinesAdded + $Diff.LinesDeleted) | Should -BeGreaterThan 0
     }
 
     It 'Diff entry has Patch content' {
-        $Diff = Get-GitDiff -Path $script:RepoPath | Select-Object -First 1
+        $Diff = Get-GitDiff -RepoPath $script:RepoPath | Select-Object -First 1
         $Diff.Patch | Should -Not -BeNullOrEmpty
     }
 }
@@ -148,19 +148,19 @@ Describe 'Get-GitDiff -Staged' {
     }
 
     It 'Returns staged diff entries with -Staged switch' {
-        $Diffs = @(Get-GitDiff -Path $script:RepoPath -Staged)
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath -Staged)
         $Diffs | Should -Not -BeNullOrEmpty
     }
 
     It 'Shows the correct status for staged new file' {
-        $Diff = Get-GitDiff -Path $script:RepoPath -Staged | Where-Object { $_.NewPath -eq 'new-staged.txt' }
+        $Diff = Get-GitDiff -RepoPath $script:RepoPath -Staged | Where-Object { $_.NewPath -eq 'new-staged.txt' }
         $Diff.Status | Should -Be 'Added'
     }
 }
 
 Describe 'Get-GitDiff error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Get-GitDiff -Path 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Get-GitDiff -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

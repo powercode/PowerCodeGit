@@ -20,6 +20,8 @@ internal static class DependencyContext
     private const string WorkingTreeServiceTypeName = "PowerGit.Core.Services.GitWorkingTreeService";
     private const string BranchServiceTypeName = "PowerGit.Core.Services.GitBranchService";
     private const string TagServiceTypeName = "PowerGit.Core.Services.GitTagService";
+    private const string PathServiceTypeName = "PowerGit.Core.Services.GitPathService";
+    private const string RemoteServiceTypeName = "PowerGit.Core.Services.GitRemoteService";
 
     private static readonly object Gate = new();
     private static PowerGitDependencyLoadContext? loadContext;
@@ -135,5 +137,43 @@ internal static class DependencyContext
                 $"Failed to create an instance of '{TagServiceTypeName}'.");
 
         return (IGitTagService)instance;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IGitPathService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitPathService"/>.</returns>
+    public static IGitPathService CreateGitPathService()
+    {
+        EnsureInitialized();
+
+        var serviceType = coreAssembly!.GetType(PathServiceTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{PathServiceTypeName}' was not found in the loaded core assembly.");
+
+        var instance = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create an instance of '{PathServiceTypeName}'.");
+
+        return (IGitPathService)instance;
+    }
+
+    /// <summary>
+    /// Creates a new <see cref="IGitRemoteService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitRemoteService"/>.</returns>
+    public static IGitRemoteService CreateGitRemoteService()
+    {
+        EnsureInitialized();
+
+        var serviceType = coreAssembly!.GetType(RemoteServiceTypeName)
+            ?? throw new InvalidOperationException(
+                $"Type '{RemoteServiceTypeName}' was not found in the loaded core assembly.");
+
+        var instance = Activator.CreateInstance(serviceType)
+            ?? throw new InvalidOperationException(
+                $"Failed to create an instance of '{RemoteServiceTypeName}'.");
+
+        return (IGitRemoteService)instance;
     }
 }

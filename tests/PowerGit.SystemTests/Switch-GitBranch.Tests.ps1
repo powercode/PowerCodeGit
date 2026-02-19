@@ -105,14 +105,14 @@ Describe 'Switch-GitBranch basic usage' {
     }
 
     It 'Switches to the specified branch and returns branch info' {
-        $Result = Switch-GitBranch -Path $script:RepoPath -Name 'feature'
+        $Result = Switch-GitBranch -RepoPath $script:RepoPath -Name 'feature'
         $Result | Should -Not -BeNullOrEmpty
         $Result.Name | Should -BeExactly 'feature'
         $Result.IsHead | Should -BeTrue
     }
 
     It 'HEAD points to the new branch after switching' {
-        Switch-GitBranch -Path $script:RepoPath -Name 'main' | Out-Null
+        Switch-GitBranch -RepoPath $script:RepoPath -Name 'main' | Out-Null
 
         Push-Location -Path $script:RepoPath
         try {
@@ -136,13 +136,13 @@ Describe 'Switch-GitBranch error handling' {
     }
 
     It 'Produces a non-terminating error for a nonexistent branch' {
-        $Result = Switch-GitBranch -Path $script:RepoPath -Name 'nonexistent' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Switch-GitBranch -RepoPath $script:RepoPath -Name 'nonexistent' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Switch-GitBranch -Path 'C:\nonexistent\repo\path' -Name 'main' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Switch-GitBranch -RepoPath 'C:\nonexistent\repo\path' -Name 'main' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

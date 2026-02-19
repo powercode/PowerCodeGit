@@ -115,12 +115,12 @@ Describe 'Get-GitLog basic usage' {
     }
 
     It 'Returns commits from a valid repository' {
-        $Commits = Get-GitLog -Path $script:RepoPath
+        $Commits = Get-GitLog -RepoPath $script:RepoPath
         $Commits | Should -Not -BeNullOrEmpty
     }
 
     It 'Returns GitCommitInfo objects with expected properties' {
-        $Commit = Get-GitLog -Path $script:RepoPath | Select-Object -First 1
+        $Commit = Get-GitLog -RepoPath $script:RepoPath | Select-Object -First 1
 
         $Commit.Sha | Should -Match '^[0-9a-f]{40}$'
         $Commit.ShortSha.Length | Should -Be 7
@@ -146,17 +146,17 @@ Describe 'Get-GitLog -MaxCount' {
     }
 
     It 'Returns all commits when MaxCount is not specified' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath)
         $Commits | Should -HaveCount 3
     }
 
     It 'Limits results when MaxCount is specified' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -MaxCount 2)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -MaxCount 2)
         $Commits | Should -HaveCount 2
     }
 
     It 'Returns most recent commits first' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -MaxCount 1)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -MaxCount 1)
         $Commits[0].MessageShort | Should -BeExactly 'Third'
     }
 }
@@ -194,19 +194,19 @@ Describe 'Get-GitLog -Author' {
     }
 
     It 'Filters commits by author name' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Author 'Alice')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Author 'Alice')
         $Commits | Should -HaveCount 1
         $Commits[0].AuthorName | Should -BeExactly 'Alice Smith'
     }
 
     It 'Filters commits by author email' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Author 'bob@example.com')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Author 'bob@example.com')
         $Commits | Should -HaveCount 1
         $Commits[0].AuthorEmail | Should -BeExactly 'bob@example.com'
     }
 
     It 'Returns nothing when author does not match' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Author 'Nonexistent')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Author 'Nonexistent')
         $Commits | Should -HaveCount 0
     }
 }
@@ -221,17 +221,17 @@ Describe 'Get-GitLog -MessagePattern' {
     }
 
     It 'Filters commits by message pattern' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -MessagePattern 'fix:')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -MessagePattern 'fix:')
         $Commits | Should -HaveCount 2
     }
 
     It 'Performs case-insensitive matching' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -MessagePattern 'FIX:')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -MessagePattern 'FIX:')
         $Commits | Should -HaveCount 2
     }
 
     It 'Returns nothing when pattern does not match' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -MessagePattern 'chore:')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -MessagePattern 'chore:')
         $Commits | Should -HaveCount 0
     }
 }
@@ -248,20 +248,20 @@ Describe 'Get-GitLog -Since and -Until' {
     It 'Filters commits newer than Since date' {
         # All commits are from today, so using yesterday should return all
         $Yesterday = (Get-Date).AddDays(-1)
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Since $Yesterday)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Since $Yesterday)
         $Commits | Should -HaveCount 2
     }
 
     It 'Filters commits older than Until date' {
         # Using tomorrow should return all commits
         $Tomorrow = (Get-Date).AddDays(1)
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Until $Tomorrow)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Until $Tomorrow)
         $Commits | Should -HaveCount 2
     }
 
     It 'Returns nothing when date range excludes all commits' {
         $FarFuture = (Get-Date).AddYears(100)
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Since $FarFuture)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Since $FarFuture)
         $Commits | Should -HaveCount 0
     }
 }
@@ -298,14 +298,14 @@ Describe 'Get-GitLog -Branch' {
     }
 
     It 'Returns commits from the specified branch' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Branch 'feature')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Branch 'feature')
         $Commits | Should -HaveCount 2
         $Commits[0].MessageShort | Should -BeExactly 'Feature commit'
         $Commits[1].MessageShort | Should -BeExactly 'Main commit'
     }
 
     It 'Returns only main branch commits when branch is main' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Branch 'main')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Branch 'main')
         $Commits | Should -HaveCount 1
         $Commits[0].MessageShort | Should -BeExactly 'Main commit'
     }
@@ -313,7 +313,7 @@ Describe 'Get-GitLog -Branch' {
 
 Describe 'Get-GitLog error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Commits = Get-GitLog -Path 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Commits = Get-GitLog -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Commits | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }
@@ -356,13 +356,13 @@ Describe 'Get-GitLog with multiple parameters combined' {
     }
 
     It 'Combines Author and MessagePattern filters' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Author 'Alice' -MessagePattern 'fix:')
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Author 'Alice' -MessagePattern 'fix:')
         $Commits | Should -HaveCount 1
         $Commits[0].MessageShort | Should -BeExactly 'fix: alice fix'
     }
 
     It 'Combines Author, MessagePattern, and MaxCount' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath -Author 'Alice' -MaxCount 1)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Author 'Alice' -MaxCount 1)
         $Commits | Should -HaveCount 1
         $Commits[0].MessageShort | Should -BeExactly 'feat: alice feature'
     }
@@ -378,19 +378,19 @@ Describe 'Get-GitLog parent commit tracking' {
     }
 
     It 'First commit has no parents' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath)
         $FirstCommit = $Commits | Where-Object { $_.MessageShort -eq 'First' }
         $FirstCommit.ParentShas | Should -HaveCount 0
     }
 
     It 'Second commit has one parent' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath)
         $SecondCommit = $Commits | Where-Object { $_.MessageShort -eq 'Second' }
         $SecondCommit.ParentShas | Should -HaveCount 1
     }
 
     It 'Parent SHA references the first commit' {
-        $Commits = @(Get-GitLog -Path $script:RepoPath)
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath)
         $FirstCommit = $Commits | Where-Object { $_.MessageShort -eq 'First' }
         $SecondCommit = $Commits | Where-Object { $_.MessageShort -eq 'Second' }
         $SecondCommit.ParentShas[0] | Should -BeExactly $FirstCommit.Sha

@@ -15,4 +15,10 @@ public sealed class GitDiffOptions
     /// instead of unstaged (working directory) changes.
     /// </summary>
     public bool Staged { get; set; }
+
+    /// <summary>
+    /// Gets or sets one or more repository-relative file paths to restrict
+    /// the diff output.
+    /// </summary>
+    public string[]? Paths { get; set; }
 }

@@ -37,7 +37,11 @@ public sealed class GitHistoryService : IGitHistoryService
             SortBy = CommitSortStrategies.Time,
         };
 
-        if (!string.IsNullOrWhiteSpace(options.BranchName))
+        if (options.AllBranches)
+        {
+            filter.IncludeReachableFrom = repository.Branches.Where(b => !b.IsRemote).Select(b => b.Tip);
+        }
+        else if (!string.IsNullOrWhiteSpace(options.BranchName))
         {
             var branch = repository.Branches[options.BranchName];
             if (branch is null)
@@ -74,6 +78,12 @@ public sealed class GitHistoryService : IGitHistoryService
             commits = commits.Where(commit => ContainsIgnoreCase(commit.Message, messagePattern));
         }
 
+        if (options.Paths is { Length: > 0 })
+        {
+            var paths = options.Paths;
+            commits = commits.Where(commit => CommitTouchesAnyPath(repository, commit, paths));
+        }
+
         if (options.MaxCount is not null && options.MaxCount.Value > 0)
         {
             commits = commits.Take(options.MaxCount.Value);
@@ -85,6 +95,18 @@ public sealed class GitHistoryService : IGitHistoryService
     private static bool ContainsIgnoreCase(string source, string value)
     {
         return source?.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static bool CommitTouchesAnyPath(Repository repository, Commit commit, string[] paths)
+    {
+        var parentTree = commit.Parents.FirstOrDefault()?.Tree;
+
+        using var changes = repository.Diff.Compare<TreeChanges>(parentTree, commit.Tree);
+
+        return changes.Any(change =>
+            paths.Any(p =>
+                string.Equals(change.Path, p, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
     }
 
     private static GitCommitInfo MapCommit(Commit commit)

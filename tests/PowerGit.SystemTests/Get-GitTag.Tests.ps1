@@ -96,7 +96,7 @@ Describe 'Get-GitTag no tags' {
     }
 
     It 'Returns empty when there are no tags' {
-        $Tags = @(Get-GitTag -Path $script:RepoPath)
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath)
         $Tags | Should -HaveCount 0
     }
 }
@@ -119,18 +119,18 @@ Describe 'Get-GitTag lightweight tags' {
     }
 
     It 'Lists lightweight tags' {
-        $Tags = @(Get-GitTag -Path $script:RepoPath)
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath)
         $Tags | Should -HaveCount 1
         $Tags[0].Name | Should -BeExactly 'v1.0.0'
     }
 
     It 'Lightweight tag is not annotated' {
-        $Tag = Get-GitTag -Path $script:RepoPath | Select-Object -First 1
+        $Tag = Get-GitTag -RepoPath $script:RepoPath | Select-Object -First 1
         $Tag.IsAnnotated | Should -BeFalse
     }
 
     It 'Tag has a valid SHA' {
-        $Tag = Get-GitTag -Path $script:RepoPath | Select-Object -First 1
+        $Tag = Get-GitTag -RepoPath $script:RepoPath | Select-Object -First 1
         $Tag.Sha | Should -Match '^[0-9a-f]{40}$'
         $Tag.ShortSha.Length | Should -Be 7
     }
@@ -154,13 +154,13 @@ Describe 'Get-GitTag annotated tags' {
     }
 
     It 'Lists annotated tags' {
-        $Tags = @(Get-GitTag -Path $script:RepoPath)
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath)
         $Tags | Should -HaveCount 1
         $Tags[0].Name | Should -BeExactly 'v2.0.0'
     }
 
     It 'Annotated tag has metadata' {
-        $Tag = Get-GitTag -Path $script:RepoPath | Select-Object -First 1
+        $Tag = Get-GitTag -RepoPath $script:RepoPath | Select-Object -First 1
         $Tag.IsAnnotated | Should -BeTrue
         $Tag.TaggerName | Should -Not -BeNullOrEmpty
         $Tag.TaggerEmail | Should -Not -BeNullOrEmpty
@@ -187,14 +187,14 @@ Describe 'Get-GitTag multiple tags' {
     }
 
     It 'Returns all tags' {
-        $Tags = @(Get-GitTag -Path $script:RepoPath)
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath)
         $Tags | Should -HaveCount 2
     }
 }
 
 Describe 'Get-GitTag error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Get-GitTag -Path 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Get-GitTag -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

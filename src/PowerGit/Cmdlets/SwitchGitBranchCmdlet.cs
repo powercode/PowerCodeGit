@@ -2,6 +2,7 @@ using System;
 using System.Management.Automation;
 using PowerGit.Abstractions.Models;
 using PowerGit.Abstractions.Services;
+using PowerGit.Completers;
 
 namespace PowerGit.Cmdlets;
 
@@ -10,7 +11,7 @@ namespace PowerGit.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsCommon.Switch, "GitBranch", SupportsShouldProcess = true)]
 [OutputType(typeof(GitBranchInfo))]
-public sealed class SwitchGitBranchCmdlet : PSCmdlet
+public sealed class SwitchGitBranchCmdlet : GitCmdlet
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="SwitchGitBranchCmdlet"/> class.
@@ -32,16 +33,11 @@ public sealed class SwitchGitBranchCmdlet : PSCmdlet
     private readonly IGitBranchService branchService;
 
     /// <summary>
-    /// Gets or sets the repository path. Defaults to the current location.
-    /// </summary>
-    [Parameter]
-    public string? Path { get; set; }
-
-    /// <summary>
     /// Gets or sets the name of the branch to switch to.
     /// </summary>
     [Parameter(Mandatory = true, Position = 0)]
     [ValidateNotNullOrEmpty]
+    [GitBranchCompleter(IncludeRemote = true)]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
@@ -49,7 +45,7 @@ public sealed class SwitchGitBranchCmdlet : PSCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolvePath();
+        var repositoryPath = ResolveRepositoryPath();
 
         if (!ShouldProcess(repositoryPath, $"Switch to branch '{Name}'"))
         {
@@ -71,20 +67,5 @@ public sealed class SwitchGitBranchCmdlet : PSCmdlet
 
             WriteError(errorRecord);
         }
-    }
-
-    /// <summary>
-    /// Resolves the repository path from the <see cref="Path"/> parameter or the current location.
-    /// </summary>
-    /// <param name="currentFileSystemPath">The current PowerShell file system path.</param>
-    /// <returns>The resolved repository path.</returns>
-    internal string ResolvePath(string? currentFileSystemPath = null)
-    {
-        if (!string.IsNullOrWhiteSpace(Path))
-        {
-            return Path!;
-        }
-
-        return currentFileSystemPath ?? SessionState.Path.CurrentFileSystemLocation.Path;
     }
 }

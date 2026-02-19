@@ -18,6 +18,12 @@ public sealed class GitLogOptions
     public string? BranchName { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether to include commits reachable
+    /// from all local branches, not just HEAD or the specified branch.
+    /// </summary>
+    public bool AllBranches { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum number of commits to return.
     /// </summary>
     public int? MaxCount { get; set; }
@@ -41,4 +47,10 @@ public sealed class GitLogOptions
     /// Gets or sets a substring filter for commit messages.
     /// </summary>
     public string? MessagePattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets one or more repository-relative file paths. When set,
+    /// only commits that touch at least one of these paths are returned.
+    /// </summary>
+    public string[]? Paths { get; set; }
 }

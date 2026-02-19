@@ -2,6 +2,7 @@ using System;
 using System.Management.Automation;
 using PowerGit.Abstractions.Models;
 using PowerGit.Abstractions.Services;
+using PowerGit.Completers;
 
 namespace PowerGit.Cmdlets;
 
@@ -10,7 +11,7 @@ namespace PowerGit.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsCommon.Get, "GitDiff")]
 [OutputType(typeof(GitDiffEntry))]
-public sealed class GetGitDiffCmdlet : PSCmdlet
+public sealed class GetGitDiffCmdlet : GitCmdlet
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="GetGitDiffCmdlet"/> class.
@@ -32,10 +33,12 @@ public sealed class GetGitDiffCmdlet : PSCmdlet
     private readonly IGitWorkingTreeService workingTreeService;
 
     /// <summary>
-    /// Gets or sets the repository path. Defaults to the current location.
+    /// Gets or sets one or more repository-relative file paths to restrict
+    /// the diff output.
     /// </summary>
     [Parameter]
-    public string? Path { get; set; }
+    [GitPathCompleter]
+    public string[]? Path { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to show staged (index) changes
@@ -79,17 +82,13 @@ public sealed class GetGitDiffCmdlet : PSCmdlet
     /// <returns>A populated diff options object.</returns>
     internal GitDiffOptions BuildOptions(string currentFileSystemPath)
     {
-        var repositoryPath = Path;
-
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            repositoryPath = currentFileSystemPath;
-        }
+        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
 
         return new GitDiffOptions
         {
-            RepositoryPath = repositoryPath!,
+            RepositoryPath = repositoryPath,
             Staged = Staged.IsPresent,
+            Paths = Path,
         };
     }
 }

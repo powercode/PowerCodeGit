@@ -22,7 +22,7 @@ public sealed class GetGitDiffCmdletTests
     {
         var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
         {
-            Path = "D:\\other-repo",
+            RepoPath = "D:\\other-repo",
         };
 
         var options = cmdlet.BuildOptions("C:\\ignored");
@@ -45,7 +45,7 @@ public sealed class GetGitDiffCmdletTests
     {
         var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
         {
-            Path = "D:\\git",
+            RepoPath = "D:\\git",
             Staged = true,
         };
 
