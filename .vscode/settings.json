@@ -15,5 +15,6 @@
         },
         ".\\scripts\\Invoke-SystemTests.ps1": true
     },
-    "FSharp.suggestGitignore": false
+    "FSharp.suggestGitignore": false,
+    "pester.runTestsInNewProcess": true
 }
