@@ -88,11 +88,11 @@ jobs:
       - name: Patch Module Manifest
         shell: pwsh
         run: >-
-          ./repo/scripts/Update-PowerGitManifest.ps1
+          ./repo/scripts/Update-PowerCodeGitManifest.ps1
           -ModulePath './module'
           -ModuleVersion '${{ steps.version.outputs.module-version }}'
           -Prerelease '${{ steps.version.outputs.prerelease }}'
 
       - name: Publish to PSGallery
         shell: pwsh
-        run: ./repo/scripts/Publish-PowerGitModule.ps1 -ModulePath './module' -ApiKey '${{ secrets.PSGALLERY_API_KEY }}'
+        run: ./repo/scripts/Publish-PowerCodeGitModule.ps1 -ModulePath './module' -ApiKey '${{ secrets.PSGALLERY_API_KEY }}'
