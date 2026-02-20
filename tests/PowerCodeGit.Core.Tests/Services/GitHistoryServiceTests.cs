@@ -1,9 +1,9 @@
 using LibGit2Sharp;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Core.Services;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Core.Services;
 using System.Threading;
 
-namespace PowerCodeGit.Core.Tests.Services;
+namespace PowerCode.Git.Core.Tests.Services;
 
 [TestClass]
 public sealed class GitHistoryServiceTests
@@ -108,7 +108,7 @@ public sealed class GitHistoryServiceTests
             File.WriteAllText(filePath, $"value-{index}");
             Commands.Stage(repository, filePath);
 
-            var signature = new Signature("PowerCodeGit", "powercodegit@example.com", DateTimeOffset.UtcNow.AddMinutes(index));
+            var signature = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow.AddMinutes(index));
             var commit = repository.Commit($"commit {index}", signature, signature);
             commitShas.Add(commit.Sha);
         }
@@ -152,7 +152,7 @@ public sealed class GitHistoryServiceTests
         var bugfixPath = System.IO.Path.Combine(repositoryPath, "bugfix.txt");
         File.WriteAllText(bugfixPath, "bugfix");
         Commands.Stage(repository, bugfixPath);
-        var signature = new Signature("PowerCodeGit", "powercodegit@example.com", DateTimeOffset.UtcNow.AddMinutes(-2));
+        var signature = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow.AddMinutes(-2));
         repository.Commit("fix: bug", signature, signature);
 
         var featurePath = System.IO.Path.Combine(repositoryPath, "feature.txt");
@@ -165,7 +165,7 @@ public sealed class GitHistoryServiceTests
 
     private static string CreateTemporaryDirectory()
     {
-        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "PowerCodeGitTests", Guid.NewGuid().ToString("N"));
+        var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "PowerCode.GitTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
     }

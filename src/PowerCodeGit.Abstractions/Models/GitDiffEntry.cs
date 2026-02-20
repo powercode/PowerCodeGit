@@ -1,4 +1,4 @@
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Represents a single file change in a diff result.

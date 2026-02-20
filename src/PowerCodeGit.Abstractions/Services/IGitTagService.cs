@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using PowerCodeGit.Abstractions.Models;
+using PowerCode.Git.Abstractions.Models;
 
-namespace PowerCodeGit.Abstractions.Services;
+namespace PowerCode.Git.Abstractions.Services;
 
 /// <summary>
 /// Defines operations for listing git tags.

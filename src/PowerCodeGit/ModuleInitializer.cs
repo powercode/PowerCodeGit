@@ -1,6 +1,6 @@
 using System.Management.Automation;
 
-namespace PowerCodeGit;
+namespace PowerCode.Git;
 
 /// <summary>
 /// Bootstraps the isolated dependency load context when the module is imported.

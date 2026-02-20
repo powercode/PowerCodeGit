@@ -2,12 +2,12 @@ using System;
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace PowerCodeGit;
+namespace PowerCode.Git;
 
 /// <summary>
-/// Loads PowerCodeGit.Core and its transitive dependencies (including LibGit2Sharp
+/// Loads PowerCode.Git.Core and its transitive dependencies (including LibGit2Sharp
 /// native libraries) in an isolated context. Returns <see langword="null"/> for
-/// the shared <c>PowerCodeGit.Abstractions</c> assembly so the runtime falls back to
+/// the shared <c>PowerCode.Git.Abstractions</c> assembly so the runtime falls back to
 /// the default context, keeping interface and model types unified across contexts.
 /// </summary>
 internal sealed class PowerCodeGitDependencyLoadContext : AssemblyLoadContext
@@ -18,12 +18,12 @@ internal sealed class PowerCodeGitDependencyLoadContext : AssemblyLoadContext
     /// Initializes a new instance of the <see cref="PowerCodeGitDependencyLoadContext"/> class.
     /// </summary>
     /// <param name="coreAssemblyPath">
-    /// Full path to <c>PowerCodeGit.Core.dll</c> inside the <c>dependencies</c> folder.
+    /// Full path to <c>PowerCode.Git.Core.dll</c> inside the <c>dependencies</c> folder.
     /// The <see cref="AssemblyDependencyResolver"/> uses the accompanying
     /// <c>.deps.json</c> file to locate managed and native dependencies.
     /// </param>
     public PowerCodeGitDependencyLoadContext(string coreAssemblyPath)
-        : base(name: "PowerCodeGit.DependencyContext", isCollectible: false)
+        : base(name: "PowerCode.Git.DependencyContext", isCollectible: false)
     {
         resolver = new AssemblyDependencyResolver(coreAssemblyPath);
     }
@@ -33,7 +33,7 @@ internal sealed class PowerCodeGitDependencyLoadContext : AssemblyLoadContext
     {
         // The abstractions assembly must resolve from the default (shared) context
         // so that types like IGitHistoryService are identical on both sides.
-        if (string.Equals(assemblyName.Name, "PowerCodeGit.Abstractions", StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(assemblyName.Name, "PowerCode.Git.Abstractions", StringComparison.OrdinalIgnoreCase))
         {
             return null;
         }

@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PowerCodeGit\PowerCodeGit.csproj" />
-    <ProjectReference Include="..\..\src\PowerCodeGit.Abstractions\PowerCodeGit.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\PowerCode.Git\PowerCode.Git.csproj" />
+    <ProjectReference Include="..\..\src\PowerCode.Git.Abstractions\PowerCode.Git.Abstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

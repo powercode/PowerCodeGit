@@ -4,24 +4,24 @@
 .SYNOPSIS
     Pester system tests for the Get-GitLog cmdlet.
 .DESCRIPTION
-    End-to-end tests that exercise the PowerCodeGit binary module
+    End-to-end tests that exercise the PowerCode.Git binary module
     against real git repositories created in temporary directories.
 #>
 
 BeforeAll {
     # Resolve the module path from the environment variable set by Invoke-SystemTests.ps1,
     # or fall back to discovering the versioned module layout under artifacts/module/.
-    if ($env:POWERCODEGIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODEGIT_MODULE_PATH)) {
-        $ModulePath = $env:POWERCODEGIT_MODULE_PATH
+    if ($env:PowerCode.Git_MODULE_PATH -and (Test-Path -Path $env:PowerCode.Git_MODULE_PATH)) {
+        $ModulePath = $env:PowerCode.Git_MODULE_PATH
     }
     else {
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCodeGit'
+        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
         $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $VersionedDir) {
             throw "No versioned module folder found under '$ModuleLayoutDir'. Build the solution before running system tests."
         }
-        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCodeGit.psd1'
+        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
     }
 
     if (-not (Test-Path -Path $ModulePath)) {
@@ -53,7 +53,7 @@ BeforeAll {
             [string]$AuthorEmail = 'test@example.com'
         )
 
-        $TempDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCodeGitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        $TempDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $TempDir -ItemType Directory -Force | Out-Null
 
         Push-Location -Path $TempDir
@@ -102,7 +102,7 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Module -Name PowerCodeGit -Force -ErrorAction SilentlyContinue
+    Remove-Module -Name PowerCode.Git -Force -ErrorAction SilentlyContinue
 }
 
 Describe 'Get-GitLog basic usage' {
@@ -163,7 +163,7 @@ Describe 'Get-GitLog -MaxCount' {
 
 Describe 'Get-GitLog -Author' {
     BeforeAll {
-        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCodeGitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $script:RepoPath -ItemType Directory -Force | Out-Null
 
         Push-Location -Path $script:RepoPath
@@ -268,7 +268,7 @@ Describe 'Get-GitLog -Since and -Until' {
 
 Describe 'Get-GitLog -Branch' {
     BeforeAll {
-        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCodeGitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $script:RepoPath -ItemType Directory -Force | Out-Null
 
         Push-Location -Path $script:RepoPath
@@ -321,7 +321,7 @@ Describe 'Get-GitLog error handling' {
 
 Describe 'Get-GitLog with multiple parameters combined' {
     BeforeAll {
-        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCodeGitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $script:RepoPath -ItemType Directory -Force | Out-Null
 
         Push-Location -Path $script:RepoPath

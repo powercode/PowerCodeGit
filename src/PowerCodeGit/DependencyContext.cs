@@ -1,27 +1,27 @@
 using System;
 using System.IO;
 using System.Reflection;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit;
+namespace PowerCode.Git;
 
 /// <summary>
 /// Creates and exposes the isolated dependency load context used by the module.
-/// All dependencies of <c>PowerCodeGit.Core</c> (including LibGit2Sharp and its
+/// All dependencies of <c>PowerCode.Git.Core</c> (including LibGit2Sharp and its
 /// native libraries) are loaded in this context. Types from
-/// <c>PowerCodeGit.Abstractions</c> are shared with the default context so no
+/// <c>PowerCode.Git.Abstractions</c> are shared with the default context so no
 /// reflection is needed when consuming <see cref="IGitHistoryService"/>.
 /// </summary>
 internal static class DependencyContext
 {
     private const string DependenciesFolderName = "dependencies";
-    private const string CoreAssemblyFileName = "PowerCodeGit.Core.dll";
-    private const string CoreServiceTypeName = "PowerCodeGit.Core.Services.GitHistoryService";
-    private const string WorkingTreeServiceTypeName = "PowerCodeGit.Core.Services.GitWorkingTreeService";
-    private const string BranchServiceTypeName = "PowerCodeGit.Core.Services.GitBranchService";
-    private const string TagServiceTypeName = "PowerCodeGit.Core.Services.GitTagService";
-    private const string PathServiceTypeName = "PowerCodeGit.Core.Services.GitPathService";
-    private const string RemoteServiceTypeName = "PowerCodeGit.Core.Services.GitRemoteService";
+    private const string CoreAssemblyFileName = "PowerCode.Git.Core.dll";
+    private const string CoreServiceTypeName = "PowerCode.Git.Core.Services.GitHistoryService";
+    private const string WorkingTreeServiceTypeName = "PowerCode.Git.Core.Services.GitWorkingTreeService";
+    private const string BranchServiceTypeName = "PowerCode.Git.Core.Services.GitBranchService";
+    private const string TagServiceTypeName = "PowerCode.Git.Core.Services.GitTagService";
+    private const string PathServiceTypeName = "PowerCode.Git.Core.Services.GitPathService";
+    private const string RemoteServiceTypeName = "PowerCode.Git.Core.Services.GitRemoteService";
 
     private static readonly object Gate = new();
     private static PowerCodeGitDependencyLoadContext? loadContext;
@@ -63,7 +63,7 @@ internal static class DependencyContext
     /// <summary>
     /// Creates a new <see cref="IGitHistoryService"/> instance from the isolated
     /// context. Because <c>IGitHistoryService</c> lives in the shared
-    /// <c>PowerCodeGit.Abstractions</c> assembly, the returned object can be cast
+    /// <c>PowerCode.Git.Abstractions</c> assembly, the returned object can be cast
     /// directly — no reflection needed for subsequent calls.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitHistoryService"/>.</returns>

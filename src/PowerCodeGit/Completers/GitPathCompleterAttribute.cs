@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit.Completers;
+namespace PowerCode.Git.Completers;
 
 /// <summary>
 /// Provides argument completions for tracked file paths in a git repository.

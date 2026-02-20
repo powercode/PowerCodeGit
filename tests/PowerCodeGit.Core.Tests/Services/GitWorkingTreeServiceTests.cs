@@ -1,9 +1,9 @@
 using LibGit2Sharp;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Core.Services;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Core.Services;
 using System.Threading;
 
-namespace PowerCodeGit.Core.Tests.Services;
+namespace PowerCode.Git.Core.Tests.Services;
 
 [TestClass]
 public sealed class GitWorkingTreeServiceTests
@@ -258,7 +258,7 @@ public sealed class GitWorkingTreeServiceTests
         File.WriteAllText(filePath, "initial content");
         Commands.Stage(repository, filePath);
 
-        var signature = new Signature("PowerCodeGit", "powercodegit@example.com", DateTimeOffset.UtcNow);
+        var signature = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow);
         repository.Commit("Initial commit", signature, signature);
 
         return repositoryPath;
@@ -266,7 +266,7 @@ public sealed class GitWorkingTreeServiceTests
 
     private static string CreateTemporaryDirectory()
     {
-        var path = Path.Combine(Path.GetTempPath(), "PowerCodeGitTests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(Path.GetTempPath(), "PowerCode.GitTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
     }

@@ -1,10 +1,10 @@
 using System;
 using System.Management.Automation;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Abstractions.Services;
-using PowerCodeGit.Completers;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
-namespace PowerCodeGit.Cmdlets;
+namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
 /// Switches the current branch of a git repository.

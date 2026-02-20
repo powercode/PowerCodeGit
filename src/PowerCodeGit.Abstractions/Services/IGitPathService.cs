@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace PowerCodeGit.Abstractions.Services;
+namespace PowerCode.Git.Abstractions.Services;
 
 /// <summary>
 /// Defines operations for listing tracked file paths in a git repository.

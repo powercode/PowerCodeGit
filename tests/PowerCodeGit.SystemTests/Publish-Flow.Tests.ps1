@@ -4,8 +4,8 @@
 .SYNOPSIS
     Pester tests that exercise the publish-flow scripts end to end.
 .DESCRIPTION
-    Validates Get-ModuleVersionFromTag, Update-PowerCodeGitManifest, and
-    Publish-PowerCodeGitModule (dry-run) against a temporary module layout
+    Validates Get-ModuleVersionFromTag, Update-PowerGitManifest, and
+    Publish-PowerGitModule (dry-run) against a temporary module layout
     mirroring the CI publish pipeline.
 #>
 
@@ -54,25 +54,25 @@ Describe 'Get-ModuleVersionFromTag' {
     }
 }
 
-Describe 'Update-PowerCodeGitManifest' {
+Describe 'Update-PowerGitManifest' {
     BeforeAll {
-        $Script = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerCodeGitManifest.ps1'
+        $Script = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerGitManifest.ps1'
 
         # Locate the real manifest to use as a template
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $SourceManifest = Join-Path -Path $RepoRoot -ChildPath 'src/PowerCodeGit/PowerCodeGit.psd1'
+        $SourceManifest = Join-Path -Path $RepoRoot -ChildPath 'src/PowerCode.Git/PowerCode.Git.psd1'
     }
 
     BeforeEach {
-        # Create a temporary module layout: <temp>/module/0.1.0/PowerCodeGit.psd1
+        # Create a temporary module layout: <temp>/module/0.1.0/PowerCode.Git.psd1
         $TempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "publish-flow-$([System.Guid]::NewGuid())"
         $VersionedDir = Join-Path -Path $TempRoot -ChildPath 'module/0.1.0'
         $null = New-Item -Path $VersionedDir -ItemType Directory -Force
-        Copy-Item -Path $SourceManifest -Destination (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.psd1')
+        Copy-Item -Path $SourceManifest -Destination (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.psd1')
 
         # Create stub files referenced by the manifest so Update-ModuleManifest validation passes
-        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.dll') -ItemType File -Force
-        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.Format.ps1xml') -ItemType File -Force
+        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.dll') -ItemType File -Force
+        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.Format.ps1xml') -ItemType File -Force
     }
 
     AfterEach {
@@ -89,7 +89,7 @@ Describe 'Update-PowerCodeGitManifest' {
         Test-Path -Path $NewDir | Should -BeTrue
 
         # Manifest should reflect the new version
-        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $NewDir -ChildPath 'PowerCodeGit.psd1')
+        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $NewDir -ChildPath 'PowerCode.Git.psd1')
         $Manifest.Version | Should -Be '2.5.0'
     }
 
@@ -99,7 +99,7 @@ Describe 'Update-PowerCodeGitManifest' {
         & $Script -ModulePath $ModulePath -ModuleVersion '3.0.0' -Prerelease 'beta1'
 
         $NewDir = Join-Path -Path $ModulePath -ChildPath '3.0.0'
-        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $NewDir -ChildPath 'PowerCodeGit.psd1')
+        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $NewDir -ChildPath 'PowerCode.Git.psd1')
         $Manifest.Version | Should -Be '3.0.0'
         $Manifest.PrivateData.PSData.Prerelease | Should -Be 'beta1'
     }
@@ -114,7 +114,7 @@ Describe 'Update-PowerCodeGitManifest' {
         & $Script -ModulePath $ModulePath -ModuleVersion '1.0.0'
 
         Test-Path -Path $MatchingDir | Should -BeTrue
-        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $MatchingDir -ChildPath 'PowerCodeGit.psd1')
+        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $MatchingDir -ChildPath 'PowerCode.Git.psd1')
         $Manifest.Version | Should -Be '1.0.0'
     }
 
@@ -129,21 +129,21 @@ Describe 'Update-PowerCodeGitManifest' {
 Describe 'End-to-end publish flow' {
     BeforeAll {
         $GetVersionScript = Join-Path -Path $ScriptsDir -ChildPath 'Get-ModuleVersionFromTag.ps1'
-        $UpdateManifestScript = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerCodeGitManifest.ps1'
+        $UpdateManifestScript = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerGitManifest.ps1'
 
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $SourceManifest = Join-Path -Path $RepoRoot -ChildPath 'src/PowerCodeGit/PowerCodeGit.psd1'
+        $SourceManifest = Join-Path -Path $RepoRoot -ChildPath 'src/PowerCode.Git/PowerCode.Git.psd1'
     }
 
     BeforeEach {
         $TempRoot = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "publish-flow-$([System.Guid]::NewGuid())"
         $VersionedDir = Join-Path -Path $TempRoot -ChildPath 'module/0.1.0'
         $null = New-Item -Path $VersionedDir -ItemType Directory -Force
-        Copy-Item -Path $SourceManifest -Destination (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.psd1')
+        Copy-Item -Path $SourceManifest -Destination (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.psd1')
 
         # Create stub files referenced by the manifest so Update-ModuleManifest validation passes
-        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.dll') -ItemType File -Force
-        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCodeGit.Format.ps1xml') -ItemType File -Force
+        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.dll') -ItemType File -Force
+        $null = New-Item -Path (Join-Path -Path $VersionedDir -ChildPath 'PowerCode.Git.Format.ps1xml') -ItemType File -Force
     }
 
     AfterEach {
@@ -159,7 +159,7 @@ Describe 'End-to-end publish flow' {
         $FinalDir = Join-Path -Path $ModulePath -ChildPath $Version.ModuleVersion
         Test-Path -Path $FinalDir | Should -BeTrue
 
-        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $FinalDir -ChildPath 'PowerCodeGit.psd1')
+        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $FinalDir -ChildPath 'PowerCode.Git.psd1')
         $Manifest.Version | Should -Be '4.2.1'
         $Manifest.PrivateData.PSData.Prerelease | Should -BeNullOrEmpty
     }
@@ -173,7 +173,7 @@ Describe 'End-to-end publish flow' {
         $FinalDir = Join-Path -Path $ModulePath -ChildPath $Version.ModuleVersion
         Test-Path -Path $FinalDir | Should -BeTrue
 
-        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $FinalDir -ChildPath 'PowerCodeGit.psd1')
+        $Manifest = Test-ModuleManifest -Path (Join-Path -Path $FinalDir -ChildPath 'PowerCode.Git.psd1')
         $Manifest.Version | Should -Be '5.0.0'
         $Manifest.PrivateData.PSData.Prerelease | Should -Be 'rc1'
     }

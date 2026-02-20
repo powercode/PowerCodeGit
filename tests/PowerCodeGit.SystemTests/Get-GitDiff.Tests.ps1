@@ -4,22 +4,22 @@
 .SYNOPSIS
     Pester system tests for the Get-GitDiff cmdlet.
 .DESCRIPTION
-    End-to-end tests that exercise the PowerCodeGit binary module
+    End-to-end tests that exercise the PowerCode.Git binary module
     against real git repositories created in temporary directories.
 #>
 
 BeforeAll {
-    if ($env:POWERCODEGIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODEGIT_MODULE_PATH)) {
-        $ModulePath = $env:POWERCODEGIT_MODULE_PATH
+    if ($env:PowerCode.Git_MODULE_PATH -and (Test-Path -Path $env:PowerCode.Git_MODULE_PATH)) {
+        $ModulePath = $env:PowerCode.Git_MODULE_PATH
     }
     else {
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCodeGit'
+        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
         $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $VersionedDir) {
             throw "No versioned module folder found under '$ModuleLayoutDir'. Build the solution before running system tests."
         }
-        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCodeGit.psd1'
+        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
     }
 
     if (-not (Test-Path -Path $ModulePath)) {
@@ -41,7 +41,7 @@ BeforeAll {
             [string]$AuthorEmail = 'test@example.com'
         )
 
-        $TempDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCodeGitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        $TempDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $TempDir -ItemType Directory -Force | Out-Null
 
         Push-Location -Path $TempDir
@@ -83,7 +83,7 @@ BeforeAll {
 }
 
 AfterAll {
-    Remove-Module -Name PowerCodeGit -Force -ErrorAction SilentlyContinue
+    Remove-Module -Name PowerCode.Git -Force -ErrorAction SilentlyContinue
 }
 
 Describe 'Get-GitDiff no changes' {

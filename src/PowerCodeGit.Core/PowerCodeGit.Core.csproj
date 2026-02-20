@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>PowerCodeGit.Core</AssemblyName>
-    <RootNamespace>PowerCodeGit.Core</RootNamespace>
+    <AssemblyName>PowerCode.Git.Core</AssemblyName>
+    <RootNamespace>PowerCode.Git.Core</RootNamespace>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PowerCodeGit.Abstractions\PowerCodeGit.Abstractions.csproj" />
+    <ProjectReference Include="..\PowerCode.Git.Abstractions\PowerCode.Git.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

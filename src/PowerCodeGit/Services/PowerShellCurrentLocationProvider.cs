@@ -1,6 +1,6 @@
 using System.Management.Automation;
 
-namespace PowerCodeGit.Services;
+namespace PowerCode.Git.Services;
 
 /// <summary>
 /// Resolves the current file-system location by invoking <c>Get-Location</c>

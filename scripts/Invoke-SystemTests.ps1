@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Launches Pester system tests for PowerCodeGit in a clean pwsh process.
+    Launches Pester system tests for PowerCode.Git in a clean pwsh process.
 .DESCRIPTION
     Builds the solution, then spawns a separate pwsh.exe process to run the
     Pester system tests. A fresh process is required because binary modules
@@ -31,7 +31,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/..").Path
-$TestDir = Join-Path -Path $RepoRoot -ChildPath 'tests/PowerCodeGit.SystemTests'
+$TestDir = Join-Path -Path $RepoRoot -ChildPath 'tests/PowerCode.Git.SystemTests'
 
 if (-not (Test-Path -Path $TestDir)) {
     Write-Error -Message "System test directory not found: $TestDir"
@@ -41,7 +41,7 @@ if (-not (Test-Path -Path $TestDir)) {
 # Build the solution unless skipped
 if (-not $NoBuild) {
     Write-Host 'Building solution...' -ForegroundColor Cyan
-    $SlnPath = Join-Path -Path $RepoRoot -ChildPath 'PowerCodeGit.slnx'
+    $SlnPath = Join-Path -Path $RepoRoot -ChildPath 'PowerCode.Git.slnx'
     dotnet build $SlnPath --configuration $Configuration --verbosity minimal
     if ($LASTEXITCODE -ne 0) {
         Write-Error -Message "Build failed with exit code $LASTEXITCODE."
@@ -50,14 +50,14 @@ if (-not $NoBuild) {
 }
 
 # Verify the module layout was produced
-$ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCodeGit'
+$ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
 $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $VersionedDir) {
     Write-Error -Message "No versioned module folder found under '$ModuleLayoutDir'. Ensure the build succeeded."
     return
 }
 
-$ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCodeGit.psd1'
+$ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
 if (-not (Test-Path -Path $ModulePath)) {
     Write-Error -Message "Module manifest not found at '$ModulePath'. Ensure the build succeeded."
     return
@@ -73,7 +73,7 @@ Write-Host "Module:    $ModulePath" -ForegroundColor DarkGray
 $PesterScript = @"
 `$ErrorActionPreference = 'Stop'
 
-`$env:POWERCODEGIT_MODULE_PATH = '$($ModulePath -replace "'", "''")'
+`$env:PowerCode.Git_MODULE_PATH = '$($ModulePath -replace "'", "''")'
 
 # Ensure Pester v5+ is available
 `$PesterModule = Get-Module -Name Pester -ListAvailable | Where-Object { `$_.Version.Major -ge 5 } | Select-Object -First 1

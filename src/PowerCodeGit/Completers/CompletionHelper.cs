@@ -1,7 +1,7 @@
 using System.Collections;
-using PowerCodeGit.Services;
+using PowerCode.Git.Services;
 
-namespace PowerCodeGit.Completers;
+namespace PowerCode.Git.Completers;
 
 /// <summary>
 /// Shared utilities for argument completers that need to resolve the

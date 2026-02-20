@@ -1,10 +1,10 @@
 using System.Management.Automation;
-using PowerCodeGit.Services;
+using PowerCode.Git.Services;
 
-namespace PowerCodeGit.Cmdlets;
+namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
-/// Base class for all PowerCodeGit cmdlets that operate on a git repository.
+/// Base class for all PowerCode.Git cmdlets that operate on a git repository.
 /// Provides a common <see cref="RepoPath"/> parameter that defaults to
 /// the current PowerShell working directory.
 /// </summary>

@@ -1,4 +1,4 @@
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Describes the kind of change applied to a file.

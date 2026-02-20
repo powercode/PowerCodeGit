@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Represents the full working-tree and index status of a git repository.

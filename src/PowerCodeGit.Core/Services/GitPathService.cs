@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit.Core.Services;
+namespace PowerCode.Git.Core.Services;
 
 /// <summary>
 /// Lists tracked file paths in a git repository using LibGit2Sharp.

@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Management.Automation;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Abstractions.Services;
-using PowerCodeGit.Completers;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
-namespace PowerCodeGit.Tests.Completers;
+namespace PowerCode.Git.Tests.Completers;
 
 [TestClass]
 public sealed class GitBranchCompleterTests

@@ -1,18 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>PowerCodeGit</AssemblyName>
-    <RootNamespace>PowerCodeGit</RootNamespace>
+    <AssemblyName>PowerCode.Git</AssemblyName>
+    <RootNamespace>PowerCode.Git</RootNamespace>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <ModuleManifestPath>$(MSBuildProjectDirectory)\PowerCodeGit.psd1</ModuleManifestPath>
+    <ModuleManifestPath>$(MSBuildProjectDirectory)\PowerCode.Git.psd1</ModuleManifestPath>
     <ModuleVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(ModuleManifestPath)')), "ModuleVersion\s*=\s*'([^']+)'").Groups[1].Value)</ModuleVersion>
-    <ModuleLayoutRoot>$(ArtifactsPath)\module\PowerCodeGit\$(ModuleVersion)\</ModuleLayoutRoot>
+    <ModuleLayoutRoot>$(ArtifactsPath)\module\PowerCode.Git\$(ModuleVersion)\</ModuleLayoutRoot>
     <ModuleDependenciesRoot>$(ModuleLayoutRoot)dependencies\</ModuleDependenciesRoot>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="PowerCodeGit.psd1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="PowerCodeGit.Format.ps1xml" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="PowerCode.Git.psd1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="PowerCode.Git.Format.ps1xml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,25 +20,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PowerCodeGit.Abstractions\PowerCodeGit.Abstractions.csproj" />
+    <ProjectReference Include="..\PowerCode.Git.Abstractions\PowerCode.Git.Abstractions.csproj" />
     <!-- Build-only: Core is loaded at runtime from the dependencies folder via the custom ALC. -->
-    <ProjectReference Include="..\PowerCodeGit.Core\PowerCodeGit.Core.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\PowerCode.Git.Core\PowerCode.Git.Core.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <!--
     Assembles the versioned PowerShell module layout after build:
-      artifacts/module/PowerCodeGit/<version>/
-        PowerCodeGit.dll
-        PowerCodeGit.Abstractions.dll
-        PowerCodeGit.psd1
+      artifacts/module/PowerCode.Git/<version>/
+        PowerCode.Git.dll
+        PowerCode.Git.Abstractions.dll
+        PowerCode.Git.psd1
         dependencies/
-          PowerCodeGit.Core.dll   (+ its .deps.json for AssemblyDependencyResolver)
+          PowerCode.Git.Core.dll   (+ its .deps.json for AssemblyDependencyResolver)
           LibGit2Sharp.dll
           runtimes/...         (native libraries)
   -->
   <Target Name="BuildVersionedModuleLayout" AfterTargets="Build">
     <PropertyGroup>
-      <CoreOutputDir>$(ArtifactsPath)\bin\PowerCodeGit.Core\$(Configuration.ToLowerInvariant())\</CoreOutputDir>
+      <CoreOutputDir>$(ArtifactsPath)\bin\PowerCode.Git.Core\$(Configuration.ToLowerInvariant())\</CoreOutputDir>
     </PropertyGroup>
 
     <RemoveDir Directories="$(ModuleLayoutRoot)" />
@@ -50,7 +50,7 @@
     <Copy SourceFiles="$(ModuleManifestPath)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
 
     <ItemGroup>
-      <AbstractionsFiles Include="$(TargetDir)PowerCodeGit.Abstractions.dll" />
+      <AbstractionsFiles Include="$(TargetDir)PowerCode.Git.Abstractions.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(AbstractionsFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
 
@@ -63,21 +63,21 @@
 
     <!-- Dependencies folder: Core assembly and its deps.json -->
     <ItemGroup>
-      <CoreFiles Include="$(CoreOutputDir)PowerCodeGit.Core.dll" />
-      <CoreFiles Include="$(CoreOutputDir)PowerCodeGit.Core.deps.json" />
+      <CoreFiles Include="$(CoreOutputDir)PowerCode.Git.Core.dll" />
+      <CoreFiles Include="$(CoreOutputDir)PowerCode.Git.Core.deps.json" />
     </ItemGroup>
     <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(ModuleDependenciesRoot)" SkipUnchangedFiles="true" />
 
     <!-- Dependencies folder: all transitive managed dependencies from Core output -->
     <ItemGroup>
       <CoreDependencyFiles Include="$(CoreOutputDir)**\*"
-                           Exclude="$(CoreOutputDir)PowerCodeGit.Core.dll;$(CoreOutputDir)PowerCodeGit.Core.deps.json;$(CoreOutputDir)PowerCodeGit.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll;$(CoreOutputDir)**\*.pdb;$(CoreOutputDir)**\*.xml" />
+                           Exclude="$(CoreOutputDir)PowerCode.Git.Core.dll;$(CoreOutputDir)PowerCode.Git.Core.deps.json;$(CoreOutputDir)PowerCode.Git.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll;$(CoreOutputDir)**\*.pdb;$(CoreOutputDir)**\*.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(CoreDependencyFiles)"
           DestinationFiles="@(CoreDependencyFiles->'$(ModuleDependenciesRoot)%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
 
-    <Message Importance="High" Text="PowerCodeGit module layout created at $(ModuleLayoutRoot)" />
+    <Message Importance="High" Text="PowerCode.Git module layout created at $(ModuleLayoutRoot)" />
   </Target>
 
 </Project>

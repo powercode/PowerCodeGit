@@ -1,3 +1,3 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("PowerCodeGit.Tests")]
+[assembly: InternalsVisibleTo("PowerCode.Git.Tests")]

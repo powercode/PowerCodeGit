@@ -1,4 +1,4 @@
-namespace PowerCodeGit.Services;
+namespace PowerCode.Git.Services;
 
 /// <summary>
 /// Provides the current file-system location for repository path resolution.

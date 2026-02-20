@@ -64,6 +64,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: powercodegit-module
-          path: artifacts/module/PowerCodeGit/
+          name: PowerCode.Git-module
+          path: artifacts/module/PowerCode.Git/
           retention-days: 14

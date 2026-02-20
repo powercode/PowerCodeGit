@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit.Core.Services;
+namespace PowerCode.Git.Core.Services;
 
 /// <summary>
 /// Lists and switches git branches using LibGit2Sharp.

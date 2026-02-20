@@ -1,9 +1,9 @@
 using System;
 using System.Management.Automation;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit.Cmdlets;
+namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
 /// Lists tags in a git repository.

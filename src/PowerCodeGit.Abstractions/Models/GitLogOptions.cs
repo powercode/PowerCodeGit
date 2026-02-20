@@ -1,6 +1,6 @@
 using System;
 
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Represents supported filters for a git log query.

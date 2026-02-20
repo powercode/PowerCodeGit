@@ -5,7 +5,7 @@
     <View>
       <Name>GitCommitInfo-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitCommitInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitCommitInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -50,7 +50,7 @@
     <View>
       <Name>GitCommitInfo-Detailed</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitCommitInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitCommitInfo</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -94,7 +94,7 @@
     <View>
       <Name>GitStatusResult-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitStatusResult</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitStatusResult</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -140,7 +140,7 @@
     <View>
       <Name>GitStatusResult-Detailed</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitStatusResult</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitStatusResult</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -180,7 +180,7 @@
     <View>
       <Name>GitStatusEntry-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitStatusEntry</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitStatusEntry</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -218,7 +218,7 @@
     <View>
       <Name>GitDiffEntry-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitDiffEntry</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitDiffEntry</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -264,7 +264,7 @@
     <View>
       <Name>GitDiffEntry-Detailed</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitDiffEntry</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitDiffEntry</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -304,7 +304,7 @@
     <View>
       <Name>GitBranchInfo-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitBranchInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -349,7 +349,7 @@
     <View>
       <Name>GitBranchInfo-Detailed</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitBranchInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>
@@ -393,7 +393,7 @@
     <View>
       <Name>GitTagInfo-Default</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitTagInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitTagInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -439,7 +439,7 @@
     <View>
       <Name>GitTagInfo-Detailed</Name>
       <ViewSelectedBy>
-        <TypeName>PowerCodeGit.Abstractions.Models.GitTagInfo</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitTagInfo</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>

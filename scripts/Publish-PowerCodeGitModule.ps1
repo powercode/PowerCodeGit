@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Publishes the PowerCodeGit module to the PowerShell Gallery.
+    Publishes the PowerCode.Git module to the PowerShell Gallery.
 .DESCRIPTION
     Locates the versioned module directory under the given path and publishes
     the module to PSGallery using Publish-PSResource and the provided API key.
@@ -13,7 +13,7 @@
 .PARAMETER ApiKey
     The PSGallery API key used for authentication.
 .EXAMPLE
-    .\scripts\Publish-PowerCodeGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
+    .\scripts\Publish-PowerGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
 #>
 [CmdletBinding()]
 param(
@@ -37,7 +37,7 @@ if (-not $VersionedDir) {
     return
 }
 
-$ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCodeGit.psd1'
+$ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
 if (-not (Test-Path -Path $ManifestPath)) {
     Write-Error "Module manifest not found at '$ManifestPath'."
     return

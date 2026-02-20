@@ -1,4 +1,4 @@
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Represents options for a git diff query.

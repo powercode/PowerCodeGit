@@ -1,11 +1,11 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/PowerCodeGit.Abstractions/PowerCodeGit.Abstractions.csproj" />
-    <Project Path="src/PowerCodeGit.Core/PowerCodeGit.Core.csproj" />
-    <Project Path="src/PowerCodeGit/PowerCodeGit.csproj" />
+    <Project Path="src/PowerCode.Git.Abstractions/PowerCode.Git.Abstractions.csproj" />
+    <Project Path="src/PowerCode.Git.Core/PowerCode.Git.Core.csproj" />
+    <Project Path="src/PowerCode.Git/PowerCode.Git.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/PowerCodeGit.Core.Tests/PowerCodeGit.Core.Tests.csproj" />
-    <Project Path="tests/PowerCodeGit.Tests/PowerCodeGit.Tests.csproj" />
+    <Project Path="tests/PowerCode.Git.Core.Tests/PowerCode.Git.Core.Tests.csproj" />
+    <Project Path="tests/PowerCode.Git.Tests/PowerCode.Git.Tests.csproj" />
   </Folder>
 </Solution>

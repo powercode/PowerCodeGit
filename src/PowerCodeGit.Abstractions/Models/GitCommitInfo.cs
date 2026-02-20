@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Represents commit data returned from the git history layer.

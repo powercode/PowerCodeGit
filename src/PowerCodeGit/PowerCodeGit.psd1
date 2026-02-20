@@ -1,5 +1,5 @@
 @{
-    RootModule = 'PowerCodeGit.dll'
+    RootModule = 'PowerCode.Git.dll'
     ModuleVersion = '0.1.0'
     GUID = '86ed19db-80a7-48c4-a04e-1125b82f7cce'
     Author = 'Staffan Gustafsson'
@@ -8,7 +8,7 @@
     Description = 'PowerShell Git binary module implemented in C#.'
     PowerShellVersion = '7.4'
     CompatiblePSEditions = @('Core')
-    FormatsToProcess = @('PowerCodeGit.Format.ps1xml')
+    FormatsToProcess = @('PowerCode.Git.Format.ps1xml')
     CmdletsToExport = @('Get-GitLog', 'Get-GitStatus', 'Get-GitDiff', 'Get-GitBranch', 'Switch-GitBranch', 'Get-GitTag')
     FunctionsToExport = @()
     AliasesToExport = @()

@@ -1,4 +1,4 @@
-namespace PowerCodeGit.Abstractions.Models;
+namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
 /// Indicates whether a file change is staged (in the index) or unstaged

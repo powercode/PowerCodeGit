@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>PowerCodeGit.Abstractions</AssemblyName>
-    <RootNamespace>PowerCodeGit.Abstractions</RootNamespace>
+    <AssemblyName>PowerCode.Git.Abstractions</AssemblyName>
+    <RootNamespace>PowerCode.Git.Abstractions</RootNamespace>
   </PropertyGroup>
 
 </Project>

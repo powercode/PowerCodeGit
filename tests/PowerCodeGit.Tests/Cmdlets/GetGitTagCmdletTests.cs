@@ -1,8 +1,8 @@
-using PowerCodeGit.Cmdlets;
-using PowerCodeGit.Abstractions.Models;
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Cmdlets;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit.Tests.Cmdlets;
+namespace PowerCode.Git.Tests.Cmdlets;
 
 [TestClass]
 public sealed class GetGitTagCmdletTests

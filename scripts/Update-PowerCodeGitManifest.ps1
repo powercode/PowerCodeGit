@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Patches the PowerCodeGit module manifest with the specified version.
+    Patches the PowerCode.Git module manifest with the specified version.
 .DESCRIPTION
     Updates the module manifest inside the given module directory with the
     provided ModuleVersion and optional Prerelease label. After patching, it
@@ -18,9 +18,9 @@
     Optional prerelease label (e.g. 'beta1'). Must already be sanitised
     for PSGallery (no dots or hyphens).
 .EXAMPLE
-    .\scripts\Update-PowerCodeGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3'
+    .\scripts\Update-PowerGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3'
 .EXAMPLE
-    .\scripts\Update-PowerCodeGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3' -Prerelease 'beta1'
+    .\scripts\Update-PowerGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3' -Prerelease 'beta1'
 #>
 [CmdletBinding()]
 param(
@@ -46,7 +46,7 @@ if (-not $VersionedDir) {
     return
 }
 
-$ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCodeGit.psd1'
+$ManifestPath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
 if (-not (Test-Path -Path $ManifestPath)) {
     Write-Error "Module manifest not found at '$ManifestPath'."
     return
@@ -91,7 +91,7 @@ Write-Host 'Manifest updated successfully.'
 if ($VersionedDir.Name -ne $ModuleVersion) {
     $null = Rename-Item -Path $VersionedDir.FullName -NewName $ModuleVersion
     Write-Host "Renamed module directory from '$($VersionedDir.Name)' to '$ModuleVersion'."
-    $ManifestPath = Join-Path -Path $ModulePath -ChildPath "$ModuleVersion/PowerCodeGit.psd1"
+    $ManifestPath = Join-Path -Path $ModulePath -ChildPath "$ModuleVersion/PowerCode.Git.psd1"
 }
 
 # Validate the manifest after renaming so folder name matches version

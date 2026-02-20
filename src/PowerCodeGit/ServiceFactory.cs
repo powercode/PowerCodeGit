@@ -1,6 +1,6 @@
-using PowerCodeGit.Abstractions.Services;
+using PowerCode.Git.Abstractions.Services;
 
-namespace PowerCodeGit;
+namespace PowerCode.Git;
 
 /// <summary>
 /// Creates service instances used by cmdlets.
