@@ -9,7 +9,7 @@
     PowerShellVersion = '7.4'
     CompatiblePSEditions = @('Core')
     FormatsToProcess = @('PowerCode.Git.Format.ps1xml')
-    CmdletsToExport = @('Get-GitLog', 'Get-GitStatus', 'Get-GitDiff', 'Get-GitBranch', 'Switch-GitBranch', 'Get-GitTag')
+    CmdletsToExport = @('Get-GitLog', 'Get-GitStatus', 'Get-GitDiff', 'Get-GitBranch', 'Switch-GitBranch', 'Get-GitTag', 'Add-GitItem', 'Save-GitCommit', 'New-GitBranch', 'Remove-GitBranch', 'Reset-GitHead', 'Copy-GitRepository', 'Send-GitBranch', 'Receive-GitBranch')
     FunctionsToExport = @()
     AliasesToExport = @()
 }
