@@ -10,7 +10,7 @@ namespace PowerCode.Git;
 /// All dependencies of <c>PowerCode.Git.Core</c> (including LibGit2Sharp and its
 /// native libraries) are loaded in this context. Types from
 /// <c>PowerCode.Git.Abstractions</c> are shared with the default context so no
-/// reflection is needed when consuming <see cref="IGitHistoryService"/>.
+/// reflection is needed when consuming the services, like <see cref="IGitHistoryService"/>.
 /// </summary>
 internal static class DependencyContext
 {
