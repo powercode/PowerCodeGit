@@ -67,113 +67,59 @@ internal static class DependencyContext
     /// directly — no reflection needed for subsequent calls.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitHistoryService"/>.</returns>
-    public static IGitHistoryService CreateGitHistoryService()
-    {
-        EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(CoreServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{CoreServiceTypeName}' was not found in the loaded core assembly.");
-
-        var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{CoreServiceTypeName}'.");
-
-        return (IGitHistoryService)instance;
-    }
+    public static IGitHistoryService CreateGitHistoryService() => CreateService<IGitHistoryService>();
 
     /// <summary>
     /// Creates a new <see cref="IGitWorkingTreeService"/> instance from the isolated context.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitWorkingTreeService"/>.</returns>
-    public static IGitWorkingTreeService CreateGitWorkingTreeService()
-    {
-        EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(WorkingTreeServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{WorkingTreeServiceTypeName}' was not found in the loaded core assembly.");
-
-        var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{WorkingTreeServiceTypeName}'.");
-
-        return (IGitWorkingTreeService)instance;
-    }
+    public static IGitWorkingTreeService CreateGitWorkingTreeService() => CreateService<IGitWorkingTreeService>();
 
     /// <summary>
     /// Creates a new <see cref="IGitBranchService"/> instance from the isolated context.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitBranchService"/>.</returns>
-    public static IGitBranchService CreateGitBranchService()
-    {
-        EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(BranchServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{BranchServiceTypeName}' was not found in the loaded core assembly.");
-
-        var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{BranchServiceTypeName}'.");
-
-        return (IGitBranchService)instance;
-    }
+    public static IGitBranchService CreateGitBranchService() => CreateService<IGitBranchService>();
 
     /// <summary>
     /// Creates a new <see cref="IGitTagService"/> instance from the isolated context.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitTagService"/>.</returns>
-    public static IGitTagService CreateGitTagService()
-    {
-        EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(TagServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{TagServiceTypeName}' was not found in the loaded core assembly.");
-
-        var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{TagServiceTypeName}'.");
-
-        return (IGitTagService)instance;
-    }
+    public static IGitTagService CreateGitTagService() => CreateService<IGitTagService>();
 
     /// <summary>
     /// Creates a new <see cref="IGitPathService"/> instance from the isolated context.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitPathService"/>.</returns>
-    public static IGitPathService CreateGitPathService()
-    {
-        EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(PathServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{PathServiceTypeName}' was not found in the loaded core assembly.");
-
-        var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{PathServiceTypeName}'.");
-
-        return (IGitPathService)instance;
-    }
+    public static IGitPathService CreateGitPathService() => CreateService<IGitPathService>();
 
     /// <summary>
     /// Creates a new <see cref="IGitRemoteService"/> instance from the isolated context.
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitRemoteService"/>.</returns>
-    public static IGitRemoteService CreateGitRemoteService()
+    public static IGitRemoteService CreateGitRemoteService() => CreateService<IGitRemoteService>();
+    private static T CreateService<T>()
     {
         EnsureInitialized();
-
-        var serviceType = coreAssembly!.GetType(RemoteServiceTypeName)
-            ?? throw new InvalidOperationException(
-                $"Type '{RemoteServiceTypeName}' was not found in the loaded core assembly.");
-
+        var typeName = GetServiceTypeName<T>();
+        var serviceType = coreAssembly!.GetType(typeName)
+            ?? throw new InvalidOperationException($"Type '{typeName}' was not found in the loaded core assembly.");
         var instance = Activator.CreateInstance(serviceType)
-            ?? throw new InvalidOperationException(
-                $"Failed to create an instance of '{RemoteServiceTypeName}'.");
+            ?? throw new InvalidOperationException($"Failed to create an instance of '{typeName}'.");
+        return (T)instance;
+    }
 
-        return (IGitRemoteService)instance;
+    private static string GetServiceTypeName<T>()
+    {
+        return typeof(T) switch
+        {
+            var t when t == typeof(IGitHistoryService) => CoreServiceTypeName,
+            var t when t == typeof(IGitWorkingTreeService) => WorkingTreeServiceTypeName,
+            var t when t == typeof(IGitBranchService) => BranchServiceTypeName,
+            var t when t == typeof(IGitTagService) => TagServiceTypeName,
+            var t when t == typeof(IGitPathService) => PathServiceTypeName,
+            var t when t == typeof(IGitRemoteService) => RemoteServiceTypeName,
+            _ => throw new NotSupportedException($"No mapping for service type '{typeof(T).FullName}'")
+        };
     }
 }
