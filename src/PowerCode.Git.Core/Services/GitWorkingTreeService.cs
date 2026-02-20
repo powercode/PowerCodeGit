@@ -8,7 +8,8 @@ using PowerCode.Git.Abstractions.Services;
 namespace PowerCode.Git.Core.Services;
 
 /// <summary>
-/// Inspects the working tree and index state of a git repository using LibGit2Sharp.
+/// Inspects and modifies the working tree, index, and HEAD of a git repository
+/// using LibGit2Sharp — including status, diff, staging, and reset.
 /// </summary>
 public sealed class GitWorkingTreeService : IGitWorkingTreeService
 {
@@ -148,5 +149,76 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
             change.LinesAdded,
             change.LinesDeleted,
             change.Patch);
+    }
+
+    /// <inheritdoc/>
+    public void Stage(GitStageOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        if (options.All)
+        {
+            Commands.Stage(repository, "*");
+            return;
+        }
+
+        if (options.Paths is not { Count: > 0 })
+        {
+            throw new ArgumentException("Either Paths or All must be specified.", nameof(options));
+        }
+
+        foreach (var path in options.Paths)
+        {
+            Commands.Stage(repository, path);
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Unstage(string repositoryPath, IReadOnlyList<string>? paths = null)
+    {
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+
+        using var repository = new Repository(repositoryPath);
+
+        if (paths is { Count: > 0 })
+        {
+            foreach (var path in paths)
+            {
+                Commands.Unstage(repository, path);
+            }
+        }
+        else
+        {
+            // Unstage everything
+            if (repository.Head.Tip is not null)
+            {
+                repository.Reset(ResetMode.Mixed, repository.Head.Tip);
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public void Reset(string repositoryPath, string? revision, GitResetMode mode)
+    {
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+
+        using var repository = new Repository(repositoryPath);
+
+        var resetMode = mode switch
+        {
+            GitResetMode.Soft => ResetMode.Soft,
+            GitResetMode.Hard => ResetMode.Hard,
+            _ => ResetMode.Mixed,
+        };
+
+        var target = revision is not null
+            ? repository.Lookup<Commit>(revision)
+                ?? throw new ArgumentException($"Revision '{revision}' was not found.", nameof(revision))
+            : repository.Head.Tip
+                ?? throw new InvalidOperationException("Repository has no commits to reset to.");
+
+        repository.Reset(resetMode, target);
     }
 }

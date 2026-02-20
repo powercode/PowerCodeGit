@@ -48,5 +48,8 @@ public sealed class GetGitLogCmdletTests
         {
             return Array.Empty<GitCommitInfo>();
         }
+
+        public GitCommitInfo Commit(GitCommitOptions options) =>
+            throw new NotImplementedException();
     }
 }

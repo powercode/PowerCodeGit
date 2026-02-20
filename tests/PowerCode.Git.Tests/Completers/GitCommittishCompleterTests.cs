@@ -191,12 +191,18 @@ public sealed class GitCommittishCompleterTests
     private sealed class StubGitHistoryService(IReadOnlyList<GitCommitInfo> commits) : IGitHistoryService
     {
         public IReadOnlyList<GitCommitInfo> GetLog(GitLogOptions options) => commits;
+
+        public GitCommitInfo Commit(GitCommitOptions options) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitHistoryService : IGitHistoryService
     {
         public IReadOnlyList<GitCommitInfo> GetLog(GitLogOptions options) =>
             throw new InvalidOperationException("Not a git repository");
+
+        public GitCommitInfo Commit(GitCommitOptions options) =>
+            throw new NotImplementedException();
     }
 
     private sealed class CapturingGitHistoryService : IGitHistoryService
@@ -208,5 +214,8 @@ public sealed class GitCommittishCompleterTests
             CapturedOptions = options;
             return [];
         }
+
+        public GitCommitInfo Commit(GitCommitOptions options) =>
+            throw new NotImplementedException();
     }
 }

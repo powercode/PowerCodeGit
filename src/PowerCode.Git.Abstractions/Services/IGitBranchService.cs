@@ -22,4 +22,23 @@ public interface IGitBranchService
     /// <param name="branchName">The name of the branch to switch to.</param>
     /// <returns>The branch information for the new HEAD.</returns>
     GitBranchInfo SwitchBranch(string repositoryPath, string branchName);
+
+    /// <summary>
+    /// Creates a new branch at the current HEAD and checks it out.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <param name="name">The name of the new branch.</param>
+    /// <returns>Information about the newly created branch.</returns>
+    GitBranchInfo CreateBranch(string repositoryPath, string name);
+
+    /// <summary>
+    /// Deletes a branch.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <param name="name">The name of the branch to delete.</param>
+    /// <param name="force">
+    /// When <see langword="true"/>, force-deletes the branch even if it is
+    /// not fully merged.
+    /// </param>
+    void DeleteBranch(string repositoryPath, string name, bool force = false);
 }

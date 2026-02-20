@@ -42,6 +42,62 @@ public sealed class GitBranchService : IGitBranchService
         return MapBranch(updatedBranch);
     }
 
+    /// <inheritdoc/>
+    public GitBranchInfo CreateBranch(string repositoryPath, string name)
+    {
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateRequiredString(name, nameof(name), "Branch name is required.");
+
+        using var repository = new Repository(repositoryPath);
+
+        if (repository.Branches[name] is not null)
+        {
+            throw new ArgumentException($"A branch named '{name}' already exists.", nameof(name));
+        }
+
+        var branch = repository.CreateBranch(name);
+        Commands.Checkout(repository, branch);
+
+        var updatedBranch = repository.Branches[name]!;
+        return MapBranch(updatedBranch);
+    }
+
+    /// <inheritdoc/>
+    public void DeleteBranch(string repositoryPath, string name, bool force = false)
+    {
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateRequiredString(name, nameof(name), "Branch name is required.");
+
+        using var repository = new Repository(repositoryPath);
+
+        var branch = repository.Branches[name]
+            ?? throw new ArgumentException($"The branch '{name}' does not exist.", nameof(name));
+
+        if (branch.IsCurrentRepositoryHead)
+        {
+            throw new InvalidOperationException($"Cannot delete the current branch '{name}'. Switch to a different branch first.");
+        }
+
+        if (!force && !IsBranchMerged(repository, branch))
+        {
+            throw new InvalidOperationException(
+                $"The branch '{name}' is not fully merged. Use force to delete it anyway.");
+        }
+
+        repository.Branches.Remove(branch);
+    }
+
+    private static bool IsBranchMerged(Repository repository, Branch branch)
+    {
+        if (branch.Tip is null || repository.Head.Tip is null)
+        {
+            return true;
+        }
+
+        var mergeBase = repository.ObjectDatabase.FindMergeBase(repository.Head.Tip, branch.Tip);
+        return mergeBase?.Sha == branch.Tip.Sha;
+    }
+
     private static GitBranchInfo MapBranch(Branch branch)
     {
         return new GitBranchInfo(

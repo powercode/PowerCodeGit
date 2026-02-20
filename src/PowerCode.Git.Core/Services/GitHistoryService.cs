@@ -8,7 +8,7 @@ using PowerCode.Git.Abstractions.Services;
 namespace PowerCode.Git.Core.Services;
 
 /// <summary>
-/// Reads git history information from repositories using LibGit2Sharp.
+/// Reads git history information and creates commits using LibGit2Sharp.
 /// </summary>
 public sealed class GitHistoryService : IGitHistoryService
 {
@@ -111,5 +111,49 @@ public sealed class GitHistoryService : IGitHistoryService
             commit.MessageShort,
             commit.Message,
             parentShas);
+    }
+
+    /// <inheritdoc/>
+    public GitCommitInfo Commit(GitCommitOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var config = repository.Config;
+        var name = config.Get<string>("user.name")?.Value
+            ?? throw new InvalidOperationException("Git user.name is not configured.");
+        var email = config.Get<string>("user.email")?.Value
+            ?? throw new InvalidOperationException("Git user.email is not configured.");
+        var signature = new Signature(name, email, DateTimeOffset.Now);
+
+        var message = options.Message;
+
+        if (options.Amend)
+        {
+            message ??= repository.Head.Tip?.Message
+                ?? throw new InvalidOperationException("No previous commit to amend.");
+
+            var amendedCommit = repository.Commit(
+                message,
+                signature,
+                signature,
+                new CommitOptions { AmendPreviousCommit = true });
+
+            return MapCommit(amendedCommit);
+        }
+
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            throw new ArgumentException("A commit message is required.", nameof(options));
+        }
+
+        var commitOptions = new CommitOptions
+        {
+            AllowEmptyCommit = options.AllowEmpty,
+        };
+
+        var newCommit = repository.Commit(message, signature, signature, commitOptions);
+        return MapCommit(newCommit);
     }
 }

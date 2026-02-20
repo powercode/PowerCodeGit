@@ -66,5 +66,13 @@ public sealed class GetGitDiffCmdletTests
         {
             return Array.Empty<GitDiffEntry>();
         }
+
+        public void Stage(GitStageOptions options) => throw new NotImplementedException();
+
+        public void Unstage(string repositoryPath, IReadOnlyList<string>? paths = null) =>
+            throw new NotImplementedException();
+
+        public void Reset(string repositoryPath, string? target, GitResetMode mode) =>
+            throw new NotImplementedException();
     }
 }

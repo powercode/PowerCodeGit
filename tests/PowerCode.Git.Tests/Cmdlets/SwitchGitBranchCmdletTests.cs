@@ -56,5 +56,11 @@ public sealed class SwitchGitBranchCmdletTests
         {
             return new GitBranchInfo(branchName, true, false, "abc1234", null, null, null);
         }
+
+        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+            throw new NotImplementedException();
+
+        public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
+            throw new NotImplementedException();
     }
 }

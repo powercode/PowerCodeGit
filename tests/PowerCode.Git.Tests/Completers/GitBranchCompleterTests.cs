@@ -172,6 +172,12 @@ public sealed class GitBranchCompleterTests
 
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
             throw new NotImplementedException();
+
+        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+            throw new NotImplementedException();
+
+        public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitBranchService : IGitBranchService
@@ -180,6 +186,12 @@ public sealed class GitBranchCompleterTests
             throw new InvalidOperationException("Not a git repository");
 
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
+            throw new NotImplementedException();
+
+        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+            throw new NotImplementedException();
+
+        public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
             throw new NotImplementedException();
     }
 }

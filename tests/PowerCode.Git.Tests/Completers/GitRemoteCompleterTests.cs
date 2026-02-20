@@ -120,11 +120,29 @@ public sealed class GitRemoteCompleterTests
     private sealed class StubGitRemoteService(IReadOnlyList<GitRemoteInfo> remotes) : IGitRemoteService
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) => remotes;
+
+        public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
+        public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
+        public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitRemoteService : IGitRemoteService
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>
             throw new InvalidOperationException("Not a git repository");
+
+        public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
+        public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
+        public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
     }
 }
