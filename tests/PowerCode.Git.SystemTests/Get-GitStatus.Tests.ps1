@@ -118,7 +118,7 @@ Describe 'Get-GitStatus -IncludeIgnored' {
     It 'Ignored entry has the Ignored status' {
         $Status = Get-GitStatus -RepoPath $script:RepoPath -IncludeIgnored
         $LogEntry = $Status.Entries | Where-Object { $_.FilePath -like '*.log' } | Select-Object -First 1
-        $LogEntry.FileStatus | Should -Be 'Ignored'
+        $LogEntry.Status | Should -Be 'Ignored'
     }
 }
 
