@@ -56,24 +56,44 @@ Write-Host "Updating manifest at: $ManifestPath"
 Write-Host "  ModuleVersion: $ModuleVersion"
 Write-Host "  Prerelease:    $Prerelease"
 
-$UpdateParams = @{
-    Path          = $ManifestPath
-    ModuleVersion = $ModuleVersion
-}
+# Directly patch the psd1 content instead of using Update-ModuleManifest,
+# which enforces that the folder name matches the version and fails when
+# the directory has not been renamed yet.
+$Content = Get-Content -Path $ManifestPath -Raw
+
+# Replace the ModuleVersion value
+$Content = $Content -replace "(?<=ModuleVersion\s*=\s*')[^']*", $ModuleVersion
 
 if ($Prerelease) {
-    $UpdateParams['Prerelease'] = $Prerelease
+    # Inject a PrivateData / PSData / Prerelease block if one does not exist
+    if ($Content -match 'Prerelease\s*=') {
+        $Content = $Content -replace "(?<=Prerelease\s*=\s*')[^']*", $Prerelease
+    }
+    else {
+        # Insert a PrivateData block before the closing brace of the root hashtable
+        $PsdataBlock = @"
+
+    PrivateData = @{
+        PSData = @{
+            Prerelease = '$Prerelease'
+        }
+    }
+"@
+        $LastBrace = $Content.LastIndexOf('}')
+        $Content = $Content.Substring(0, $LastBrace) + $PsdataBlock + [System.Environment]::NewLine + '}'
+    }
 }
 
-Update-ModuleManifest @UpdateParams
+Set-Content -Path $ManifestPath -Value $Content -NoNewline
 Write-Host 'Manifest updated successfully.'
-
-# Validate the manifest
-$null = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
-Write-Host 'Manifest validation passed.'
 
 # Rename directory to match the final module version
 if ($VersionedDir.Name -ne $ModuleVersion) {
     $null = Rename-Item -Path $VersionedDir.FullName -NewName $ModuleVersion
     Write-Host "Renamed module directory from '$($VersionedDir.Name)' to '$ModuleVersion'."
+    $ManifestPath = Join-Path -Path $ModulePath -ChildPath "$ModuleVersion/PowerGit.psd1"
 }
+
+# Validate the manifest after renaming so folder name matches version
+$null = Test-ModuleManifest -Path $ManifestPath -ErrorAction Stop
+Write-Host 'Manifest validation passed.'

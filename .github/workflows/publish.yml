@@ -87,14 +87,11 @@ jobs:
 
       - name: Patch Module Manifest
         shell: pwsh
-        run: |
-          $Params = @{
-              ModulePath    = './module'
-              ModuleVersion = '${{ steps.version.outputs.module-version }}'
-          }
-          $Prerelease = '${{ steps.version.outputs.prerelease }}'
-          if ($Prerelease) { $Params['Prerelease'] = $Prerelease }
-          ./repo/scripts/Update-PowerGitManifest.ps1 @Params
+        run: >-
+          ./repo/scripts/Update-PowerGitManifest.ps1
+          -ModulePath './module'
+          -ModuleVersion '${{ steps.version.outputs.module-version }}'
+          -Prerelease '${{ steps.version.outputs.prerelease }}'
 
       - name: Publish to PSGallery
         shell: pwsh
