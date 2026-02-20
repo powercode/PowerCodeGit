@@ -9,77 +9,7 @@
 #>
 
 BeforeAll {
-    if ($env:POWERCODE_GIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODE_GIT_MODULE_PATH)) {
-        $ModulePath = $env:POWERCODE_GIT_MODULE_PATH
-    }
-    else {
-        $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
-        $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $VersionedDir) {
-            throw "No versioned module folder found under '$ModuleLayoutDir'. Build the solution before running system tests."
-        }
-        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
-    }
-
-    if (-not (Test-Path -Path $ModulePath)) {
-        throw "Module not found at '$ModulePath'. Build the solution before running system tests."
-    }
-
-    Import-Module -Name $ModulePath -Force -ErrorAction Stop
-
-    function New-TestGitRepository {
-        [CmdletBinding()]
-        param(
-            [Parameter()]
-            [string[]]$CommitMessages = @('Initial commit'),
-
-            [Parameter()]
-            [string]$AuthorName = 'Test Author',
-
-            [Parameter()]
-            [string]$AuthorEmail = 'test@example.com'
-        )
-
-        $TempDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
-        New-Item -Path $TempDir -ItemType Directory -Force | Out-Null
-
-        Push-Location -Path $TempDir
-        try {
-            git init --initial-branch main 2>&1 | Out-Null
-            git config user.name $AuthorName
-            git config user.email $AuthorEmail
-
-            foreach ($Message in $CommitMessages) {
-                $FileName = "file_$([System.Guid]::NewGuid().ToString('N')).txt"
-                Set-Content -Path (Join-Path -Path $TempDir -ChildPath $FileName) -Value $Message
-                git add . 2>&1 | Out-Null
-                git commit -m $Message 2>&1 | Out-Null
-            }
-        }
-        finally {
-            Pop-Location
-        }
-
-        return $TempDir
-    }
-
-    function Remove-TestGitRepository {
-        [CmdletBinding()]
-        param(
-            [Parameter(Mandatory)]
-            [string]$Path
-        )
-
-        if (Test-Path -Path $Path) {
-            Get-ChildItem -Path $Path -Recurse -Force | ForEach-Object {
-                if ($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) {
-                    $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)
-                }
-            }
-            Remove-Item -Path $Path -Recurse -Force
-        }
-    }
+    . "$PSScriptRoot/SystemTest-Helpers.ps1"
 }
 
 AfterAll {

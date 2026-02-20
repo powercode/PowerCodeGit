@@ -9,24 +9,7 @@
 #>
 
 BeforeAll {
-    if ($env:POWERCODE_GIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODE_GIT_MODULE_PATH)) {
-        $ModulePath = $env:POWERCODE_GIT_MODULE_PATH
-    }
-    else {
-        $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
-        $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
-        $VersionedDir = Get-ChildItem -Path $ModuleLayoutDir -Directory -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $VersionedDir) {
-            throw "No versioned module folder found under '$ModuleLayoutDir'. Build the solution before running system tests."
-        }
-        $ModulePath = Join-Path -Path $VersionedDir.FullName -ChildPath 'PowerCode.Git.psd1'
-    }
-
-    if (-not (Test-Path -Path $ModulePath)) {
-        throw "Module not found at '$ModulePath'. Build the solution before running system tests."
-    }
-
-    Import-Module -Name $ModulePath -Force -ErrorAction Stop
+    . "$PSScriptRoot/SystemTest-Helpers.ps1"
 
     function New-TestRepoWithRemoteAndPushedCommit {
         <#
@@ -88,23 +71,6 @@ BeforeAll {
             PullerPath = $PullerDir
             PusherPath = $PusherDir
             BarePath   = $BareDir
-        }
-    }
-
-    function Remove-TestGitRepository {
-        [CmdletBinding()]
-        param(
-            [Parameter(Mandatory)]
-            [string]$Path
-        )
-
-        if (Test-Path -Path $Path) {
-            Get-ChildItem -Path $Path -Recurse -Force | ForEach-Object {
-                if ($_.Attributes -band [System.IO.FileAttributes]::ReadOnly) {
-                    $_.Attributes = $_.Attributes -band (-bnot [System.IO.FileAttributes]::ReadOnly)
-                }
-            }
-            Remove-Item -Path $Path -Recurse -Force
         }
     }
 }
