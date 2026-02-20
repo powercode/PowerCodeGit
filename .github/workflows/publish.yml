@@ -95,4 +95,4 @@ jobs:
 
       - name: Publish to PSGallery
         shell: pwsh
-        run: ./repo/scripts/Publish-PowerGitModule.ps1 -ModulePath './module' -NuGetApiKey '${{ secrets.PSGALLERY_API_KEY }}'
+        run: ./repo/scripts/Publish-PowerGitModule.ps1 -ModulePath './module' -ApiKey '${{ secrets.PSGALLERY_API_KEY }}'

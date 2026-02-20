@@ -3,17 +3,17 @@
     Publishes the PowerGit module to the PowerShell Gallery.
 .DESCRIPTION
     Locates the versioned module directory under the given path and publishes
-    the module manifest to PSGallery using the provided API key.
+    the module to PSGallery using Publish-PSResource and the provided API key.
 
     This script is called by the CI publish workflow but can also be run
     interactively to publish a locally built module artifact.
 .PARAMETER ModulePath
     Path to the module directory that contains the versioned sub-folder
     (e.g. './module' which contains './module/1.2.3/').
-.PARAMETER NuGetApiKey
-    The PSGallery NuGet API key used for authentication.
+.PARAMETER ApiKey
+    The PSGallery API key used for authentication.
 .EXAMPLE
-    .\scripts\Publish-PowerGitModule.ps1 -ModulePath ./module -NuGetApiKey $ApiKey
+    .\scripts\Publish-PowerGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
 #>
 [CmdletBinding()]
 param(
@@ -23,11 +23,13 @@ param(
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string]$NuGetApiKey
+    [string]$ApiKey
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+Install-PSResource  Microsoft.PowerShell.PSResourceGet
 
 $VersionedDir = Get-ChildItem -Path $ModulePath -Directory | Select-Object -First 1
 if (-not $VersionedDir) {
@@ -43,5 +45,5 @@ if (-not (Test-Path -Path $ManifestPath)) {
 
 Write-Host "Publishing module from: $($VersionedDir.FullName)"
 
-Publish-Module -Path $ManifestPath -NuGetApiKey $NuGetApiKey -Verbose
+Publish-PSResource -Path $VersionedDir.FullName -ApiKey $ApiKey -Repository PSGallery -Verbose
 Write-Host 'Module published successfully.'
