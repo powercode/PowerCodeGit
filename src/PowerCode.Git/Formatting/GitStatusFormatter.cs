@@ -73,6 +73,27 @@ public static class GitStatusFormatter
     }
 
     /// <summary>
+    /// Formats only the two-character status indicator portion of a status entry,
+    /// suitable for use as a table column value alongside a separate path column.
+    /// Staged entries show the indicator in green in the left position (<c>X </c>);
+    /// unstaged entries show it in red in the right position (<c> X</c>).
+    /// </summary>
+    /// <param name="entry">The status entry to format.</param>
+    /// <returns>An ANSI-colored two-character status indicator string.</returns>
+    public static string FormatEntryStatus(GitStatusEntry entry)
+    {
+        var indicator = GetStatusIndicator(entry.Status);
+
+        return entry.StagingState switch
+        {
+            GitStagingState.Staged =>
+                $"{AnsiCodes.Green}{indicator} {AnsiCodes.Reset}",
+            _ =>
+                $"{AnsiCodes.Red} {indicator}{AnsiCodes.Reset}",
+        };
+    }
+
+    /// <summary>
     /// Formats all status entries grouped by staging state, with colored section headers,
     /// suitable for the detailed (list) view of <see cref="GitStatusResult"/>.
     /// </summary>

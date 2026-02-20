@@ -207,10 +207,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntry($_)</ScriptBlock>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntryStatus($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$null</ScriptBlock>
+                <PropertyName>FilePath</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

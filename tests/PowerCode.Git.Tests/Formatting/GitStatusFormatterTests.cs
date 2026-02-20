@@ -126,4 +126,37 @@ public sealed class GitStatusFormatterTests
         Assert.DoesNotContain(result, "Changes not staged", "Should not have unstaged section");
         Assert.DoesNotContain(result, "Untracked", "Should not have untracked section");
     }
+
+    [TestMethod]
+    public void FormatEntryStatus_StagedAdded_ReturnsGreenIndicatorInLeftPosition()
+    {
+        var entry = new GitStatusEntry("file.cs", GitFileStatus.Added, GitStagingState.Staged);
+
+        var result = GitStatusFormatter.FormatEntryStatus(entry);
+
+        // Green, indicator 'A' in left (XY) position, no file path
+        Assert.AreEqual($"{Esc}[32mA {Esc}[0m", result);
+    }
+
+    [TestMethod]
+    public void FormatEntryStatus_UnstagedModified_ReturnsRedIndicatorInRightPosition()
+    {
+        var entry = new GitStatusEntry("src/app.cs", GitFileStatus.Modified, GitStagingState.Unstaged);
+
+        var result = GitStatusFormatter.FormatEntryStatus(entry);
+
+        // Red, indicator 'M' in right (XY) position, no file path
+        Assert.AreEqual($"{Esc}[31m M{Esc}[0m", result);
+    }
+
+    [TestMethod]
+    public void FormatEntryStatus_DoesNotContainFilePath()
+    {
+        var entry = new GitStatusEntry("should-not-appear.cs", GitFileStatus.Deleted, GitStagingState.Staged);
+
+        var result = GitStatusFormatter.FormatEntryStatus(entry);
+
+        Assert.IsFalse(result.Contains("should-not-appear.cs"),
+            "FormatEntryStatus should return only the indicator, not the file path.");
+    }
 }
