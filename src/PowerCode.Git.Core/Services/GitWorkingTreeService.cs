@@ -15,15 +15,7 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
     /// <inheritdoc/>
     public GitStatusResult GetStatus(string repositoryPath)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(repositoryPath));
-        }
-
-        if (!Repository.IsValid(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(repositoryPath));
-        }
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
 
         using var repository = new Repository(repositoryPath);
         var status = repository.RetrieveStatus(new StatusOptions());
@@ -53,20 +45,7 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
     /// <inheritdoc/>
     public IReadOnlyList<GitDiffEntry> GetDiff(GitDiffOptions options)
     {
-        if (options is null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
-        if (string.IsNullOrWhiteSpace(options.RepositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(options));
-        }
-
-        if (!Repository.IsValid(options.RepositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(options));
-        }
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
         using var repository = new Repository(options.RepositoryPath);
 

@@ -15,15 +15,7 @@ public sealed class GitBranchService : IGitBranchService
     /// <inheritdoc/>
     public IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(repositoryPath));
-        }
-
-        if (!Repository.IsValid(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(repositoryPath));
-        }
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
 
         using var repository = new Repository(repositoryPath);
 
@@ -35,20 +27,8 @@ public sealed class GitBranchService : IGitBranchService
     /// <inheritdoc/>
     public GitBranchInfo SwitchBranch(string repositoryPath, string branchName)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(repositoryPath));
-        }
-
-        if (string.IsNullOrWhiteSpace(branchName))
-        {
-            throw new ArgumentException("BranchName is required.", nameof(branchName));
-        }
-
-        if (!Repository.IsValid(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(repositoryPath));
-        }
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateRequiredString(branchName, nameof(branchName), "BranchName is required.");
 
         using var repository = new Repository(repositoryPath);
 

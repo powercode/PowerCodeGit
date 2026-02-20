@@ -14,15 +14,7 @@ public sealed class GitPathService : IGitPathService
     /// <inheritdoc/>
     public IReadOnlyList<string> GetTrackedPaths(string repositoryPath)
     {
-        if (string.IsNullOrWhiteSpace(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(repositoryPath));
-        }
-
-        if (!Repository.IsValid(repositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(repositoryPath));
-        }
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
 
         using var repository = new Repository(repositoryPath);
 

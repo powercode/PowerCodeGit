@@ -15,20 +15,7 @@ public sealed class GitHistoryService : IGitHistoryService
     /// <inheritdoc/>
     public IReadOnlyList<GitCommitInfo> GetLog(GitLogOptions options)
     {
-        if (options is null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
-
-        if (string.IsNullOrWhiteSpace(options.RepositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath is required.", nameof(options));
-        }
-
-        if (!Repository.IsValid(options.RepositoryPath))
-        {
-            throw new ArgumentException("RepositoryPath does not reference a valid git repository.", nameof(options));
-        }
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
         using var repository = new Repository(options.RepositoryPath);
 
