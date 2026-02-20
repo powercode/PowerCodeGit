@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PowerCodeGit.Core</AssemblyName>
+    <RootNamespace>PowerCodeGit.Core</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibGit2Sharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PowerCodeGit.Abstractions\PowerCodeGit.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

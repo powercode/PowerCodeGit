@@ -15,7 +15,7 @@
     <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'PowerGit.Abstractions' or '$(MSBuildProjectName)' == 'PowerGit.Core' or '$(MSBuildProjectName)' == 'PowerGit'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'PowerCodeGit.Abstractions' or '$(MSBuildProjectName)' == 'PowerCodeGit.Core' or '$(MSBuildProjectName)' == 'PowerCodeGit'">
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
   </PropertyGroup>

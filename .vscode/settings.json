@@ -5,7 +5,7 @@
         "dotnet publish": true,
         "dotnet restore": true,
         "dotnet test": true,
-        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"& \\{ \\.\\\\scripts\\\\clean\\.ps1; dotnet build PowerGit\\.slnx -v minimal \\}\"$/": {
+        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"& \\{ \\.\\\\scripts\\\\clean\\.ps1; dotnet build PowerCodeGit\\.slnx -v minimal \\}\"$/": {
             "approve": true,
             "matchCommandLine": true
         },

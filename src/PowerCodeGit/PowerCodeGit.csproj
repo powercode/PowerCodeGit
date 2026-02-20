@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>PowerCodeGit</AssemblyName>
+    <RootNamespace>PowerCodeGit</RootNamespace>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <ModuleManifestPath>$(MSBuildProjectDirectory)\PowerCodeGit.psd1</ModuleManifestPath>
+    <ModuleVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(ModuleManifestPath)')), "ModuleVersion\s*=\s*'([^']+)'").Groups[1].Value)</ModuleVersion>
+    <ModuleLayoutRoot>$(ArtifactsPath)\module\PowerCodeGit\$(ModuleVersion)\</ModuleLayoutRoot>
+    <ModuleDependenciesRoot>$(ModuleLayoutRoot)dependencies\</ModuleDependenciesRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="PowerCodeGit.psd1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="PowerCodeGit.Format.ps1xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerShell.SDK" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PowerCodeGit.Abstractions\PowerCodeGit.Abstractions.csproj" />
+    <!-- Build-only: Core is loaded at runtime from the dependencies folder via the custom ALC. -->
+    <ProjectReference Include="..\PowerCodeGit.Core\PowerCodeGit.Core.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!--
+    Assembles the versioned PowerShell module layout after build:
+      artifacts/module/PowerCodeGit/<version>/
+        PowerCodeGit.dll
+        PowerCodeGit.Abstractions.dll
+        PowerCodeGit.psd1
+        dependencies/
+          PowerCodeGit.Core.dll   (+ its .deps.json for AssemblyDependencyResolver)
+          LibGit2Sharp.dll
+          runtimes/...         (native libraries)
+  -->
+  <Target Name="BuildVersionedModuleLayout" AfterTargets="Build">
+    <PropertyGroup>
+      <CoreOutputDir>$(ArtifactsPath)\bin\PowerCodeGit.Core\$(Configuration.ToLowerInvariant())\</CoreOutputDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(ModuleLayoutRoot)" />
+    <MakeDir Directories="$(ModuleLayoutRoot)" />
+    <MakeDir Directories="$(ModuleDependenciesRoot)" />
+
+    <!-- Module root: cmdlet assembly, abstractions, and manifest -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ModuleManifestPath)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <AbstractionsFiles Include="$(TargetDir)PowerCodeGit.Abstractions.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AbstractionsFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" />
+
+    <!-- Module root: PowerShell files (format, types, help, etc.) -->
+    <ItemGroup>
+      <PowerShellFiles Include="$(TargetDir)*.ps1xml" />
+      <PowerShellFiles Include="$(TargetDir)about_*.help.txt" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PowerShellFiles)" DestinationFolder="$(ModuleLayoutRoot)" SkipUnchangedFiles="true" Condition="'@(PowerShellFiles)' != ''" />
+
+    <!-- Dependencies folder: Core assembly and its deps.json -->
+    <ItemGroup>
+      <CoreFiles Include="$(CoreOutputDir)PowerCodeGit.Core.dll" />
+      <CoreFiles Include="$(CoreOutputDir)PowerCodeGit.Core.deps.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(ModuleDependenciesRoot)" SkipUnchangedFiles="true" />
+
+    <!-- Dependencies folder: all transitive managed dependencies from Core output -->
+    <ItemGroup>
+      <CoreDependencyFiles Include="$(CoreOutputDir)**\*"
+                           Exclude="$(CoreOutputDir)PowerCodeGit.Core.dll;$(CoreOutputDir)PowerCodeGit.Core.deps.json;$(CoreOutputDir)PowerCodeGit.Abstractions.dll;$(CoreOutputDir)ref\**;$(CoreOutputDir)**\*.resources.dll;$(CoreOutputDir)**\*.pdb;$(CoreOutputDir)**\*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CoreDependencyFiles)"
+          DestinationFiles="@(CoreDependencyFiles->'$(ModuleDependenciesRoot)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+
+    <Message Importance="High" Text="PowerCodeGit module layout created at $(ModuleLayoutRoot)" />
+  </Target>
+
+</Project>

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PowerCodeGit.Abstractions/PowerCodeGit.Abstractions.csproj" />
+    <Project Path="src/PowerCodeGit.Core/PowerCodeGit.Core.csproj" />
+    <Project Path="src/PowerCodeGit/PowerCodeGit.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PowerCodeGit.Core.Tests/PowerCodeGit.Core.Tests.csproj" />
+    <Project Path="tests/PowerCodeGit.Tests/PowerCodeGit.Tests.csproj" />
+  </Folder>
+</Solution>
