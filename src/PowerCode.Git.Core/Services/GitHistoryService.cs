@@ -76,7 +76,57 @@ public sealed class GitHistoryService : IGitHistoryService
             commits = commits.Take(options.MaxCount.Value);
         }
 
-        return commits.Select(MapCommit).ToList();
+        var decorationMap = BuildDecorationMap(repository);
+
+        return commits.Select(c => MapCommit(c, decorationMap)).ToList();
+    }
+
+    /// <summary>
+    /// Builds a lookup from commit SHA to the list of ref-name decorations
+    /// (HEAD, local branches, remote branches, tags) pointing at that commit.
+    /// </summary>
+    private static Dictionary<string, List<GitDecoration>> BuildDecorationMap(Repository repository)
+    {
+        var map = new Dictionary<string, List<GitDecoration>>(StringComparer.OrdinalIgnoreCase);
+
+        // HEAD pointer
+        if (repository.Head?.Tip is not null)
+        {
+            var headSha = repository.Head.Tip.Sha;
+            GetOrCreate(map, headSha).Add(new GitDecoration("HEAD", GitDecorationType.Head));
+        }
+
+        // Branches (local and remote)
+        foreach (var branch in repository.Branches)
+        {
+            if (branch.Tip is null)
+            {
+                continue;
+            }
+
+            var type = branch.IsRemote ? GitDecorationType.RemoteBranch : GitDecorationType.LocalBranch;
+            GetOrCreate(map, branch.Tip.Sha).Add(new GitDecoration(branch.FriendlyName, type));
+        }
+
+        // Tags
+        foreach (var tag in repository.Tags)
+        {
+            var targetSha = (tag.PeeledTarget ?? tag.Target).Sha;
+            GetOrCreate(map, targetSha).Add(new GitDecoration($"tag: {tag.FriendlyName}", GitDecorationType.Tag));
+        }
+
+        return map;
+    }
+
+    private static List<GitDecoration> GetOrCreate(Dictionary<string, List<GitDecoration>> map, string sha)
+    {
+        if (!map.TryGetValue(sha, out var list))
+        {
+            list = [];
+            map[sha] = list;
+        }
+
+        return list;
     }
 
     private static bool ContainsIgnoreCase(string source, string value)
@@ -96,9 +146,11 @@ public sealed class GitHistoryService : IGitHistoryService
                 string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
     }
 
-    private static GitCommitInfo MapCommit(Commit commit)
+    private static GitCommitInfo MapCommit(Commit commit, Dictionary<string, List<GitDecoration>>? decorationMap = null)
     {
         var parentShas = commit.Parents.Select(parent => parent.Sha).ToList();
+        List<GitDecoration>? decorations = null;
+        decorationMap?.TryGetValue(commit.Sha, out decorations);
 
         return new GitCommitInfo(
             commit.Sha,
@@ -110,7 +162,8 @@ public sealed class GitHistoryService : IGitHistoryService
             commit.Committer.When,
             commit.MessageShort,
             commit.Message,
-            parentShas);
+            parentShas,
+            decorations);
     }
 
     /// <inheritdoc/>

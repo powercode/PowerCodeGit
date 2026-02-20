@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PowerCode.Git.Abstractions.Models;
 
@@ -21,6 +22,7 @@ public sealed class GitCommitInfo
     /// <param name="messageShort">The first line of the commit message.</param>
     /// <param name="message">The full commit message.</param>
     /// <param name="parentShas">The parent commit SHAs.</param>
+    /// <param name="decorations">Optional ref-name decorations (branches, tags, HEAD) pointing at this commit.</param>
     public GitCommitInfo(
         string sha,
         string authorName,
@@ -31,7 +33,8 @@ public sealed class GitCommitInfo
         DateTimeOffset commitDate,
         string messageShort,
         string message,
-        IReadOnlyList<string> parentShas)
+        IReadOnlyList<string> parentShas,
+        IReadOnlyList<GitDecoration>? decorations = null)
     {
         Sha = sha;
         ShortSha = sha.Length > 7 ? sha[..7] : sha;
@@ -44,6 +47,7 @@ public sealed class GitCommitInfo
         MessageShort = messageShort;
         Message = message;
         ParentShas = parentShas;
+        Decorations = decorations ?? [];
     }
 
     /// <summary>
@@ -101,6 +105,25 @@ public sealed class GitCommitInfo
     /// </summary>
     public IReadOnlyList<string> ParentShas { get; }
 
+    /// <summary>
+    /// Gets the ref-name decorations (branches, tags, HEAD) that point at this commit.
+    /// </summary>
+    public IReadOnlyList<GitDecoration> Decorations { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether this commit has any decorations.
+    /// </summary>
+    public bool HasDecorations => Decorations.Count > 0;
+
     /// <inheritdoc/>
-    public override string ToString() => $"{ShortSha} {MessageShort}";
+    public override string ToString()
+    {
+        if (!HasDecorations)
+        {
+            return $"{ShortSha} {MessageShort}";
+        }
+
+        var refs = string.Join(", ", Decorations.Select(d => d.Name));
+        return $"{ShortSha} ({refs}) {MessageShort}";
+    }
 }

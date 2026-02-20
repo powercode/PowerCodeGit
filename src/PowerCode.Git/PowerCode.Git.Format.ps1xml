@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration>
   <ViewDefinitions>
-    <!-- Default table view for GitCommitInfo -->
+    <!-- Default table view for GitCommitInfo: colored like git log -oneline -decorate -->
     <View>
       <Name>GitCommitInfo-Default</Name>
       <ViewSelectedBy>
@@ -12,6 +12,10 @@
           <TableColumnHeader>
             <Label>Commit</Label>
             <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Refs</Label>
+            <Width>30</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Author</Label>
@@ -29,7 +33,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>ShortSha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.ShortSha)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatDecorations($_.Decorations)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>AuthorName</PropertyName>
@@ -58,7 +65,11 @@
             <ListItems>
               <ListItem>
                 <Label>Commit</Label>
-                <PropertyName>Sha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.Sha)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Refs</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatDecorations($_.Decorations)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Author</Label>
@@ -90,7 +101,7 @@
       </ListControl>
     </View>
 
-    <!-- Default table view for GitStatusResult -->
+    <!-- Default table view for GitStatusResult — colored branch and counts -->
     <View>
       <Name>GitStatusResult-Default</Name>
       <ViewSelectedBy>
@@ -119,16 +130,16 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>CurrentBranch</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatBranch($_.CurrentBranch)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>StagedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatStagedCount($_.StagedCount)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>ModifiedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatModifiedCount($_.ModifiedCount)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>UntrackedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatUntrackedCount($_.UntrackedCount)</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -136,7 +147,7 @@
       </TableControl>
     </View>
 
-    <!-- Detailed list view for GitStatusResult -->
+    <!-- Detailed list view for GitStatusResult — grouped entries with section headers -->
     <View>
       <Name>GitStatusResult-Detailed</Name>
       <ViewSelectedBy>
@@ -152,23 +163,23 @@
               </ListItem>
               <ListItem>
                 <Label>Branch</Label>
-                <PropertyName>CurrentBranch</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatBranch($_.CurrentBranch)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Staged</Label>
-                <PropertyName>StagedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatStagedCount($_.StagedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Modified</Label>
-                <PropertyName>ModifiedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatModifiedCount($_.ModifiedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Untracked</Label>
-                <PropertyName>UntrackedCount</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatUntrackedCount($_.UntrackedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Entries</Label>
-                <ScriptBlock>($_.Entries | ForEach-Object { "$($_.StagingState): $($_.Status) $($_.FilePath)" }) -join '; '</ScriptBlock>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntries($_.Entries)</ScriptBlock>
               </ListItem>
             </ListItems>
           </ListEntry>
@@ -176,7 +187,7 @@
       </ListControl>
     </View>
 
-    <!-- Default table view for GitStatusEntry -->
+    <!-- Default table view for GitStatusEntry — colored status indicators -->
     <View>
       <Name>GitStatusEntry-Default</Name>
       <ViewSelectedBy>
@@ -185,12 +196,8 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>State</Label>
-            <Width>10</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
             <Label>Status</Label>
-            <Width>12</Width>
+            <Width>4</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Path</Label>
@@ -200,13 +207,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>StagingState</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntry($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Status</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>FilePath</PropertyName>
+                <ScriptBlock>$null</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -214,7 +218,7 @@
       </TableControl>
     </View>
 
-    <!-- Default table view for GitDiffEntry -->
+    <!-- Default table view for GitDiffEntry — colored status -->
     <View>
       <Name>GitDiffEntry-Default</Name>
       <ViewSelectedBy>
@@ -243,16 +247,24 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>Status</PropertyName>
+                <ScriptBlock>
+                  switch ($_.Status.ToString()) {
+                    'Added'    { "`e[32m$($_.Status)`e[0m" }
+                    'Deleted'  { "`e[31m$($_.Status)`e[0m" }
+                    'Modified' { "`e[33m$($_.Status)`e[0m" }
+                    'Renamed'  { "`e[36m$($_.Status)`e[0m" }
+                    default    { $_.Status.ToString() }
+                  }
+                </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>NewPath</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>LinesAdded</PropertyName>
+                <ScriptBlock>if ($_.LinesAdded -gt 0) { "`e[32m+$($_.LinesAdded)`e[0m" } else { $_.LinesAdded }</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>LinesDeleted</PropertyName>
+                <ScriptBlock>if ($_.LinesDeleted -gt 0) { "`e[31m-$($_.LinesDeleted)`e[0m" } else { $_.LinesDeleted }</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -300,7 +312,7 @@
       </ListControl>
     </View>
 
-    <!-- Default table view for GitBranchInfo -->
+    <!-- Default table view for GitBranchInfo — colored branch names -->
     <View>
       <Name>GitBranchInfo-Default</Name>
       <ViewSelectedBy>
@@ -317,10 +329,6 @@
             <Width>9</Width>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Remote</Label>
-            <Width>8</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
             <Label>Tracking</Label>
           </TableColumnHeader>
         </TableHeaders>
@@ -328,16 +336,13 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <ScriptBlock>if ($_.IsHead) { '* ' + $_.Name } else { '  ' + $_.Name }</ScriptBlock>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>TipShortSha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>IsRemote</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>TrackedBranchName</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -357,7 +362,7 @@
             <ListItems>
               <ListItem>
                 <Label>Name</Label>
-                <PropertyName>Name</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>IsHead</Label>
@@ -369,19 +374,11 @@
               </ListItem>
               <ListItem>
                 <Label>Commit</Label>
-                <PropertyName>TipSha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Tracking</Label>
-                <PropertyName>TrackedBranchName</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>AheadBy</Label>
-                <PropertyName>AheadBy</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>BehindBy</Label>
-                <PropertyName>BehindBy</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
               </ListItem>
             </ListItems>
           </ListEntry>
@@ -389,7 +386,7 @@
       </ListControl>
     </View>
 
-    <!-- Default table view for GitTagInfo -->
+    <!-- Default table view for GitTagInfo — colored tag names -->
     <View>
       <Name>GitTagInfo-Default</Name>
       <ViewSelectedBy>
@@ -418,10 +415,10 @@
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>Name</PropertyName>
+                <ScriptBlock>"`e[1;33m$($_.Name)`e[0m"</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>ShortSha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.ShortSha)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>IsAnnotated</PropertyName>
@@ -447,11 +444,11 @@
             <ListItems>
               <ListItem>
                 <Label>Name</Label>
-                <PropertyName>Name</PropertyName>
+                <ScriptBlock>"`e[1;33m$($_.Name)`e[0m"</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Commit</Label>
-                <PropertyName>Sha</PropertyName>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.Sha)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>IsAnnotated</Label>
