@@ -72,8 +72,9 @@ Write-Host "Module:    $ModulePath" -ForegroundColor DarkGray
 # Pass the module path via environment variable so the test file can locate it.
 $PesterScript = @"
 `$ErrorActionPreference = 'Stop'
+`$ProgressPreference = 'SilentlyContinue'
 
-`$env:PowerCode.Git_MODULE_PATH = '$($ModulePath -replace "'", "''")'
+    `$env:POWERCODE_GIT_MODULE_PATH = '$($ModulePath -replace "'", "''")'
 
 # Ensure Pester v5+ is available
 `$PesterModule = Get-Module -Name Pester -ListAvailable | Where-Object { `$_.Version.Major -ge 5 } | Select-Object -First 1

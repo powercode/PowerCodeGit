@@ -4,8 +4,8 @@
 .SYNOPSIS
     Pester tests that exercise the publish-flow scripts end to end.
 .DESCRIPTION
-    Validates Get-ModuleVersionFromTag, Update-PowerGitManifest, and
-    Publish-PowerGitModule (dry-run) against a temporary module layout
+    Validates Get-ModuleVersionFromTag, Update-PowerCodeGitManifest, and
+    Publish-PowerCodeGitModule (dry-run) against a temporary module layout
     mirroring the CI publish pipeline.
 #>
 
@@ -54,9 +54,9 @@ Describe 'Get-ModuleVersionFromTag' {
     }
 }
 
-Describe 'Update-PowerGitManifest' {
+Describe 'Update-PowerCodeGitManifest' {
     BeforeAll {
-        $Script = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerGitManifest.ps1'
+        $Script = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerCodeGitManifest.ps1'
 
         # Locate the real manifest to use as a template
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
@@ -129,7 +129,7 @@ Describe 'Update-PowerGitManifest' {
 Describe 'End-to-end publish flow' {
     BeforeAll {
         $GetVersionScript = Join-Path -Path $ScriptsDir -ChildPath 'Get-ModuleVersionFromTag.ps1'
-        $UpdateManifestScript = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerGitManifest.ps1'
+        $UpdateManifestScript = Join-Path -Path $ScriptsDir -ChildPath 'Update-PowerCodeGitManifest.ps1'
 
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
         $SourceManifest = Join-Path -Path $RepoRoot -ChildPath 'src/PowerCode.Git/PowerCode.Git.psd1'

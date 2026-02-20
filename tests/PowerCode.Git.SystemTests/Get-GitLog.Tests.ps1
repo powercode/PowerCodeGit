@@ -11,8 +11,8 @@
 BeforeAll {
     # Resolve the module path from the environment variable set by Invoke-SystemTests.ps1,
     # or fall back to discovering the versioned module layout under artifacts/module/.
-    if ($env:PowerCode.Git_MODULE_PATH -and (Test-Path -Path $env:PowerCode.Git_MODULE_PATH)) {
-        $ModulePath = $env:PowerCode.Git_MODULE_PATH
+    if ($env:POWERCODE_GIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODE_GIT_MODULE_PATH)) {
+        $ModulePath = $env:POWERCODE_GIT_MODULE_PATH
     }
     else {
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path

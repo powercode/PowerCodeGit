@@ -9,8 +9,8 @@
 #>
 
 BeforeAll {
-    if ($env:PowerCode.Git_MODULE_PATH -and (Test-Path -Path $env:PowerCode.Git_MODULE_PATH)) {
-        $ModulePath = $env:PowerCode.Git_MODULE_PATH
+    if ($env:POWERCODE_GIT_MODULE_PATH -and (Test-Path -Path $env:POWERCODE_GIT_MODULE_PATH)) {
+        $ModulePath = $env:POWERCODE_GIT_MODULE_PATH
     }
     else {
         $RepoRoot = (Resolve-Path -Path "$PSScriptRoot/../..").Path
