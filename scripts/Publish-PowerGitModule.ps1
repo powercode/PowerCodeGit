@@ -29,7 +29,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-Install-PSResource  Microsoft.PowerShell.PSResourceGet
+Install-PSResource  -Name:Microsoft.PowerShell.PSResourceGet -Force -TrustRepository -Repository:PSGallery
 
 $VersionedDir = Get-ChildItem -Path $ModulePath -Directory | Select-Object -First 1
 if (-not $VersionedDir) {
