@@ -41,7 +41,7 @@ public sealed class GitPathCompleterAttribute : ArgumentCompleterFactoryAttribut
                 var paths = pathService.GetTrackedPaths(repositoryPath);
 
                 return paths
-                    .Where(p => p.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))
+                    .Where(p => p.Contains(wordToComplete, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                     .Select(p => new CompletionResult(
                         p,
