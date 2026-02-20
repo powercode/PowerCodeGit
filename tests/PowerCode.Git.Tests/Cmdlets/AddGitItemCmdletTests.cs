@@ -53,8 +53,8 @@ public sealed class AddGitItemCmdletTests
 
     private sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     {
-        public GitStatusResult GetStatus(string repositoryPath) =>
-            new(repositoryPath, "main", Array.Empty<GitStatusEntry>(), 0, 0, 0);
+        public GitStatusResult GetStatus(GitStatusOptions options) =>
+            new(options.RepositoryPath, "main", Array.Empty<GitStatusEntry>(), 0, 0, 0);
 
         public IReadOnlyList<GitDiffEntry> GetDiff(GitDiffOptions options) =>
             Array.Empty<GitDiffEntry>();

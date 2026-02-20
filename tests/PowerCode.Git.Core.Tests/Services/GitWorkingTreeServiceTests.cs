@@ -13,7 +13,7 @@ public sealed class GitWorkingTreeServiceTests
     {
         var service = new GitWorkingTreeService();
 
-        Assert.Throws<ArgumentException>(() => service.GetStatus("X:\\not-a-real-repo"));
+        Assert.Throws<ArgumentException>(() => service.GetStatus(new GitStatusOptions { RepositoryPath = "X:\\not-a-real-repo" }));
     }
 
     [TestMethod]
@@ -21,7 +21,7 @@ public sealed class GitWorkingTreeServiceTests
     {
         var service = new GitWorkingTreeService();
 
-        Assert.Throws<ArgumentException>(() => service.GetStatus(string.Empty));
+        Assert.Throws<ArgumentException>(() => service.GetStatus(new GitStatusOptions { RepositoryPath = string.Empty }));
     }
 
     [TestMethod]
@@ -33,7 +33,7 @@ public sealed class GitWorkingTreeServiceTests
         {
             var service = new GitWorkingTreeService();
 
-            var result = service.GetStatus(repositoryPath);
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             Assert.AreEqual(0, result.StagedCount);
             Assert.AreEqual(0, result.ModifiedCount);
@@ -56,7 +56,7 @@ public sealed class GitWorkingTreeServiceTests
             File.WriteAllText(Path.Combine(repositoryPath, "untracked.txt"), "new file");
 
             var service = new GitWorkingTreeService();
-            var result = service.GetStatus(repositoryPath);
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             Assert.AreEqual(1, result.UntrackedCount);
             Assert.AreEqual(0, result.StagedCount);
@@ -84,7 +84,7 @@ public sealed class GitWorkingTreeServiceTests
             Commands.Stage(repository, filePath);
 
             var service = new GitWorkingTreeService();
-            var result = service.GetStatus(repositoryPath);
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             Assert.AreEqual(1, result.StagedCount);
             Assert.IsTrue(result.Entries.Any(e =>
@@ -107,7 +107,7 @@ public sealed class GitWorkingTreeServiceTests
             File.WriteAllText(Path.Combine(repositoryPath, "file-0.txt"), "modified content");
 
             var service = new GitWorkingTreeService();
-            var result = service.GetStatus(repositoryPath);
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             Assert.AreEqual(1, result.ModifiedCount);
             Assert.IsTrue(result.Entries.Any(e =>
@@ -128,7 +128,7 @@ public sealed class GitWorkingTreeServiceTests
         try
         {
             var service = new GitWorkingTreeService();
-            var result = service.GetStatus(repositoryPath);
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(result.CurrentBranch));
         }

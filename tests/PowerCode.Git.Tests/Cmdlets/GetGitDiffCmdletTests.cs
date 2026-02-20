@@ -57,9 +57,9 @@ public sealed class GetGitDiffCmdletTests
 
     private sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     {
-        public GitStatusResult GetStatus(string repositoryPath)
+        public GitStatusResult GetStatus(GitStatusOptions options)
         {
-            return new GitStatusResult(repositoryPath, "main", Array.Empty<GitStatusEntry>(), 0, 0, 0);
+            return new GitStatusResult(options.RepositoryPath, "main", Array.Empty<GitStatusEntry>(), 0, 0, 0);
         }
 
         public IReadOnlyList<GitDiffEntry> GetDiff(GitDiffOptions options)

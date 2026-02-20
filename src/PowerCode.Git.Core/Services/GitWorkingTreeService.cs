@@ -14,12 +14,15 @@ namespace PowerCode.Git.Core.Services;
 public sealed class GitWorkingTreeService : IGitWorkingTreeService
 {
     /// <inheritdoc/>
-    public GitStatusResult GetStatus(string repositoryPath)
+    public GitStatusResult GetStatus(GitStatusOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
-        using var repository = new Repository(repositoryPath);
-        var status = repository.RetrieveStatus(new StatusOptions());
+        using var repository = new Repository(options.RepositoryPath);
+        var status = repository.RetrieveStatus(new StatusOptions
+        {
+            IncludeIgnored = options.IncludeIgnored,
+        });
 
         var entries = new List<GitStatusEntry>();
 
@@ -35,7 +38,7 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         var currentBranch = repository.Head.FriendlyName ?? "(detached)";
 
         return new GitStatusResult(
-            repositoryPath,
+            options.RepositoryPath,
             currentBranch,
             entries,
             stagedCount,
@@ -117,16 +120,16 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
             results.Add(new GitStatusEntry(entry.FilePath, GitFileStatus.Untracked, GitStagingState.Unstaged));
         }
 
-        // Ignored
-        if (state.HasFlag(FileStatus.Ignored))
-        {
-            results.Add(new GitStatusEntry(entry.FilePath, GitFileStatus.Ignored, GitStagingState.Unstaged));
-        }
-
         // Conflicted
         if (state.HasFlag(FileStatus.Conflicted))
         {
             results.Add(new GitStatusEntry(entry.FilePath, GitFileStatus.Conflicted, GitStagingState.Unstaged));
+        }
+
+        // Ignored (only present when StatusOptions.IncludeIgnored = true)
+        if (state.HasFlag(FileStatus.Ignored))
+        {
+            results.Add(new GitStatusEntry(entry.FilePath, GitFileStatus.Ignored, GitStagingState.Unstaged));
         }
     }
 

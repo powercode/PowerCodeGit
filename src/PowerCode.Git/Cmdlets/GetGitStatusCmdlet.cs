@@ -32,6 +32,13 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     private readonly IGitWorkingTreeService workingTreeService;
 
     /// <summary>
+    /// Gets or sets a value indicating whether files matched by <c>.gitignore</c>
+    /// should be included in the status results.
+    /// </summary>
+    [Parameter]
+    public SwitchParameter IncludeIgnored { get; set; }
+
+    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
@@ -40,7 +47,13 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
 
         try
         {
-            var result = workingTreeService.GetStatus(repositoryPath);
+            var options = new GitStatusOptions
+            {
+                RepositoryPath = repositoryPath,
+                IncludeIgnored = IncludeIgnored.IsPresent,
+            };
+
+            var result = workingTreeService.GetStatus(options);
             WriteObject(result);
         }
         catch (Exception exception)

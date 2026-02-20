@@ -80,6 +80,48 @@ Describe 'Get-GitStatus with changes' {
     }
 }
 
+Describe 'Get-GitStatus -IncludeIgnored' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Create a .gitignore that ignores *.log files
+            Set-Content -Path '.gitignore' -Value '*.log'
+            git add .gitignore 2>&1 | Out-Null
+            git commit -m 'Add .gitignore' 2>&1 | Out-Null
+
+            # Create an ignored file
+            Set-Content -Path 'debug.log' -Value 'ignored log content'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Does not include ignored files by default' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $IgnoredEntries = $Status.Entries | Where-Object { $_.FilePath -like '*.log' }
+        $IgnoredEntries | Should -BeNullOrEmpty
+    }
+
+    It 'Includes ignored files when -IncludeIgnored is specified' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath -IncludeIgnored
+        $IgnoredEntries = $Status.Entries | Where-Object { $_.FilePath -like '*.log' }
+        $IgnoredEntries | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Ignored entry has the Ignored status' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath -IncludeIgnored
+        $LogEntry = $Status.Entries | Where-Object { $_.FilePath -like '*.log' } | Select-Object -First 1
+        $LogEntry.FileStatus | Should -Be 'Ignored'
+    }
+}
+
 Describe 'Get-GitStatus error handling' {
     It 'Produces a non-terminating error for an invalid path' {
         $Result = Get-GitStatus -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue

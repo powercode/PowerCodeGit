@@ -12,9 +12,9 @@ public interface IGitWorkingTreeService
     /// <summary>
     /// Gets the current status of the repository working tree and index.
     /// </summary>
-    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <param name="options">The status query options.</param>
     /// <returns>A status result containing file entries and summary counts.</returns>
-    GitStatusResult GetStatus(string repositoryPath);
+    GitStatusResult GetStatus(GitStatusOptions options);
 
     /// <summary>
     /// Gets the diff entries for working tree or staged changes.
