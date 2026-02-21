@@ -186,25 +186,25 @@ public sealed class GitBranchService : IGitBranchService
     }
 
     /// <inheritdoc/>
-    public void DeleteBranch(string repositoryPath, string name, bool force = false)
+    public void DeleteBranch(GitBranchDeleteOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
-        RepositoryGuard.ValidateRequiredString(name, nameof(name), "Branch name is required.");
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Branch name (options.Name) is required.");
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
 
-        var branch = repository.Branches[name]
-            ?? throw new ArgumentException($"The branch '{name}' does not exist.", nameof(name));
+        var branch = repository.Branches[options.Name]
+            ?? throw new ArgumentException($"The branch '{options.Name}' does not exist.", nameof(options));
 
         if (branch.IsCurrentRepositoryHead)
         {
-            throw new InvalidOperationException($"Cannot delete the current branch '{name}'. Switch to a different branch first.");
+            throw new InvalidOperationException($"Cannot delete the current branch '{options.Name}'. Switch to a different branch first.");
         }
 
-        if (!force && !IsBranchMerged(repository, branch))
+        if (!options.Force && !IsBranchMerged(repository, branch))
         {
             throw new InvalidOperationException(
-                $"The branch '{name}' is not fully merged. Use force to delete it anyway.");
+                $"The branch '{options.Name}' is not fully merged. Use force to delete it anyway.");
         }
 
         repository.Branches.Remove(branch);

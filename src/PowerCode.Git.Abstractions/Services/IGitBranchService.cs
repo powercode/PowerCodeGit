@@ -48,6 +48,12 @@ public interface IGitBranchService
         => CreateBranch(new GitBranchCreateOptions { RepositoryPath = repositoryPath, Name = name });
 
     /// <summary>
+    /// Deletes a branch using the specified options.
+    /// </summary>
+    /// <param name="options">Options identifying the branch to delete.</param>
+    void DeleteBranch(GitBranchDeleteOptions options);
+
+    /// <summary>
     /// Deletes a branch.
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
@@ -56,5 +62,6 @@ public interface IGitBranchService
     /// When <see langword="true"/>, force-deletes the branch even if it is
     /// not fully merged.
     /// </param>
-    void DeleteBranch(string repositoryPath, string name, bool force = false);
+    void DeleteBranch(string repositoryPath, string name, bool force = false)
+        => DeleteBranch(new GitBranchDeleteOptions { RepositoryPath = repositoryPath, Name = name, Force = force });
 }

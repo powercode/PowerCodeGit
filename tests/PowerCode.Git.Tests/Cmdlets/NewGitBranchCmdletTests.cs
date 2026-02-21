@@ -141,7 +141,7 @@ public sealed class NewGitBranchCmdletTests
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             new(options.Name, true, false, "abc1234", null, null, null);
 
-        public void DeleteBranch(string repositoryPath, string name, bool force = false)
+        public void DeleteBranch(GitBranchDeleteOptions options)
         {
         }
     }

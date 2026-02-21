@@ -423,6 +423,98 @@ public sealed class GitBranchServiceTests
         }
     }
 
+    [TestMethod]
+    public void DeleteBranch_ValidOptions_DeletesBranch()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            service.DeleteBranch(new GitBranchDeleteOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "feature",
+            });
+
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
+            Assert.IsFalse(branches.Any(b => b.Name == "feature"));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void DeleteBranch_UnmergedBranchNoForce_ThrowsInvalidOperationException()
+    {
+        var repositoryPath = CreateRepositoryWithUnmergedBranch();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            Assert.Throws<InvalidOperationException>(() => service.DeleteBranch(new GitBranchDeleteOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "unmerged",
+            }));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void DeleteBranch_UnmergedBranchWithForce_DeletesBranch()
+    {
+        var repositoryPath = CreateRepositoryWithUnmergedBranch();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            service.DeleteBranch(new GitBranchDeleteOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "unmerged",
+                Force = true,
+            });
+
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
+            Assert.IsFalse(branches.Any(b => b.Name == "unmerged"));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    private static string CreateRepositoryWithUnmergedBranch()
+    {
+        var repositoryPath = CreateTemporaryDirectory();
+        Repository.Init(repositoryPath);
+
+        using var repository = new Repository(repositoryPath);
+        var sig = new Signature("Test", "t@t.com", DateTimeOffset.UtcNow);
+        var file = Path.Combine(repositoryPath, "f.txt");
+        File.WriteAllText(file, "content");
+        Commands.Stage(repository, file);
+        repository.Commit("Initial", sig, sig);
+
+        var branch = repository.CreateBranch("unmerged");
+        Commands.Checkout(repository, branch);
+        File.WriteAllText(file, "changed");
+        Commands.Stage(repository, file);
+        repository.Commit("Unmerged commit", sig, sig);
+
+        Commands.Checkout(repository, repository.Branches[DefaultBranchName]!);
+        return repositoryPath;
+    }
+
     private static string CreateRepositoryWithRemote()
     {
         // Create a "remote" repo and a clone of it so remote-tracking refs exist

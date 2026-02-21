@@ -60,7 +60,7 @@ public sealed class SwitchGitBranchCmdletTests
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             throw new NotImplementedException();
 
-        public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
+        public void DeleteBranch(GitBranchDeleteOptions options) =>
             throw new NotImplementedException();
     }
 }

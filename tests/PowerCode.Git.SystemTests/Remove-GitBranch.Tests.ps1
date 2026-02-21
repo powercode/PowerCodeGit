@@ -100,3 +100,34 @@ Describe 'Remove-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Remove-GitBranch -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature-opts 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Deletes a branch via -Options parameter set' {
+        $Options = [PowerCode.Git.Abstractions.Models.GitBranchDeleteOptions]@{
+            RepositoryPath = $script:RepoPath
+            Name           = 'feature-opts'
+        }
+
+        Remove-GitBranch -Options $Options -Confirm:$false
+
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath | Where-Object { -not $_.IsRemote })
+        $Branches | Where-Object { $_.Name -eq 'feature-opts' } | Should -BeNullOrEmpty
+    }
+}
