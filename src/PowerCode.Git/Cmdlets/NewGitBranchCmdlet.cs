@@ -2,16 +2,20 @@ using System;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
 namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
-/// Creates a new branch at the current HEAD and checks it out (git checkout -b).
+/// Creates a new branch and checks it out (git branch + git switch).
 /// <example>
 /// <code>New-GitBranch -Name feature/my-feature</code>
 /// </example>
+/// <example>
+/// <code>New-GitBranch -Name hotfix/p1 -StartPoint v2.0.0</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.New, "GitBranch", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.New, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = "Create")]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class NewGitBranchCmdlet : GitCmdlet
 {
@@ -37,36 +41,88 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the name of the new branch.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Create")]
     [ValidateNotNullOrEmpty]
     public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the start point (commit, tag, or branch) to branch from.
+    /// Defaults to HEAD when not specified.
+    /// Equivalent to the <c>[&lt;start-point&gt;]</c> argument of <c>git branch</c>.
+    /// </summary>
+    [Parameter(Position = 1, ParameterSetName = "Create")]
+    [GitCommittishCompleter]
+    public string? StartPoint { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to set up the new branch to track the
+    /// remote upstream branch. Equivalent to <c>git branch --track</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "Create")]
+    public SwitchParameter Track { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to overwrite an existing branch with the
+    /// same name. Equivalent to <c>git branch -f</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "Create")]
+    public SwitchParameter Force { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built options object for full control over branch creation.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitBranchCreateOptions Options { get; set; } = null!;
 
     /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
+        var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
 
-        if (!ShouldProcess(repositoryPath, $"Create branch '{Name}'"))
+        if (!ShouldProcess(options.RepositoryPath, $"Create branch '{options.Name}'"))
         {
             return;
         }
 
         try
         {
-            var result = branchService.CreateBranch(repositoryPath, Name);
+            var result = branchService.CreateBranch(options);
             WriteObject(result);
         }
         catch (Exception exception)
         {
-            var errorRecord = new ErrorRecord(
+            WriteError(new ErrorRecord(
                 exception,
                 "NewGitBranchFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
-
-            WriteError(errorRecord);
+                RepoPath));
         }
+    }
+
+    /// <summary>
+    /// Builds a <see cref="GitBranchCreateOptions"/> from the current cmdlet parameters.
+    /// </summary>
+    /// <param name="currentFileSystemPath">
+    /// The current file-system path, used to resolve <see cref="GitCmdlet.RepoPath"/> when not
+    /// explicitly provided.
+    /// </param>
+    /// <returns>The resolved options object.</returns>
+    internal GitBranchCreateOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (ParameterSetName == "Options")
+        {
+            return Options;
+        }
+
+        return new GitBranchCreateOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
+            Name = Name,
+            StartPoint = StartPoint,
+            Track = Track.IsPresent,
+            Force = Force.IsPresent,
+        };
     }
 }

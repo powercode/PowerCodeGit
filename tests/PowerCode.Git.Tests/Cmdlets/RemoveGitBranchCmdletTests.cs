@@ -64,8 +64,8 @@ public sealed class RemoveGitBranchCmdletTests
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
             new(branchName, true, false, "abc1234", null, null, null);
 
-        public GitBranchInfo CreateBranch(string repositoryPath, string name) =>
-            new(name, true, false, "abc1234", null, null, null);
+        public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
+            new(options.Name, true, false, "abc1234", null, null, null);
 
         public void DeleteBranch(string repositoryPath, string name, bool force = false)
         {

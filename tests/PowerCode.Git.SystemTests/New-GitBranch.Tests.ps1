@@ -80,3 +80,81 @@ Describe 'New-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'New-GitBranch -StartPoint' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('First commit', 'Second commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Creates a branch at the specified commit SHA' {
+        Push-Location -Path $script:RepoPath
+        try {
+            # Get the first commit SHA
+            $FirstSha = git log --format='%H' | Select-Object -Last 1
+        }
+        finally {
+            Pop-Location
+        }
+
+        $Result = New-GitBranch -RepoPath $script:RepoPath -Name 'at-first' -StartPoint $FirstSha
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.TipSha | Should -BeExactly $FirstSha
+    }
+}
+
+Describe 'New-GitBranch -Force' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Overwrites an existing branch when -Force is specified' {
+        # Create the branch once
+        New-GitBranch -RepoPath $script:RepoPath -Name 'overwritable' | Out-Null
+
+        # Go back to main and make a new commit
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout main 2>&1 | Out-Null
+            Set-Content -Path 'newfile.txt' -Value 'new'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Extra commit' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        # Force-reset the branch to the new HEAD
+        $Result = New-GitBranch -RepoPath $script:RepoPath -Name 'overwritable' -Force
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'overwritable'
+    }
+}
+
+Describe 'New-GitBranch -Options catch-all' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Accepts a GitBranchCreateOptions object via -Options' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitBranchCreateOptions]@{
+            RepositoryPath = $script:RepoPath
+            Name           = 'via-options'
+        }
+
+        $Result = New-GitBranch -Options $Opts
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'via-options'
+    }
+}

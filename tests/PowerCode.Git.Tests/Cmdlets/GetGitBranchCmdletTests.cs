@@ -176,7 +176,7 @@ public sealed class GetGitBranchCmdletTests
             return new GitBranchInfo(branchName, true, false, "abc1234", null, null, null);
         }
 
-        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+        public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             throw new NotImplementedException();
 
         public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>

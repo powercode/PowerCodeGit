@@ -131,22 +131,57 @@ public sealed class GitBranchService : IGitBranchService
     }
 
     /// <inheritdoc/>
-    public GitBranchInfo CreateBranch(string repositoryPath, string name)
+    public GitBranchInfo CreateBranch(GitBranchCreateOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
-        RepositoryGuard.ValidateRequiredString(name, nameof(name), "Branch name is required.");
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Branch name (options.Name) is required.");
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
 
-        if (repository.Branches[name] is not null)
+        var existingBranch = repository.Branches[options.Name];
+
+        if (existingBranch is not null && !options.Force)
         {
-            throw new ArgumentException($"A branch named '{name}' already exists.", nameof(name));
+            throw new ArgumentException($"A branch named '{options.Name}' already exists.", nameof(options));
         }
 
-        var branch = repository.CreateBranch(name);
-        Commands.Checkout(repository, branch);
+        if (existingBranch is not null && options.Force)
+        {
+            repository.Branches.Remove(existingBranch);
+        }
 
-        var updatedBranch = repository.Branches[name]!;
+        // Resolve start point: specific committish or HEAD
+        Commit startCommit;
+        if (options.StartPoint is not null)
+        {
+            startCommit = repository.Lookup<Commit>(options.StartPoint)
+                ?? throw new ArgumentException(
+                    $"Start point '{options.StartPoint}' was not found in the repository.", nameof(options));
+        }
+        else
+        {
+            startCommit = repository.Head.Tip
+                ?? throw new InvalidOperationException("Cannot create a branch: the repository has no commits.");
+        }
+
+        var branch = repository.CreateBranch(options.Name, startCommit);
+
+        // Set remote tracking if requested and a remote exists
+        if (options.Track)
+        {
+            var remote = repository.Network.Remotes.FirstOrDefault();
+            if (remote is not null)
+            {
+                repository.Branches.Update(
+                    branch,
+                    b => b.Remote = remote.Name,
+                    b => b.UpstreamBranch = $"refs/heads/{options.Name}");
+            }
+        }
+
+        Commands.Checkout(repository, repository.Branches[options.Name]!);
+
+        var updatedBranch = repository.Branches[options.Name]!;
         return MapBranch(updatedBranch);
     }
 

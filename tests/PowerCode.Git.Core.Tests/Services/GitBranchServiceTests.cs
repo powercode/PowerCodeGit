@@ -159,8 +159,132 @@ public sealed class GitBranchServiceTests
     }
 
     [TestMethod]
-    public void GetBranches_OptionsWithNoFilters_ReturnsAllLocalBranches()
+    public void CreateBranch_ValidOptions_CreatesBranchAtHead()
     {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var result = service.CreateBranch(new GitBranchCreateOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "new-feature",
+            });
+
+            Assert.AreEqual("new-feature", result.Name);
+            Assert.IsTrue(result.IsHead);
+            Assert.IsFalse(result.IsRemote);
+
+            using var repository = new Repository(repositoryPath);
+            Assert.AreEqual("new-feature", repository.Head.FriendlyName);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void CreateBranch_ExistingBranchNoForce_ThrowsArgumentException()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            Assert.Throws<ArgumentException>(() => service.CreateBranch(new GitBranchCreateOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "feature", // already created in CreateRepositoryWithBranches
+            }));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void CreateBranch_ExistingBranchWithForce_OverwritesBranch()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            // Advance master with a new commit so feature is behind
+            using (var repo = new Repository(repositoryPath))
+            {
+                var sig = new Signature("Test", "t@t.com", DateTimeOffset.UtcNow);
+                var file = Path.Combine(repositoryPath, "extra.txt");
+                File.WriteAllText(file, "extra");
+                Commands.Stage(repo, file);
+                repo.Commit("Extra commit", sig, sig);
+            }
+
+            var result = service.CreateBranch(new GitBranchCreateOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "feature",
+                Force = true,
+            });
+
+            Assert.AreEqual("feature", result.Name);
+            Assert.IsTrue(result.IsHead);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void CreateBranch_WithStartPoint_CreatesBranchAtSpecifiedCommit()
+    {
+        var repositoryPath = CreateTemporaryDirectory();
+        Repository.Init(repositoryPath);
+
+        try
+        {
+            var service = new GitBranchService();
+            string firstSha;
+
+            using (var repo = new Repository(repositoryPath))
+            {
+                var sig = new Signature("Test", "t@t.com", DateTimeOffset.UtcNow);
+                var file = Path.Combine(repositoryPath, "f1.txt");
+                File.WriteAllText(file, "content1");
+                Commands.Stage(repo, file);
+                var firstCommit = repo.Commit("First", sig, sig);
+                firstSha = firstCommit.Sha;
+
+                File.WriteAllText(file, "content2");
+                Commands.Stage(repo, file);
+                repo.Commit("Second", sig, sig);
+            }
+
+            var result = service.CreateBranch(new GitBranchCreateOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "at-first",
+                StartPoint = firstSha,
+            });
+
+            Assert.AreEqual("at-first", result.Name);
+            Assert.AreEqual(firstSha, result.TipSha);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_OptionsWithNoFilters_ReturnsAllLocalBranches()    {
         var repositoryPath = CreateRepositoryWithBranches();
 
         try

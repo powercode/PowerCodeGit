@@ -32,12 +32,20 @@ public interface IGitBranchService
     GitBranchInfo SwitchBranch(string repositoryPath, string branchName);
 
     /// <summary>
+    /// Creates a new branch using the specified options.
+    /// </summary>
+    /// <param name="options">Options for the branch to create.</param>
+    /// <returns>Information about the newly created branch.</returns>
+    GitBranchInfo CreateBranch(GitBranchCreateOptions options);
+
+    /// <summary>
     /// Creates a new branch at the current HEAD and checks it out.
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
     /// <param name="name">The name of the new branch.</param>
     /// <returns>Information about the newly created branch.</returns>
-    GitBranchInfo CreateBranch(string repositoryPath, string name);
+    GitBranchInfo CreateBranch(string repositoryPath, string name)
+        => CreateBranch(new GitBranchCreateOptions { RepositoryPath = repositoryPath, Name = name });
 
     /// <summary>
     /// Deletes a branch.

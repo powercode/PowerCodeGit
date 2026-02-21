@@ -173,7 +173,7 @@ public sealed class GitBranchCompleterTests
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
             throw new NotImplementedException();
 
-        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+        public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             throw new NotImplementedException();
 
         public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
@@ -188,7 +188,7 @@ public sealed class GitBranchCompleterTests
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
             throw new NotImplementedException();
 
-        public GitBranchInfo CreateBranch(string repositoryPath, string branchName) =>
+        public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             throw new NotImplementedException();
 
         public void DeleteBranch(string repositoryPath, string branchName, bool force = false) =>
