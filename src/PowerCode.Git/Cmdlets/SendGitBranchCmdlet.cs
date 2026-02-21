@@ -14,8 +14,11 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>Send-GitBranch -Remote origin -SetUpstream</code>
 /// </example>
+/// <example>
+/// <code>Send-GitBranch -Force</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsCommunications.Send, "GitBranch", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommunications.Send, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = "Push")]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class SendGitBranchCmdlet : GitCmdlet
 {
@@ -41,7 +44,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the name of the remote to push to. Defaults to "origin".
     /// </summary>
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ParameterSetName = "Push")]
     [GitRemoteCompleter]
     public string Remote { get; set; } = "origin";
 
@@ -49,7 +52,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// Gets or sets the branch name to push. When omitted, pushes the current
     /// HEAD branch.
     /// </summary>
-    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true, ParameterSetName = "Push")]
     [GitBranchCompleter]
     public string? Name { get; set; }
 
@@ -57,16 +60,86 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to set the upstream tracking
     /// reference (git push -u).
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Push")]
     [Alias("u")]
     public SwitchParameter SetUpstream { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether to force-push the branch.
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter Force { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to force-push only if the remote tip matches
+    /// the local expectation (--force-with-lease).
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter ForceWithLease { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to delete the branch on the remote.
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter Delete { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to push all tags.
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter Tags { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to push all branches.
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter All { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to perform a dry run without actually pushing.
+    /// </summary>
+    [Parameter(ParameterSetName = "Push")]
+    public SwitchParameter DryRun { get; set; }
+
+    /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Push")]
     [Credential]
     public PSCredential? Credential { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built <see cref="GitPushOptions"/> instance.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitPushOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds the <see cref="GitPushOptions"/> from current parameter values.
+    /// </summary>
+    internal GitPushOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        return new GitPushOptions
+        {
+            RepositoryPath = currentFileSystemPath,
+            RemoteName = Remote,
+            BranchName = Name,
+            SetUpstream = SetUpstream.IsPresent,
+            Force = Force.IsPresent,
+            ForceWithLease = ForceWithLease.IsPresent,
+            Delete = Delete.IsPresent,
+            Tags = Tags.IsPresent,
+            All = All.IsPresent,
+            DryRun = DryRun.IsPresent,
+            CredentialUsername = Credential?.UserName,
+            CredentialPassword = Credential?.GetNetworkCredential()?.Password,
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
@@ -83,15 +156,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
 
         try
         {
-            var options = new GitPushOptions
-            {
-                RepositoryPath = repositoryPath,
-                RemoteName = Remote,
-                BranchName = Name,
-                SetUpstream = SetUpstream.IsPresent,
-                CredentialUsername = Credential?.UserName,
-                CredentialPassword = Credential?.GetNetworkCredential()?.Password,
-            };
+            var options = BuildOptions(repositoryPath);
 
             var result = remoteService.Push(options, (percent, message) =>
             {

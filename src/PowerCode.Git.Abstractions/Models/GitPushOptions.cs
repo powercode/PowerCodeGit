@@ -34,4 +34,35 @@ public sealed class GitPushOptions
     /// Gets or sets the optional password for HTTP authentication.
     /// </summary>
     public string? CredentialPassword { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to force-push the branch (git push --force).
+    /// </summary>
+    public bool Force { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to force-push only if the remote tip matches
+    /// the local expectation (git push --force-with-lease).
+    /// </summary>
+    public bool ForceWithLease { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to delete the branch on the remote (git push --delete).
+    /// </summary>
+    public bool Delete { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to push all tags (git push --tags).
+    /// </summary>
+    public bool Tags { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to push all branches (git push --all).
+    /// </summary>
+    public bool All { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to perform a dry run without actually pushing.
+    /// </summary>
+    public bool DryRun { get; init; }
 }

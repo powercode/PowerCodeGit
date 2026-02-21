@@ -54,6 +54,62 @@ public sealed class SendGitBranchCmdletTests
         Assert.IsFalse(cmdlet.SetUpstream.IsPresent);
     }
 
+    [TestMethod]
+    public void BuildOptions_DefaultSet_RemoteAndPathMapped()
+    {
+        var cmdlet = new SendGitBranchCmdlet(new StubGitRemoteService());
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("C:\\repo", options.RepositoryPath);
+        Assert.AreEqual("origin", options.RemoteName);
+        Assert.IsFalse(options.Force);
+        Assert.IsFalse(options.Delete);
+        Assert.IsFalse(options.Tags);
+        Assert.IsFalse(options.All);
+        Assert.IsFalse(options.DryRun);
+    }
+
+    [TestMethod]
+    public void BuildOptions_ForceSet_ForceMapped()
+    {
+        var cmdlet = new SendGitBranchCmdlet(new StubGitRemoteService())
+        {
+            Force = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.Force);
+    }
+
+    [TestMethod]
+    public void BuildOptions_DeleteSet_DeleteMapped()
+    {
+        var cmdlet = new SendGitBranchCmdlet(new StubGitRemoteService())
+        {
+            Delete = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.Delete);
+    }
+
+    [TestMethod]
+    public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
+    {
+        var predefined = new GitPushOptions { RepositoryPath = "D:\\repo", Force = true };
+        var cmdlet = new SendGitBranchCmdlet(new StubGitRemoteService())
+        {
+            Options = predefined,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\ignored");
+
+        Assert.AreSame(predefined, options);
+    }
+
     private sealed class StubGitRemoteService : IGitRemoteService
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>

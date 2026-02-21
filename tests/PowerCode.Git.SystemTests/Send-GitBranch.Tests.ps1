@@ -100,3 +100,37 @@ Describe 'Send-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Send-GitBranch -Options' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemote
+        $script:WorkPath = $script:Repos.WorkingPath
+        $script:BarePath = $script:Repos.BarePath
+
+        Push-Location -Path $script:WorkPath
+        try {
+            Set-Content -Path 'opts.txt' -Value 'via options'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Options push commit' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:WorkPath
+        Remove-TestGitRepository -Path $script:BarePath
+    }
+
+    It 'Pushes the branch via a GitPushOptions object' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitPushOptions]@{
+            RepositoryPath = $script:WorkPath
+            RemoteName     = 'origin'
+        }
+
+        $Result = Send-GitBranch -Options $Opts
+
+        $Result | Should -Not -BeNullOrEmpty
+    }
+}
