@@ -173,3 +173,26 @@ Describe 'Receive-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Receive-GitBranch -Options' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemoteAndPushedCommit
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:Repos.PullerPath
+        Remove-TestGitRepository -Path $script:Repos.PusherPath
+        Remove-TestGitRepository -Path $script:Repos.BarePath
+    }
+
+    It 'Pulls using a GitPullOptions object' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitPullOptions]@{
+            RepositoryPath = $script:Repos.PullerPath
+            RemoteName     = 'origin'
+        }
+
+        $Result = Receive-GitBranch -Options $Opts
+
+        $Result | Should -Not -BeNullOrEmpty
+    }
+}

@@ -36,8 +36,18 @@ public sealed class GitRemoteService : IGitRemoteService
 
         var cloneOptions = new CloneOptions
         {
-            IsBare = false,
+            IsBare = options.Bare,
         };
+
+        if (options.BranchName is not null)
+        {
+            cloneOptions.BranchName = options.BranchName;
+        }
+
+        if (options.RecurseSubmodules)
+        {
+            cloneOptions.RecurseSubmodules = true;
+        }
 
         if (options.CredentialUsername is not null)
         {
@@ -104,7 +114,58 @@ public sealed class GitRemoteService : IGitRemoteService
             };
         }
 
-        repository.Network.Push(remote, branch.CanonicalName, pushOptions);
+        if (options.DryRun)
+        {
+            // Dry run is not natively supported by LibGit2Sharp; skip actual push
+            return new GitBranchInfo(
+                branch.FriendlyName,
+                branch.IsCurrentRepositoryHead,
+                branch.IsRemote,
+                branch.Tip?.Sha ?? string.Empty,
+                branch.TrackedBranch?.FriendlyName,
+                branch.TrackingDetails?.AheadBy,
+                branch.TrackingDetails?.BehindBy);
+        }
+
+        if (options.Delete)
+        {
+            var branchName = branch.FriendlyName;
+            repository.Network.Push(remote, $":refs/heads/{branchName}", pushOptions);
+
+            return new GitBranchInfo(
+                branchName,
+                isHead: false,
+                isRemote: false,
+                tipSha: branch.Tip?.Sha ?? string.Empty,
+                trackedBranchName: null,
+                aheadBy: null,
+                behindBy: null);
+        }
+
+        if (options.All)
+        {
+            foreach (var localBranch in repository.Branches.Where(b => !b.IsRemote))
+            {
+                var refSpec = options.Force
+                    ? $"+{localBranch.CanonicalName}:{localBranch.CanonicalName}"
+                    : localBranch.CanonicalName;
+                repository.Network.Push(remote, refSpec, pushOptions);
+            }
+        }
+        else if (options.Tags)
+        {
+            foreach (var tag in repository.Tags)
+            {
+                repository.Network.Push(remote, tag.CanonicalName, pushOptions);
+            }
+        }
+        else
+        {
+            var refSpec = options.Force || options.ForceWithLease
+                ? $"+{branch.CanonicalName}:{branch.CanonicalName}"
+                : branch.CanonicalName;
+            repository.Network.Push(remote, refSpec, pushOptions);
+        }
 
         if (options.SetUpstream)
         {
@@ -158,6 +219,11 @@ public sealed class GitRemoteService : IGitRemoteService
             pullOptions.FetchOptions.Prune = true;
         }
 
+        if (options.Tags.HasValue)
+        {
+            pullOptions.FetchOptions.TagFetchMode = options.Tags.Value ? TagFetchMode.All : TagFetchMode.None;
+        }
+
         if (options.CredentialUsername is not null)
         {
             pullOptions.FetchOptions.CredentialsProvider = (_, _, _) =>
@@ -182,7 +248,19 @@ public sealed class GitRemoteService : IGitRemoteService
             };
         }
 
+        // AutoStash: save local changes before pulling, reapply after
+        Stash? autoStash = null;
+        if (options.AutoStash && repository.RetrieveStatus().IsDirty)
+        {
+            autoStash = repository.Stashes.Add(signature, "AutoStash before pull");
+        }
+
         var mergeResult = Commands.Pull(repository, signature, pullOptions);
+
+        if (autoStash is not null)
+        {
+            repository.Stashes.Pop(0, new StashApplyOptions());
+        }
 
         var headCommit = repository.Head.Tip;
         var parentShas = headCommit.Parents.Select(p => p.Sha).ToList();

@@ -13,8 +13,11 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>Receive-GitBranch -MergeStrategy FastForward -Prune</code>
 /// </example>
+/// <example>
+/// <code>Receive-GitBranch -AutoStash</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsCommunications.Receive, "GitBranch")]
+[Cmdlet(VerbsCommunications.Receive, "GitBranch", DefaultParameterSetName = "Pull")]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 {
@@ -40,22 +43,63 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the merge strategy. Defaults to <see cref="GitMergeStrategy.Merge"/>.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Pull")]
     public GitMergeStrategy MergeStrategy { get; set; } = GitMergeStrategy.Merge;
 
     /// <summary>
     /// Gets or sets a value indicating whether to prune remote-tracking
     /// branches that no longer exist on the remote.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Pull")]
     public SwitchParameter Prune { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically stash local changes
+    /// before pulling and reapply them afterward (git pull --autostash).
+    /// </summary>
+    [Parameter(ParameterSetName = "Pull")]
+    public SwitchParameter AutoStash { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to fetch all tags from the remote.
+    /// </summary>
+    [Parameter(ParameterSetName = "Pull")]
+    public SwitchParameter Tags { get; set; }
 
     /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Pull")]
     [Credential]
     public PSCredential? Credential { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built <see cref="GitPullOptions"/> instance.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitPullOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds the <see cref="GitPullOptions"/> from current parameter values.
+    /// </summary>
+    internal GitPullOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        return new GitPullOptions
+        {
+            RepositoryPath = currentFileSystemPath,
+            MergeStrategy = MergeStrategy,
+            Prune = Prune.IsPresent,
+            AutoStash = AutoStash.IsPresent,
+            Tags = Tags.IsPresent ? true : null,
+            CredentialUsername = Credential?.UserName,
+            CredentialPassword = Credential?.GetNetworkCredential()?.Password,
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
@@ -66,14 +110,7 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 
         try
         {
-            var options = new GitPullOptions
-            {
-                RepositoryPath = repositoryPath,
-                MergeStrategy = MergeStrategy,
-                Prune = Prune.IsPresent,
-                CredentialUsername = Credential?.UserName,
-                CredentialPassword = Credential?.GetNetworkCredential()?.Password,
-            };
+            var options = BuildOptions(repositoryPath);
 
             var result = remoteService.Pull(options, (percent, message) =>
             {

@@ -57,6 +57,59 @@ public sealed class ReceiveGitBranchCmdletTests
         Assert.IsFalse(cmdlet.Prune.IsPresent);
     }
 
+    [TestMethod]
+    public void BuildOptions_DefaultSet_MergeStrategyAndPathMapped()
+    {
+        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService());
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("C:\\repo", options.RepositoryPath);
+        Assert.AreEqual(GitMergeStrategy.Merge, options.MergeStrategy);
+        Assert.IsFalse(options.AutoStash);
+        Assert.IsNull(options.Tags);
+    }
+
+    [TestMethod]
+    public void BuildOptions_AutoStashSet_AutoStashMapped()
+    {
+        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
+        {
+            AutoStash = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.AutoStash);
+    }
+
+    [TestMethod]
+    public void BuildOptions_TagsSet_TagsTrueInOptions()
+    {
+        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
+        {
+            Tags = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.Tags);
+    }
+
+    [TestMethod]
+    public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
+    {
+        var predefined = new GitPullOptions { RepositoryPath = "D:\\repo", AutoStash = true };
+        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
+        {
+            Options = predefined,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\ignored");
+
+        Assert.AreSame(predefined, options);
+    }
+
     private sealed class StubGitRemoteService : IGitRemoteService
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>

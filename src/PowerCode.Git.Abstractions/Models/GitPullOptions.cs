@@ -35,4 +35,21 @@ public sealed class GitPullOptions
     /// Gets or sets the optional password for HTTP authentication.
     /// </summary>
     public string? CredentialPassword { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically stash local changes before
+    /// pulling and re-apply them afterward (git pull --autostash).
+    /// </summary>
+    public bool AutoStash { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to fetch tags from the remote.
+    /// True fetches all tags; false suppresses automatic tag fetching; null uses the default.
+    /// </summary>
+    public bool? Tags { get; init; }
+
+    /// <summary>
+    /// Gets or sets the maximum depth to fetch (shallow pull). Null performs a full fetch.
+    /// </summary>
+    public int? Depth { get; init; }
 }
