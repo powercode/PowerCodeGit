@@ -17,5 +17,11 @@
         "gh": true
     },
     "FSharp.suggestGitignore": false,
-    "pester.runTestsInNewProcess": true
+    "pester.runTestsInNewProcess": true,
+    "xml.fileAssociations": [
+        {
+            "pattern": "**/PowerCode.Git.Format.ps1xml",
+            "systemId": "https://raw.githubusercontent.com/PowerShell/PowerShell/refs/heads/master/src/Schemas/Format.xsd"
+        }
+    ]
 }
