@@ -11,10 +11,10 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Copy-GitRepository -Url https://github.com/user/repo.git</code>
 /// </example>
 /// <example>
-/// <code>Copy-GitRepository -Url https://github.com/user/repo.git -LocalPath ./my-repo</code>
+/// <code>Copy-GitRepository -Url https://github.com/user/repo.git -LocalPath ./my-repo -Branch main</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true, DefaultParameterSetName = "Clone")]
 [OutputType(typeof(string))]
 public sealed class CopyGitRepositoryCmdlet : PSCmdlet
 {
@@ -40,7 +40,7 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
     /// <summary>
     /// Gets or sets the remote URL to clone from.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Clone")]
     [ValidateNotNullOrEmpty]
     public string Url { get; set; } = string.Empty;
 
@@ -48,13 +48,13 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
     /// Gets or sets the local directory to clone into.
     /// When omitted, the directory name is derived from the URL.
     /// </summary>
-    [Parameter(Position = 1)]
+    [Parameter(Position = 1, ParameterSetName = "Clone")]
     public string? LocalPath { get; set; }
 
     /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Clone")]
     [Credential]
     public PSCredential? Credential { get; set; }
 
@@ -62,31 +62,74 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
     /// Gets or sets a value indicating whether to clone only the default
     /// branch (--single-branch).
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Clone")]
     public SwitchParameter SingleBranch { get; set; }
+
+    /// <summary>
+    /// Gets or sets the branch name to check out after cloning.
+    /// </summary>
+    [Parameter(ParameterSetName = "Clone")]
+    [Alias("Branch")]
+    public string? BranchName { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to create a bare repository.
+    /// </summary>
+    [Parameter(ParameterSetName = "Clone")]
+    public SwitchParameter Bare { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to recursively clone submodules.
+    /// </summary>
+    [Parameter(ParameterSetName = "Clone")]
+    public SwitchParameter RecurseSubmodules { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built <see cref="GitCloneOptions"/> instance.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitCloneOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds the <see cref="GitCloneOptions"/> from current parameter values.
+    /// </summary>
+    internal GitCloneOptions BuildOptions()
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        return new GitCloneOptions
+        {
+            Url = Url,
+            LocalPath = LocalPath,
+            CredentialUsername = Credential?.UserName,
+            CredentialPassword = Credential?.GetNetworkCredential()?.Password,
+            SingleBranch = SingleBranch.IsPresent,
+            BranchName = BranchName,
+            Bare = Bare.IsPresent,
+            RecurseSubmodules = RecurseSubmodules.IsPresent,
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
-        if (!ShouldProcess(Url, "Clone repository"))
+        var urlDescription = Options?.Url ?? Url;
+
+        if (!ShouldProcess(urlDescription, "Clone repository"))
         {
             return;
         }
 
         try
         {
-            var options = new GitCloneOptions
-            {
-                Url = Url,
-                LocalPath = LocalPath,
-                CredentialUsername = Credential?.UserName,
-                CredentialPassword = Credential?.GetNetworkCredential()?.Password,
-                SingleBranch = SingleBranch.IsPresent,
-            };
+            var cloneOptions = BuildOptions();
 
-            var resultPath = remoteService.Clone(options, (percent, message) =>
+            var resultPath = remoteService.Clone(cloneOptions, (percent, message) =>
             {
                 var progressRecord = new ProgressRecord(1, "Cloning repository", message)
                 {
@@ -103,7 +146,7 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
                 exception,
                 "CopyGitRepositoryFailed",
                 ErrorCategory.InvalidOperation,
-                Url);
+                urlDescription);
 
             WriteError(errorRecord);
         }

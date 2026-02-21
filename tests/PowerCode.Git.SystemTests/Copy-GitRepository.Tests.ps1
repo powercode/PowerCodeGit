@@ -99,3 +99,27 @@ Describe 'Copy-GitRepository error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Copy-GitRepository -Options' {
+    BeforeAll {
+        $script:BareRepoPath = New-TestBareRepository
+        $script:ClonePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitClone_$([System.Guid]::NewGuid().ToString('N'))"
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:BareRepoPath
+        Remove-TestGitRepository -Path $script:ClonePath
+    }
+
+    It 'Clones using a GitCloneOptions object' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitCloneOptions]@{
+            Url       = $script:BareRepoPath
+            LocalPath = $script:ClonePath
+        }
+
+        $Result = Copy-GitRepository -Options $Opts
+
+        $Result | Should -Not -BeNullOrEmpty
+        Test-Path -Path $Result | Should -BeTrue
+    }
+}

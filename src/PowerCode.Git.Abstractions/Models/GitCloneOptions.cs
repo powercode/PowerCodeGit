@@ -31,4 +31,26 @@ public sealed class GitCloneOptions
     /// branch (equivalent to <c>--single-branch</c>).
     /// </summary>
     public bool SingleBranch { get; init; }
+
+    /// <summary>
+    /// Gets or sets the maximum number of commits to fetch (shallow clone).
+    /// Null performs a full clone.
+    /// </summary>
+    public int? Depth { get; init; }
+
+    /// <summary>
+    /// Gets or sets the branch name to check out after cloning.
+    /// Null checks out the remote's default branch.
+    /// </summary>
+    public string? BranchName { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to create a bare repository (--bare).
+    /// </summary>
+    public bool Bare { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to recursively clone submodules (--recurse-submodules).
+    /// </summary>
+    public bool RecurseSubmodules { get; init; }
 }
