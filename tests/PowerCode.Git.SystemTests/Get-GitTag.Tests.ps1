@@ -129,3 +129,59 @@ Describe 'Get-GitTag error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitTag -Pattern' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git tag v1.0.0 2>&1 | Out-Null
+            git tag v1.1.0 2>&1 | Out-Null
+            git tag -a release-2.0 -m 'Major release' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns only matching tags when -Pattern is specified' {
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath -Pattern 'v*')
+        $Tags | Should -HaveCount 2
+        $Tags | ForEach-Object { $_.Name | Should -Match '^v' }
+    }
+}
+
+Describe 'Get-GitTag -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git tag v1.0.0 2>&1 | Out-Null
+            git tag v2.0.0 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns tags matching the pattern in the Options object' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitTagListOptions]@{
+            RepositoryPath = $script:RepoPath
+            Pattern        = 'v1*'
+        }
+
+        $Tags = @(Get-GitTag -Options $Opts)
+        $Tags | Should -HaveCount 1
+        $Tags[0].Name | Should -BeExactly 'v1.0.0'
+    }
+}

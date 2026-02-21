@@ -6,9 +6,15 @@ using PowerCode.Git.Abstractions.Services;
 namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
-/// Lists tags in a git repository.
+/// Lists tags in a git repository (git tag -l).
+/// <example>
+/// <code>Get-GitTag</code>
+/// </example>
+/// <example>
+/// <code>Get-GitTag -Pattern "v1.*"</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitTag")]
+[Cmdlet(VerbsCommon.Get, "GitTag", DefaultParameterSetName = "Tag")]
 [OutputType(typeof(GitTagInfo))]
 public sealed class GetGitTagCmdlet : GitCmdlet
 {
@@ -32,6 +38,49 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     private readonly IGitTagService tagService;
 
     /// <summary>
+    /// Gets or sets a glob pattern to filter tag names.
+    /// </summary>
+    [Parameter(ParameterSetName = "Tag")]
+    public string? Pattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets the sort order. Accepts "name" or "version".
+    /// </summary>
+    [Parameter(ParameterSetName = "Tag")]
+    public string? SortBy { get; set; }
+
+    /// <summary>
+    /// Gets or sets a committish to filter only tags that contain the specified commit.
+    /// </summary>
+    [Parameter(ParameterSetName = "Tag")]
+    public string? ContainsCommit { get; set; }
+
+    /// <summary>
+    /// Gets or sets pre-built options.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitTagListOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds the <see cref="GitTagListOptions"/> from current parameter values.
+    /// </summary>
+    internal GitTagListOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        return new GitTagListOptions
+        {
+            RepositoryPath = currentFileSystemPath,
+            Pattern = Pattern,
+            SortBy = SortBy,
+            ContainsCommit = ContainsCommit,
+        };
+    }
+
+    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
@@ -40,7 +89,8 @@ public sealed class GetGitTagCmdlet : GitCmdlet
 
         try
         {
-            var tags = tagService.GetTags(repositoryPath);
+            var options = BuildOptions(repositoryPath);
+            var tags = tagService.GetTags(options);
 
             foreach (var tag in tags)
             {

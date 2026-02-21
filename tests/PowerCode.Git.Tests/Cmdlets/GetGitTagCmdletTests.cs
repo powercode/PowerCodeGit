@@ -30,9 +30,75 @@ public sealed class GetGitTagCmdletTests
         Assert.AreEqual("D:\\other-repo", resolvedPath);
     }
 
+    [TestMethod]
+    public void BuildOptions_DefaultSet_RepositoryPathMapped()
+    {
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService());
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("C:\\repo", options.RepositoryPath);
+        Assert.IsNull(options.Pattern);
+        Assert.IsNull(options.SortBy);
+        Assert.IsNull(options.ContainsCommit);
+    }
+
+    [TestMethod]
+    public void BuildOptions_PatternSet_PatternMapped()
+    {
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
+        {
+            Pattern = "v1.*",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("v1.*", options.Pattern);
+    }
+
+    [TestMethod]
+    public void BuildOptions_SortBySet_SortByMapped()
+    {
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
+        {
+            SortBy = "version",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("version", options.SortBy);
+    }
+
+    [TestMethod]
+    public void BuildOptions_ContainsCommitSet_ContainsCommitMapped()
+    {
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
+        {
+            ContainsCommit = "abc1234",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("abc1234", options.ContainsCommit);
+    }
+
+    [TestMethod]
+    public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
+    {
+        var predefined = new GitTagListOptions { RepositoryPath = "D:\\repo", Pattern = "release*" };
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
+        {
+            Options = predefined,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\ignored");
+
+        Assert.AreSame(predefined, options);
+    }
+
     private sealed class StubGitTagService : IGitTagService
     {
-        public IReadOnlyList<GitTagInfo> GetTags(string repositoryPath)
+        public IReadOnlyList<GitTagInfo> GetTags(GitTagListOptions options)
         {
             return Array.Empty<GitTagInfo>();
         }

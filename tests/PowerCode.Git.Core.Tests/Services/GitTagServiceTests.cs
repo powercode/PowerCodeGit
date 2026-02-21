@@ -159,8 +159,70 @@ public sealed class GitTagServiceTests
         }
     }
 
-    private static string CreateRepositoryWithCommit()
+    [TestMethod]
+    public void GetTags_WithPattern_ReturnsMatchingTagsOnly()
     {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using (var repository = new Repository(repositoryPath))
+            {
+                repository.Tags.Add("v1.0.0", repository.Head.Tip);
+                repository.Tags.Add("v2.0.0", repository.Head.Tip);
+                var tagger = new Signature("T", "t@t.com", DateTimeOffset.UtcNow);
+                repository.Tags.Add("release-alpha", repository.Head.Tip, tagger, "alpha");
+            }
+
+            var service = new GitTagService();
+            var tags = service.GetTags(new GitTagListOptions
+            {
+                RepositoryPath = repositoryPath,
+                Pattern = "v*",
+            });
+
+            Assert.HasCount(2, tags);
+            Assert.IsTrue(tags.All(t => t.Name.StartsWith("v", StringComparison.OrdinalIgnoreCase)));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetTags_WithSortByVersion_ReturnsSortedByVersion()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using (var repository = new Repository(repositoryPath))
+            {
+                repository.Tags.Add("v10.0.0", repository.Head.Tip);
+                repository.Tags.Add("v2.0.0", repository.Head.Tip);
+                repository.Tags.Add("v1.0.0", repository.Head.Tip);
+            }
+
+            var service = new GitTagService();
+            var tags = service.GetTags(new GitTagListOptions
+            {
+                RepositoryPath = repositoryPath,
+                SortBy = "version",
+            });
+
+            // v1 < v2 < v10 when sorted by version
+            Assert.AreEqual("v1.0.0", tags[0].Name);
+            Assert.AreEqual("v2.0.0", tags[1].Name);
+            Assert.AreEqual("v10.0.0", tags[2].Name);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    private static string CreateRepositoryWithCommit()    {
         var repositoryPath = CreateTemporaryDirectory();
         Repository.Init(repositoryPath);
 
