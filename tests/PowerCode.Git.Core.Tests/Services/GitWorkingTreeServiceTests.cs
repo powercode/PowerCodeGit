@@ -361,6 +361,78 @@ public sealed class GitWorkingTreeServiceTests
         }
     }
 
+    [TestMethod]
+    public void Stage_WithUpdate_StagesOnlyTrackedFiles()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+
+            // Modify tracked file
+            var trackedFile = Path.Combine(repositoryPath, "file-0.txt");
+            File.WriteAllText(trackedFile, "modified content");
+
+            // Add untracked file (should NOT be staged by Update)
+            var untrackedFile = Path.Combine(repositoryPath, "untracked.txt");
+            File.WriteAllText(untrackedFile, "new file");
+
+            var service = new GitWorkingTreeService();
+            service.Stage(new GitStageOptions { RepositoryPath = repositoryPath, Update = true });
+
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
+
+            // The tracked modified file should be staged
+            Assert.IsTrue(result.StagedCount >= 1);
+
+            // The untracked file should still be untracked (not staged)
+            Assert.IsTrue(result.UntrackedCount >= 1);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void Stage_WithForce_StagesIgnoredFiles()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+
+            // Create a .gitignore and an ignored file
+            var gitignorePath = Path.Combine(repositoryPath, ".gitignore");
+            File.WriteAllText(gitignorePath, "ignored.txt\n");
+            Commands.Stage(repository, gitignorePath);
+            var sig = new Signature("Test", "t@t.com", DateTimeOffset.UtcNow);
+            repository.Commit("Add .gitignore", sig, sig);
+
+            var ignoredFile = Path.Combine(repositoryPath, "ignored.txt");
+            File.WriteAllText(ignoredFile, "this is ignored");
+
+            var service = new GitWorkingTreeService();
+            service.Stage(new GitStageOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = ["ignored.txt"],
+                Force = true,
+            });
+
+            var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
+
+            // The forced-staged ignored file should be staged
+            Assert.IsTrue(result.StagedCount >= 1);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static string CreateRepositoryWithCommit()
     {
         var repositoryPath = CreateTemporaryDirectory();

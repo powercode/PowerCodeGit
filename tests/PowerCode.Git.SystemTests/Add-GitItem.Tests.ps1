@@ -74,3 +74,52 @@ Describe 'Add-GitItem error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Add-GitItem -Update' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages only tracked modified files, not untracked files' {
+        $ExistingFile = Get-ChildItem -Path $script:RepoPath -Filter 'file_*.txt' | Select-Object -First 1
+        Set-Content -Path $ExistingFile.FullName -Value 'modified content'
+
+        $UntrackedFile = Join-Path -Path $script:RepoPath -ChildPath 'new-untracked.txt'
+        Set-Content -Path $UntrackedFile -Value 'untracked'
+
+        Add-GitItem -RepoPath $script:RepoPath -Update
+
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.StagedCount | Should -BeGreaterOrEqual 1
+        $Status.UntrackedCount | Should -BeGreaterOrEqual 1
+    }
+}
+
+Describe 'Add-GitItem -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages all changes when Options with All=true is provided' {
+        Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'options-a.txt') -Value 'a'
+        Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'options-b.txt') -Value 'b'
+
+        $Opts = [PowerCode.Git.Abstractions.Models.GitStageOptions]@{
+            RepositoryPath = $script:RepoPath
+            All            = $true
+        }
+
+        Add-GitItem -RepoPath $script:RepoPath -Options $Opts
+
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.StagedCount | Should -BeGreaterOrEqual 2
+    }
+}

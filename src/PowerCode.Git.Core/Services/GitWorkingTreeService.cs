@@ -209,20 +209,40 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         using var repository = new Repository(options.RepositoryPath);
 
+        var stageOptions = options.Force
+            ? new StageOptions { IncludeIgnored = true }
+            : null;
+
+        if (options.Update)
+        {
+            // Stage only already-tracked files that have modifications (git add -u)
+            var trackedPaths = repository.RetrieveStatus()
+                .Where(e => !e.State.HasFlag(FileStatus.NewInWorkdir) && !e.State.HasFlag(FileStatus.Ignored))
+                .Select(e => e.FilePath)
+                .ToList();
+
+            foreach (var path in trackedPaths)
+            {
+                Commands.Stage(repository, path, stageOptions);
+            }
+
+            return;
+        }
+
         if (options.All)
         {
-            Commands.Stage(repository, "*");
+            Commands.Stage(repository, "*", stageOptions);
             return;
         }
 
         if (options.Paths is not { Count: > 0 })
         {
-            throw new ArgumentException("Either Paths or All must be specified.", nameof(options));
+            throw new ArgumentException("Either Paths, All, or Update must be specified.", nameof(options));
         }
 
         foreach (var path in options.Paths)
         {
-            Commands.Stage(repository, path);
+            Commands.Stage(repository, path, stageOptions);
         }
     }
 

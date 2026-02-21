@@ -22,4 +22,14 @@ public sealed class GitStageOptions
     /// Gets or sets a value indicating whether to stage all changes.
     /// </summary>
     public bool All { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to stage only already-tracked files (git add -u).
+    /// </summary>
+    public bool Update { get; init; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to allow staging ignored files (git add -f).
+    /// </summary>
+    public bool Force { get; init; }
 }
