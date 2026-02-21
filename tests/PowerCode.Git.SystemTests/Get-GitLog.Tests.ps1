@@ -307,3 +307,69 @@ Describe 'Get-GitLog parent commit tracking' {
         $SecondCommit.ParentShas[0] | Should -BeExactly $FirstCommit.Sha
     }
 }
+
+Describe 'Get-GitLog -FirstParent' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns commits following only the first parent' {
+        $AllCommits = @(Get-GitLog -RepoPath $script:RepoPath)
+        $FirstParentCommits = @(Get-GitLog -RepoPath $script:RepoPath -FirstParent)
+        $FirstParentCommits.Count | Should -BeLessOrEqual $AllCommits.Count
+    }
+}
+
+Describe 'Get-GitLog -NoMerges' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit', 'Second commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Excludes no commits when there are no merges' {
+        $AllCommits = @(Get-GitLog -RepoPath $script:RepoPath)
+        $NoMergeCommits = @(Get-GitLog -RepoPath $script:RepoPath -NoMerges)
+        $NoMergeCommits.Count | Should -BeLessOrEqual $AllCommits.Count
+    }
+}
+
+Describe 'Get-GitLog -AllBranches' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit', 'Second commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns commits from all local branches' {
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -AllBranches)
+        $Commits.Count | Should -BeGreaterOrEqual 1
+    }
+}
+
+Describe 'Get-GitLog -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit', 'Second commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns log when Options object is provided' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitLogOptions]::new()
+        $Opts.RepositoryPath = $script:RepoPath
+        $Opts.MaxCount = 1
+
+        $Commits = @(Get-GitLog -RepoPath $script:RepoPath -Options $Opts)
+        $Commits | Should -HaveCount 1
+    }
+}

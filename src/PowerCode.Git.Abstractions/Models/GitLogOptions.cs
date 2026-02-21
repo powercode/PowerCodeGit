@@ -54,6 +54,18 @@ public sealed class GitLogOptions
     /// </summary>
     public string[]? Paths { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to follow only the first parent
+    /// commit when traversing the history (equivalent to <c>git log --first-parent</c>).
+    /// </summary>
+    public bool FirstParent { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to exclude merge commits from the results
+    /// (equivalent to <c>git log --no-merges</c>).
+    /// </summary>
+    public bool NoMerges { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -66,6 +78,8 @@ public sealed class GitLogOptions
         if (Until.HasValue) parts.Add($"until={Until:yyyy-MM-dd}");
         if (MessagePattern is not null) parts.Add($"grep={MessagePattern}");
         if (Paths is { Length: > 0 }) parts.Add($"paths=[{string.Join(", ", Paths)}]");
+        if (FirstParent) parts.Add("first-parent");
+        if (NoMerges) parts.Add("no-merges");
 
         return parts.Count > 0
             ? $"GitLogOptions({string.Join(", ", parts)})"

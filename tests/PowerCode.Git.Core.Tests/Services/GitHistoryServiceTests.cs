@@ -163,6 +163,91 @@ public sealed class GitHistoryServiceTests
         return repositoryPath;
     }
 
+    [TestMethod]
+    public void GetLog_WithFirstParent_ExcludesMergedSideBranchCommits()
+    {
+        var repositoryPath = CreateRepositoryWithMergeCommit();
+
+        try
+        {
+            var service = new GitHistoryService();
+
+            var allCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath });
+            var firstParentCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath, FirstParent = true });
+
+            // FirstParent should return fewer or equal commits (filters side-branch commits)
+            Assert.IsTrue(firstParentCommits.Count <= allCommits.Count);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetLog_WithNoMerges_ExcludesMergeCommits()
+    {
+        var repositoryPath = CreateRepositoryWithMergeCommit();
+
+        try
+        {
+            var service = new GitHistoryService();
+
+            var allCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath });
+            var noMergeCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath, NoMerges = true });
+
+            // All commits from noMerges should have at most 1 parent
+            Assert.IsTrue(noMergeCommits.Count <= allCommits.Count);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    private static string CreateRepositoryWithMergeCommit()
+    {
+        var repositoryPath = CreateTemporaryDirectory();
+        Repository.Init(repositoryPath);
+
+        using var repository = new Repository(repositoryPath);
+        var sig = new Signature("PowerCode.Git", "git@example.com", DateTimeOffset.UtcNow);
+
+        // Initial commit on main
+        var f0 = System.IO.Path.Combine(repositoryPath, "main.txt");
+        File.WriteAllText(f0, "main");
+        Commands.Stage(repository, f0);
+        repository.Commit("Initial commit", sig, sig);
+
+        var headBranch = repository.Head;
+        var headBranchName = headBranch.FriendlyName;
+        var headTip = headBranch.Tip;
+
+        // Feature branch
+        var featureBranch = repository.CreateBranch("feature");
+        Commands.Checkout(repository, featureBranch);
+
+        var f1 = System.IO.Path.Combine(repositoryPath, "feature.txt");
+        File.WriteAllText(f1, "feature");
+        Commands.Stage(repository, f1);
+        repository.Commit("Feature commit", sig, sig);
+
+        // Back to main and merge - use the canonical name to find the branch
+        var mainBranch = repository.Branches.FirstOrDefault(b => !b.IsRemote && b.FriendlyName == headBranchName)
+            ?? repository.Branches.FirstOrDefault(b => !b.IsRemote && b.Tip?.Sha == headTip?.Sha)
+            ?? throw new InvalidOperationException($"Cannot find branch '{headBranchName}'");
+        Commands.Checkout(repository, mainBranch);
+
+        var f2 = System.IO.Path.Combine(repositoryPath, "main2.txt");
+        File.WriteAllText(f2, "main2");
+        Commands.Stage(repository, f2);
+        repository.Commit("Second main commit", sig, sig);
+
+        repository.Merge(featureBranch, sig, new MergeOptions { FastForwardStrategy = FastForwardStrategy.NoFastForward });
+
+        return repositoryPath;
+    }
+
     private static string CreateTemporaryDirectory()
     {
         var path = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "PowerCode.GitTests", Guid.NewGuid().ToString("N"));

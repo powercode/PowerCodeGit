@@ -42,6 +42,58 @@ public sealed class GetGitLogCmdletTests
         Assert.AreEqual("fix", options.MessagePattern);
     }
 
+    [TestMethod]
+    public void BuildOptions_AllBranchesSet_AllBranchesTrue()
+    {
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService());
+        cmdlet.AllBranches = new System.Management.Automation.SwitchParameter(true);
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.AllBranches);
+    }
+
+    [TestMethod]
+    public void BuildOptions_FirstParentSet_FirstParentTrue()
+    {
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService());
+        cmdlet.FirstParent = new System.Management.Automation.SwitchParameter(true);
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.FirstParent);
+    }
+
+    [TestMethod]
+    public void BuildOptions_NoMergesSet_NoMergesTrue()
+    {
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService());
+        cmdlet.NoMerges = new System.Management.Automation.SwitchParameter(true);
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.NoMerges);
+    }
+
+    [TestMethod]
+    public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
+    {
+        var prebuilt = new GitLogOptions
+        {
+            RepositoryPath = "D:\\prebuilt",
+            AllBranches = true,
+            FirstParent = true,
+        };
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService())
+        {
+            Options = prebuilt,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\ignored");
+
+        Assert.AreSame(prebuilt, options);
+    }
+
     private sealed class StubGitHistoryService : IGitHistoryService
     {
         public IReadOnlyList<GitCommitInfo> GetLog(GitLogOptions options)

@@ -71,6 +71,16 @@ public sealed class GitHistoryService : IGitHistoryService
             commits = commits.Where(commit => CommitTouchesAnyPath(repository, commit, paths));
         }
 
+        if (options.FirstParent)
+        {
+            commits = FilterFirstParentOnly(commits);
+        }
+
+        if (options.NoMerges)
+        {
+            commits = commits.Where(c => c.Parents.Count() <= 1);
+        }
+
         if (options.MaxCount is not null && options.MaxCount.Value > 0)
         {
             commits = commits.Take(options.MaxCount.Value);
@@ -79,6 +89,31 @@ public sealed class GitHistoryService : IGitHistoryService
         var decorationMap = BuildDecorationMap(repository);
 
         return commits.Select(c => MapCommit(c, decorationMap)).ToList();
+    }
+
+    /// <summary>
+    /// Filters a commit sequence to follow only the first parent of each commit
+    /// (equivalent to <c>git log --first-parent</c>).
+    /// </summary>
+    private static IEnumerable<Commit> FilterFirstParentOnly(IEnumerable<Commit> commits)
+    {
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var commit in commits)
+        {
+            if (!visited.Add(commit.Sha))
+            {
+                continue;
+            }
+
+            yield return commit;
+
+            // Only follow the first parent's ancestry chain
+            if (commit.Parents.Any())
+            {
+                visited.Add(commit.Parents.First().Sha);
+            }
+        }
     }
 
     /// <summary>
