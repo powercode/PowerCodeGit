@@ -19,7 +19,6 @@ namespace PowerCode.Git.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsData.Save, "GitCommit", SupportsShouldProcess = true, DefaultParameterSetName = "Commit")]
 [OutputType(typeof(GitCommitInfo))]
-[Alias("sgc")]
 public sealed class SaveGitCommitCmdlet : GitCmdlet
 {
     /// <summary>
