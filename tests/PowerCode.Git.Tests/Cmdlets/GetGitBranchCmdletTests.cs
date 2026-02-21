@@ -171,10 +171,8 @@ public sealed class GetGitBranchCmdletTests
             return Array.Empty<GitBranchInfo>();
         }
 
-        public GitBranchInfo SwitchBranch(string repositoryPath, string branchName)
-        {
-            return new GitBranchInfo(branchName, true, false, "abc1234", null, null, null);
-        }
+        public GitBranchInfo SwitchBranch(GitSwitchOptions options) =>
+            new GitBranchInfo(options.BranchName ?? "HEAD", true, false, "abc1234", null, null, null);
 
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             throw new NotImplementedException();

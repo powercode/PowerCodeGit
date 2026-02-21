@@ -170,7 +170,7 @@ public sealed class GitBranchCompleterTests
     {
         public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) => branches;
 
-        public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
+        public GitBranchInfo SwitchBranch(GitSwitchOptions options) =>
             throw new NotImplementedException();
 
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
@@ -185,7 +185,7 @@ public sealed class GitBranchCompleterTests
         public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) =>
             throw new InvalidOperationException("Not a git repository");
 
-        public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
+        public GitBranchInfo SwitchBranch(GitSwitchOptions options) =>
             throw new NotImplementedException();
 
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>

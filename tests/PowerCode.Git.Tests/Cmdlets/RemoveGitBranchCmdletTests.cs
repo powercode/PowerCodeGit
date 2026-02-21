@@ -112,8 +112,8 @@ public sealed class RemoveGitBranchCmdletTests
         public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) =>
             Array.Empty<GitBranchInfo>();
 
-        public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
-            new(branchName, true, false, "abc1234", null, null, null);
+        public GitBranchInfo SwitchBranch(GitSwitchOptions options) =>
+            new(options.BranchName ?? "HEAD", true, false, "abc1234", null, null, null);
 
         public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
             new(options.Name, true, false, "abc1234", null, null, null);

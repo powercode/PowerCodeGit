@@ -97,7 +97,7 @@ public sealed class GitBranchServiceTests
     {
         var service = new GitBranchService();
 
-        Assert.Throws<ArgumentException>(() => service.SwitchBranch("X:\\not-a-real-repo", "main"));
+        Assert.Throws<ArgumentException>(() => service.SwitchBranch(new GitSwitchOptions { RepositoryPath = "X:\\not-a-real-repo", BranchName = "main" }));
     }
 
     [TestMethod]
@@ -109,7 +109,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-                Assert.Throws<ArgumentException>(() => service.SwitchBranch(repositoryPath, string.Empty));
+                Assert.Throws<ArgumentException>(() => service.SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = string.Empty }));
         }
         finally
         {
@@ -126,7 +126,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-            Assert.Throws<ArgumentException>(() => service.SwitchBranch(repositoryPath, "nonexistent"));
+            Assert.Throws<ArgumentException>(() => service.SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = "nonexistent" }));
         }
         finally
         {
@@ -143,7 +143,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-            var result = service.SwitchBranch(repositoryPath, "feature");
+            var result = service.SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = "feature" });
 
             Assert.AreEqual("feature", result.Name);
             Assert.IsTrue(result.IsHead);
@@ -151,6 +151,65 @@ public sealed class GitBranchServiceTests
 
             using var repository = new Repository(repositoryPath);
             Assert.AreEqual("feature", repository.Head.FriendlyName);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void SwitchBranch_WithCreate_CreatesAndSwitchesBranch()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var result = service.SwitchBranch(new GitSwitchOptions
+            {
+                RepositoryPath = repositoryPath,
+                BranchName = "new-branch",
+                Create = true,
+            });
+
+            Assert.AreEqual("new-branch", result.Name);
+            Assert.IsTrue(result.IsHead);
+
+            using var repository = new Repository(repositoryPath);
+            Assert.AreEqual("new-branch", repository.Head.FriendlyName);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void SwitchBranch_WithDetach_DetachesHeadAtCommit()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            string sha;
+            using (var repository = new Repository(repositoryPath))
+            {
+                sha = repository.Head.Tip.Sha;
+            }
+
+            var result = service.SwitchBranch(new GitSwitchOptions
+            {
+                RepositoryPath = repositoryPath,
+                Detach = true,
+                Committish = sha,
+            });
+
+            Assert.IsTrue(result.IsHead);
+            Assert.AreEqual(sha, result.TipSha);
         }
         finally
         {

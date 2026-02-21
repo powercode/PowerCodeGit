@@ -77,3 +77,51 @@ Describe 'Switch-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Switch-GitBranch -Create' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Creates and switches to a new branch' {
+        $Result = Switch-GitBranch -RepoPath $script:RepoPath -Name 'new-feature' -Create
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'new-feature'
+        $Result.IsHead | Should -BeTrue
+    }
+}
+
+Describe 'Switch-GitBranch -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b opts-branch 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Switches branch via -Options parameter set' {
+        $Options = [PowerCode.Git.Abstractions.Models.GitSwitchOptions]@{
+            RepositoryPath = $script:RepoPath
+            BranchName     = 'opts-branch'
+        }
+
+        $Result = Switch-GitBranch -Options $Options
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'opts-branch'
+        $Result.IsHead | Should -BeTrue
+    }
+}

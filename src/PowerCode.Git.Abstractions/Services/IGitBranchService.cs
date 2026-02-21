@@ -24,12 +24,20 @@ public interface IGitBranchService
         => GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
 
     /// <summary>
+    /// Switches the repository HEAD using the specified options.
+    /// </summary>
+    /// <param name="options">Options controlling the switch operation.</param>
+    /// <returns>The branch information for the new HEAD.</returns>
+    GitBranchInfo SwitchBranch(GitSwitchOptions options);
+
+    /// <summary>
     /// Switches the repository HEAD to the specified branch.
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
     /// <param name="branchName">The name of the branch to switch to.</param>
     /// <returns>The branch information for the new HEAD.</returns>
-    GitBranchInfo SwitchBranch(string repositoryPath, string branchName);
+    GitBranchInfo SwitchBranch(string repositoryPath, string branchName)
+        => SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = branchName });
 
     /// <summary>
     /// Creates a new branch using the specified options.

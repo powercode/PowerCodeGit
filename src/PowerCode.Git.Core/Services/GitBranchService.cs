@@ -113,20 +113,71 @@ public sealed class GitBranchService : IGitBranchService
     }
 
     /// <inheritdoc/>
-    public GitBranchInfo SwitchBranch(string repositoryPath, string branchName)
+    public GitBranchInfo SwitchBranch(GitSwitchOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
-        RepositoryGuard.ValidateRequiredString(branchName, nameof(branchName), "BranchName is required.");
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
 
-        var branch = repository.Branches[branchName]
-            ?? throw new ArgumentException($"The branch '{branchName}' does not exist.", nameof(branchName));
+        var checkoutOptions = new CheckoutOptions
+        {
+            CheckoutModifiers = options.Force
+                ? CheckoutModifiers.Force
+                : CheckoutModifiers.None,
+        };
 
-        Commands.Checkout(repository, branch);
+        if (options.Detach)
+        {
+            var committish = options.Committish
+                ?? throw new ArgumentException("Committish is required when Detach is true.", nameof(options));
+            var commit = repository.Lookup<Commit>(committish)
+                ?? throw new ArgumentException($"Committish '{committish}' was not found.", nameof(options));
+            Commands.Checkout(repository, commit, checkoutOptions);
 
-        // Re-read the branch after checkout to get accurate IsHead state
-        var updatedBranch = repository.Branches[branchName]!;
+            // Return a synthetic "detached HEAD" branch info
+            return new GitBranchInfo(
+                commit.Sha[..7],
+                true,
+                false,
+                commit.Sha,
+                null,
+                null,
+                null);
+        }
+
+        if (options.Create)
+        {
+            if (options.BranchName is null)
+                throw new ArgumentException("BranchName is required when Create is true.", nameof(options));
+            RepositoryGuard.ValidateRequiredString(options.BranchName, nameof(options), "BranchName is required when Create is true.");
+
+            Branch newBranch;
+            if (options.StartPoint is not null)
+            {
+                var startCommit = ResolveCommitOrHead(repository, options.StartPoint);
+                newBranch = repository.CreateBranch(options.BranchName!, startCommit);
+            }
+            else
+            {
+                newBranch = repository.CreateBranch(options.BranchName!);
+            }
+
+            Commands.Checkout(repository, newBranch, checkoutOptions);
+            var updatedNewBranch = repository.Branches[options.BranchName!]!;
+            return MapBranch(updatedNewBranch);
+        }
+
+        // Default: switch to existing branch
+        if (options.BranchName is null)
+            throw new ArgumentException("BranchName is required.", nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.BranchName, nameof(options), "BranchName is required.");
+
+        var branch = repository.Branches[options.BranchName!]
+            ?? throw new ArgumentException($"The branch '{options.BranchName}' does not exist.", nameof(options));
+
+        Commands.Checkout(repository, branch, checkoutOptions);
+
+        var updatedBranch = repository.Branches[options.BranchName!]!;
         return MapBranch(updatedBranch);
     }
 
