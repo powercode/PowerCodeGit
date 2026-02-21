@@ -19,4 +19,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>false</ImplicitUsings>
   </PropertyGroup>
+
+  <!-- Record whether the user explicitly set Version (e.g. /p:Version=X.Y.Z) before targets run -->
+  <PropertyGroup>
+    <_UserDefinedVersion Condition="'$(Version)' != '1.0.0' and '$(Version)' != ''">true</_UserDefinedVersion>
+  </PropertyGroup>
 </Project>

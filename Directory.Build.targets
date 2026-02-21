@@ -1,0 +1,46 @@
+<Project>
+
+  <!--
+    Derive the Version property from 'git describe - -tags' so that all assemblies
+    carry the correct AssemblyVersion, FileVersion and InformationalVersion.
+
+    Examples of git describe output → Version property:
+      v1.2.3              → 1.2.3
+      v1.2.3-5-gabcdef0   → 1.2.3-5-gabcdef0
+      v1.2.3-beta.1       → 1.2.3-beta.1
+
+    The target is skipped when:
+      • DisableGitDescribeVersion is set to 'true'
+      • git is not available or no tags are reachable (fresh shallow clone)
+
+    When Version is passed via /p:Version=... on the command line, MSBuild global
+    property precedence ensures the command-line value wins over the target.
+  -->
+  <Target Name="SetVersionFromGitDescribe"
+          BeforeTargets="GetAssemblyVersion;GenerateAssemblyInfo;CoreCompile"
+          Condition="'$(DisableGitDescribeVersion)' != 'true'">
+
+    <Exec Command="git describe --tags --always --dirty"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="Low"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="GitDescribeOutput" />
+      <Output TaskParameter="ExitCode"      PropertyName="GitDescribeExitCode" />
+    </Exec>
+
+    <PropertyGroup Condition="'$(GitDescribeExitCode)' == '0' and '$(GitDescribeOutput)' != ''">
+      <_GitDescribeVersion>$([System.Text.RegularExpressions.Regex]::Replace($(GitDescribeOutput), '^v', ''))</_GitDescribeVersion>
+    </PropertyGroup>
+
+    <!-- Only override Version when the user did not explicitly set it via /p:Version -->
+    <PropertyGroup Condition="'$(_UserDefinedVersion)' != 'true' and '$(_GitDescribeVersion)' != ''">
+      <Version>$(_GitDescribeVersion)</Version>
+    </PropertyGroup>
+
+    <Message Importance="High"
+             Text="Version from git describe: $(_GitDescribeVersion)"
+             Condition="'$(_UserDefinedVersion)' != 'true' and '$(_GitDescribeVersion)' != ''" />
+
+  </Target>
+
+</Project>

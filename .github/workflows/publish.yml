@@ -78,12 +78,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           sparse-checkout: scripts
+          fetch-depth: 0
           path: repo
 
-      - name: Determine Version from Tag
+      - name: Determine Version from Git
         id: version
         shell: pwsh
-        run: ./repo/scripts/Get-ModuleVersionFromTag.ps1 -Tag '${{ github.ref_name }}'
+        working-directory: repo
+        run: ./scripts/Get-ModuleVersionFromGit.ps1
 
       - name: Patch Module Manifest
         shell: pwsh
