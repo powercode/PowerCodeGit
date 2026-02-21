@@ -13,8 +13,11 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>Save-GitCommit -Amend</code>
 /// </example>
+/// <example>
+/// <code>Save-GitCommit -All -Message "Track all changes"</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsData.Save, "GitCommit", SupportsShouldProcess = true)]
+[Cmdlet(VerbsData.Save, "GitCommit", SupportsShouldProcess = true, DefaultParameterSetName = "Commit")]
 [OutputType(typeof(GitCommitInfo))]
 [Alias("sgc")]
 public sealed class SaveGitCommitCmdlet : GitCmdlet
@@ -41,21 +44,68 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the commit message.
     /// </summary>
-    [Parameter(Position = 0)]
+    [Parameter(Position = 0, ParameterSetName = "Commit")]
     [Alias("m")]
     public string? Message { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to amend the previous commit.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Commit")]
     public SwitchParameter Amend { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to allow creating an empty commit.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "Commit")]
     public SwitchParameter AllowEmpty { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically stage all tracked modified files before committing (git commit -a).
+    /// </summary>
+    [Parameter(ParameterSetName = "Commit")]
+    public SwitchParameter All { get; set; }
+
+    /// <summary>
+    /// Gets or sets the author in "Name &lt;email&gt;" format. Null uses the git config identity.
+    /// </summary>
+    [Parameter(ParameterSetName = "Commit")]
+    public string? Author { get; set; }
+
+    /// <summary>
+    /// Gets or sets the author/committer date override. Null uses the current time.
+    /// </summary>
+    [Parameter(ParameterSetName = "Commit")]
+    public DateTimeOffset? Date { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built <see cref="GitCommitOptions"/> instance.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitCommitOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds the <see cref="GitCommitOptions"/> from the current parameter values.
+    /// </summary>
+    /// <param name="currentFileSystemPath">The current working directory path.</param>
+    internal GitCommitOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        return new GitCommitOptions
+        {
+            RepositoryPath = currentFileSystemPath,
+            Message = Message,
+            Amend = Amend.IsPresent,
+            AllowEmpty = AllowEmpty.IsPresent,
+            All = All.IsPresent,
+            Author = Author,
+            Date = Date,
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
@@ -72,14 +122,7 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
 
         try
         {
-            var options = new GitCommitOptions
-            {
-                RepositoryPath = repositoryPath,
-                Message = Message,
-                Amend = Amend.IsPresent,
-                AllowEmpty = AllowEmpty.IsPresent,
-            };
-
+            var options = BuildOptions(repositoryPath);
             var result = historyService.Commit(options);
             WriteObject(result);
         }

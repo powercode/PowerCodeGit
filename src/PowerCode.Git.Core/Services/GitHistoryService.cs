@@ -209,11 +209,52 @@ public sealed class GitHistoryService : IGitHistoryService
         using var repository = new Repository(options.RepositoryPath);
 
         var config = repository.Config;
-        var name = config.Get<string>("user.name")?.Value
+        var configName = config.Get<string>("user.name")?.Value
             ?? throw new InvalidOperationException("Git user.name is not configured.");
-        var email = config.Get<string>("user.email")?.Value
+        var configEmail = config.Get<string>("user.email")?.Value
             ?? throw new InvalidOperationException("Git user.email is not configured.");
-        var signature = new Signature(name, email, DateTimeOffset.Now);
+
+        var when = options.Date ?? DateTimeOffset.Now;
+
+        Signature authorSignature;
+        if (!string.IsNullOrWhiteSpace(options.Author))
+        {
+            // Parse "Name <email>" format
+            var authorStr = options.Author!;
+            var emailStart = authorStr.LastIndexOf('<');
+            var emailEnd = authorStr.LastIndexOf('>');
+
+            if (emailStart >= 0 && emailEnd > emailStart)
+            {
+                var authorName = authorStr[..emailStart].Trim();
+                var authorEmail = authorStr[(emailStart + 1)..emailEnd].Trim();
+                authorSignature = new Signature(authorName, authorEmail, when);
+            }
+            else
+            {
+                authorSignature = new Signature(authorStr, configEmail, when);
+            }
+        }
+        else
+        {
+            authorSignature = new Signature(configName, configEmail, when);
+        }
+
+        var committerSignature = new Signature(configName, configEmail, when);
+
+        if (options.All)
+        {
+            // Stage all tracked modified files (git commit -a)
+            var trackedPaths = repository.RetrieveStatus()
+                .Where(e => !e.State.HasFlag(FileStatus.NewInWorkdir) && !e.State.HasFlag(FileStatus.Ignored))
+                .Select(e => e.FilePath)
+                .ToList();
+
+            foreach (var path in trackedPaths)
+            {
+                Commands.Stage(repository, path);
+            }
+        }
 
         var message = options.Message;
 
@@ -224,8 +265,8 @@ public sealed class GitHistoryService : IGitHistoryService
 
             var amendedCommit = repository.Commit(
                 message,
-                signature,
-                signature,
+                authorSignature,
+                committerSignature,
                 new CommitOptions { AmendPreviousCommit = true });
 
             return MapCommit(amendedCommit);
@@ -241,7 +282,7 @@ public sealed class GitHistoryService : IGitHistoryService
             AllowEmptyCommit = options.AllowEmpty,
         };
 
-        var newCommit = repository.Commit(message, signature, signature, commitOptions);
+        var newCommit = repository.Commit(message, authorSignature, committerSignature, commitOptions);
         return MapCommit(newCommit);
     }
 }

@@ -205,6 +205,110 @@ public sealed class GitHistoryServiceTests
         }
     }
 
+    [TestMethod]
+    public void Commit_WithAll_StagesTrackedFilesAndCommits()
+    {
+        var repositoryPath = CreateRepositoryWithCommits(1, out _);
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            repository.Config.Set("user.name", "Test Author");
+            repository.Config.Set("user.email", "test@example.com");
+
+            // Modify the tracked file without staging
+            var existingFile = System.IO.Path.Combine(repositoryPath, "file-0.txt");
+            File.WriteAllText(existingFile, "modified content");
+
+            var service = new GitHistoryService();
+            var options = new GitCommitOptions
+            {
+                RepositoryPath = repositoryPath,
+                Message = "commit with all",
+                All = true,
+            };
+
+            var result = service.Commit(options);
+
+            Assert.AreEqual("commit with all", result.Message.Trim());
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void Commit_WithCustomAuthor_UsesProvidedAuthor()
+    {
+        var repositoryPath = CreateRepositoryWithCommits(1, out _);
+
+        try
+        {
+            using var tmpRepo = new Repository(repositoryPath);
+            tmpRepo.Config.Set("user.name", "Test Author");
+            tmpRepo.Config.Set("user.email", "test@example.com");
+
+            var filePath = System.IO.Path.Combine(repositoryPath, "new.txt");
+            File.WriteAllText(filePath, "new");
+            Commands.Stage(tmpRepo, filePath);
+
+            var service = new GitHistoryService();
+            var options = new GitCommitOptions
+            {
+                RepositoryPath = repositoryPath,
+                Message = "custom author commit",
+                Author = "Jane Doe <jane@example.com>",
+            };
+
+            var result = service.Commit(options);
+
+            Assert.AreEqual("Jane Doe", result.AuthorName);
+            Assert.AreEqual("jane@example.com", result.AuthorEmail);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void Commit_WithCustomDate_UsesProvidedDate()
+    {
+        var repositoryPath = CreateRepositoryWithCommits(1, out _);
+
+        try
+        {
+            using var tmpRepo = new Repository(repositoryPath);
+            tmpRepo.Config.Set("user.name", "Test Author");
+            tmpRepo.Config.Set("user.email", "test@example.com");
+
+            var filePath = System.IO.Path.Combine(repositoryPath, "dated.txt");
+            File.WriteAllText(filePath, "dated");
+            Commands.Stage(tmpRepo, filePath);
+
+            var expectedDate = new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.Zero);
+
+            var service = new GitHistoryService();
+            var options = new GitCommitOptions
+            {
+                RepositoryPath = repositoryPath,
+                Message = "backdated commit",
+                Date = expectedDate,
+            };
+
+            var result = service.Commit(options);
+
+            Assert.AreEqual(expectedDate.Year, result.AuthorDate.Year);
+            Assert.AreEqual(expectedDate.Month, result.AuthorDate.Month);
+            Assert.AreEqual(expectedDate.Day, result.AuthorDate.Day);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static string CreateRepositoryWithMergeCommit()
     {
         var repositoryPath = CreateTemporaryDirectory();
