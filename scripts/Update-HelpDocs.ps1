@@ -84,7 +84,7 @@ $ExistingCommands = @($Commands | Where-Object { $_.Name -in $ExistingFiles })
 if ($NewCommands.Count -gt 0) {
     Write-Host "Creating help for $($NewCommands.Count) new command(s)..." -ForegroundColor Yellow
     foreach ($Command in $NewCommands) {
-        $CommandHelp = New-CommandHelp -Command $Command
+        $CommandHelp = New-CommandHelp -CommandInfo $Command
         # Export-MarkdownCommandHelp appends a <ModuleName> subfolder, so pass $HelpRoot.
         Export-MarkdownCommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpRoot -Force
         Write-Host "  Created: $($Command.Name).md" -ForegroundColor Green
@@ -96,9 +96,7 @@ if ($ExistingCommands.Count -gt 0) {
     Write-Host "Updating help for $($ExistingCommands.Count) existing command(s)..." -ForegroundColor Cyan
     foreach ($Command in $ExistingCommands) {
         $FilePath = Join-Path -Path $HelpDocsPath -ChildPath "$($Command.Name).md"
-        $CommandHelp = Import-MarkdownCommandHelp -Path $FilePath
-        $CommandHelp = Update-MarkdownCommandHelp -CommandHelp $CommandHelp -Command $Command
-        Export-MarkdownCommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpRoot -Force
+        Update-MarkdownCommandHelp -Path $FilePath -NoBackup
         Write-Host "  Updated: $($Command.Name).md" -ForegroundColor DarkGray
     }
 }
