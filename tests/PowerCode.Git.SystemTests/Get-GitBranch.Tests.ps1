@@ -237,3 +237,104 @@ Describe 'Get-GitBranch -Options catch-all' {
         $Branches[0].Name | Should -Be 'feature/x'
     }
 }
+
+Describe 'Get-GitBranch -Include filter' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature/login     2>&1 | Out-Null
+            git checkout -b feature/dashboard 2>&1 | Out-Null
+            git checkout -b bugfix/crash      2>&1 | Out-Null
+            git checkout -b release/v1        2>&1 | Out-Null
+            git checkout main                 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns only branches matching a single include pattern' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Include 'feature/*')
+        $Branches.Count | Should -Be 2
+        $Branches | ForEach-Object { $_.Name | Should -BeLike 'feature/*' }
+    }
+
+    It 'Returns branches matching any of multiple include patterns' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Include 'feature/*', 'bugfix/*')
+        $Branches.Count | Should -Be 3
+        $Branches | ForEach-Object { $_.Name | Should -Match '^(feature|bugfix)/' }
+    }
+
+    It 'Returns no branches when include pattern matches nothing' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Include 'hotfix/*')
+        $Branches | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitBranch -Exclude filter' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature/login     2>&1 | Out-Null
+            git checkout -b feature/dashboard 2>&1 | Out-Null
+            git checkout -b bugfix/crash      2>&1 | Out-Null
+            git checkout main                 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Removes branches matching the exclude pattern' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Exclude 'bugfix/*')
+        $Branches | Where-Object { $_.Name -like 'bugfix/*' } | Should -BeNullOrEmpty
+        $Branches.Count | Should -Be 3 # main, feature/login, feature/dashboard
+    }
+
+    It 'Removes branches matching any of multiple exclude patterns' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Exclude 'feature/*', 'bugfix/*')
+        $Branches.Count | Should -Be 1
+        $Branches[0].Name | Should -Be 'main'
+    }
+}
+
+Describe 'Get-GitBranch -Include and -Exclude combined' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature/login     2>&1 | Out-Null
+            git checkout -b feature/dashboard 2>&1 | Out-Null
+            git checkout -b feature/temp      2>&1 | Out-Null
+            git checkout -b bugfix/crash      2>&1 | Out-Null
+            git checkout main                 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Include then exclude narrows results correctly' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Include 'feature/*' -Exclude 'feature/temp')
+        $Branches.Count | Should -Be 2
+        $Branches | ForEach-Object { $_.Name | Should -BeLike 'feature/*' }
+        $Branches | Where-Object { $_.Name -eq 'feature/temp' } | Should -BeNullOrEmpty
+    }
+}

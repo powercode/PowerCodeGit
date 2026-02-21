@@ -47,6 +47,20 @@ public sealed class GitBranchListOptions
     /// </summary>
     public string? NotMergedInto { get; set; }
 
+    /// <summary>
+    /// Gets or sets wildcard patterns used to include branches by name.
+    /// Only branches matching at least one pattern are returned.
+    /// When <see langword="null" /> or empty, all branches are included.
+    /// </summary>
+    public string[]? Include { get; set; }
+
+    /// <summary>
+    /// Gets or sets wildcard patterns used to exclude branches by name.
+    /// Branches matching any pattern are removed from the result.
+    /// Exclude is applied after <see cref="Include"/>.
+    /// </summary>
+    public string[]? Exclude { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -57,6 +71,8 @@ public sealed class GitBranchListOptions
         if (ContainsCommit is not null) parts.Add($"contains={ContainsCommit}");
         if (MergedInto is not null) parts.Add($"merged={MergedInto}");
         if (NotMergedInto is not null) parts.Add($"no-merged={NotMergedInto}");
+        if (Include is { Length: > 0 }) parts.Add($"include={string.Join(",", Include)}");
+        if (Exclude is { Length: > 0 }) parts.Add($"exclude={string.Join(",", Exclude)}");
         return parts.Count > 0
             ? $"GitBranchListOptions({string.Join(", ", parts)})"
             : "GitBranchListOptions()";

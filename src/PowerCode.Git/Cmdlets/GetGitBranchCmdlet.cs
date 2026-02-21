@@ -79,6 +79,22 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     public string? NoMerged { get; set; }
 
     /// <summary>
+    /// Gets or sets wildcard patterns used to include branches by name.
+    /// Only branches matching at least one pattern are returned.
+    /// </summary>
+    [Parameter(ParameterSetName = "List", Position = 0)]
+    [SupportsWildcards]
+    public string[]? Include { get; set; }
+
+    /// <summary>
+    /// Gets or sets wildcard patterns used to exclude branches by name.
+    /// Branches matching any pattern are removed from the result.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    [SupportsWildcards]
+    public string[]? Exclude { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built options object for full control over branch listing.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = "Options")]
@@ -133,6 +149,8 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             ContainsCommit = Contains,
             MergedInto = Merged,
             NotMergedInto = NoMerged,
+            Include = Include,
+            Exclude = Exclude,
         };
     }
 }

@@ -48,6 +48,8 @@ public sealed class GetGitBranchCmdletTests
         Assert.IsNull(options.ContainsCommit);
         Assert.IsNull(options.MergedInto);
         Assert.IsNull(options.NotMergedInto);
+        Assert.IsNull(options.Include);
+        Assert.IsNull(options.Exclude);
     }
 
     [TestMethod]
@@ -134,6 +136,34 @@ public sealed class GetGitBranchCmdletTests
         var options = cmdlet.BuildOptions("C:\\repo");
 
         Assert.AreEqual("main", options.NotMergedInto);
+    }
+
+    [TestMethod]
+    public void BuildOptions_IncludeSet_IncludeMapped()
+    {
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            Include = ["feature/*", "bugfix/*"],
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        CollectionAssert.AreEqual(new[] { "feature/*", "bugfix/*" }, options.Include);
+    }
+
+    [TestMethod]
+    public void BuildOptions_ExcludeSet_ExcludeMapped()
+    {
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            Exclude = ["temp/*"],
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        CollectionAssert.AreEqual(new[] { "temp/*" }, options.Exclude);
     }
 
     [TestMethod]

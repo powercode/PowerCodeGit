@@ -90,6 +90,20 @@ public sealed class GitBranchService : IGitBranchService
             }).ToList();
         }
 
+        // Include filter: keep only branches matching at least one include pattern
+        if (options.Include is { Length: > 0 })
+        {
+            var includeRegexes = options.Include.Select(GlobToRegex).ToArray();
+            result = result.Where(b => includeRegexes.Any(r => r.IsMatch(b.Name))).ToList();
+        }
+
+        // Exclude filter: remove branches matching any exclude pattern
+        if (options.Exclude is { Length: > 0 })
+        {
+            var excludeRegexes = options.Exclude.Select(GlobToRegex).ToArray();
+            result = result.Where(b => !excludeRegexes.Any(r => r.IsMatch(b.Name))).ToList();
+        }
+
         return result;
     }
 
