@@ -49,15 +49,8 @@ public sealed class GitRemoteService : IGitRemoteService
             cloneOptions.RecurseSubmodules = true;
         }
 
-        if (options.CredentialUsername is not null)
-        {
-            cloneOptions.FetchOptions.CredentialsProvider = (_, _, _) =>
-                new UsernamePasswordCredentials
-                {
-                    Username = options.CredentialUsername,
-                    Password = options.CredentialPassword ?? string.Empty,
-                };
-        }
+        cloneOptions.FetchOptions.CredentialsProvider = CreateCredentialsProvider(
+            options.CredentialUsername, options.CredentialPassword, options.Url);
 
         if (onProgress is not null)
         {
@@ -94,15 +87,8 @@ public sealed class GitRemoteService : IGitRemoteService
 
         var pushOptions = new LibGit2Sharp.PushOptions();
 
-        if (options.CredentialUsername is not null)
-        {
-            pushOptions.CredentialsProvider = (_, _, _) =>
-                new UsernamePasswordCredentials
-                {
-                    Username = options.CredentialUsername,
-                    Password = options.CredentialPassword ?? string.Empty,
-                };
-        }
+        pushOptions.CredentialsProvider = CreateCredentialsProvider(
+            options.CredentialUsername, options.CredentialPassword, remote.Url);
 
         if (onProgress is not null)
         {
@@ -224,15 +210,9 @@ public sealed class GitRemoteService : IGitRemoteService
             pullOptions.FetchOptions.TagFetchMode = options.Tags.Value ? TagFetchMode.All : TagFetchMode.None;
         }
 
-        if (options.CredentialUsername is not null)
-        {
-            pullOptions.FetchOptions.CredentialsProvider = (_, _, _) =>
-                new UsernamePasswordCredentials
-                {
-                    Username = options.CredentialUsername,
-                    Password = options.CredentialPassword ?? string.Empty,
-                };
-        }
+        pullOptions.FetchOptions.CredentialsProvider = CreateCredentialsProvider(
+            options.CredentialUsername, options.CredentialPassword,
+            GetRemoteUrl(options.RepositoryPath, options.RemoteName));
 
         if (onProgress is not null)
         {
@@ -276,6 +256,51 @@ public sealed class GitRemoteService : IGitRemoteService
             headCommit.MessageShort,
             headCommit.Message,
             parentShas);
+    }
+
+    /// <summary>
+    /// Creates a credentials handler that uses explicit credentials if provided,
+    /// or falls back to the system's Git credential helper via <c>git credential fill</c>.
+    /// </summary>
+    private static LibGit2Sharp.Handlers.CredentialsHandler CreateCredentialsProvider(
+        string? credentialUsername, string? credentialPassword, string remoteUrl)
+    {
+        return (_, _, supportedTypes) =>
+        {
+            if (!supportedTypes.HasFlag(SupportedCredentialTypes.UsernamePassword))
+            {
+                return new DefaultCredentials();
+            }
+
+            var username = credentialUsername;
+            var password = credentialPassword;
+
+            if (username is null)
+            {
+                (username, password) = GitCredentialHelper.GetCredentials(remoteUrl);
+            }
+
+            if (username is not null)
+            {
+                return new UsernamePasswordCredentials
+                {
+                    Username = username,
+                    Password = password ?? string.Empty,
+                };
+            }
+
+            return new DefaultCredentials();
+        };
+    }
+
+    /// <summary>
+    /// Resolves the URL of a remote from the repository configuration.
+    /// </summary>
+    private static string GetRemoteUrl(string repositoryPath, string remoteName)
+    {
+        using var repository = new Repository(repositoryPath);
+        var remote = repository.Network.Remotes[remoteName];
+        return remote?.Url ?? string.Empty;
     }
 
     private static string DeriveLocalPath(string url)
