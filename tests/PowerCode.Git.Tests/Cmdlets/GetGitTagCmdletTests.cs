@@ -102,5 +102,8 @@ public sealed class GetGitTagCmdletTests
         {
             return Array.Empty<GitTagInfo>();
         }
+
+        public GitTagInfo CreateTag(GitTagCreateOptions options) =>
+            new(options.Name, "abc1234abc1234abc1234abc1234abc1234abc1234", isAnnotated: false, null, null, null, null);
     }
 }

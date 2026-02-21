@@ -16,6 +16,7 @@
         'Get-GitBranch'
         'Switch-GitBranch'
         'Get-GitTag'
+        'Set-GitTag'
         'Add-GitItem'
         'Save-GitCommit'
         'New-GitBranch'

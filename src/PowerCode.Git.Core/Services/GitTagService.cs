@@ -9,7 +9,7 @@ using PowerCode.Git.Abstractions.Services;
 namespace PowerCode.Git.Core.Services;
 
 /// <summary>
-/// Lists git tags using LibGit2Sharp.
+/// Lists and creates git tags using LibGit2Sharp.
 /// </summary>
 public sealed class GitTagService : IGitTagService
 {
@@ -74,6 +74,46 @@ public sealed class GitTagService : IGitTagService
         }
 
         return result;
+    }
+
+    /// <inheritdoc/>
+    public GitTagInfo CreateTag(GitTagCreateOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Tag Name is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        // Resolve the target object. Defaults to the current HEAD commit when not specified.
+        GitObject target;
+        if (options.Target is not null)
+        {
+            target = repository.Lookup<GitObject>(options.Target)
+                ?? throw new ArgumentException(
+                    $"Target '{options.Target}' was not found in the repository.", nameof(options));
+        }
+        else
+        {
+            target = repository.Head.Tip
+                ?? throw new InvalidOperationException(
+                    "The repository has no commits. Cannot create a tag without a target.");
+        }
+
+        Tag tag;
+        if (!string.IsNullOrWhiteSpace(options.Message))
+        {
+            // Annotated tag: capture the tagger identity from the repository configuration.
+            var tagger = repository.Config.BuildSignature(DateTimeOffset.Now);
+            tag = repository.Tags.Add(options.Name, target, tagger, options.Message, allowOverwrite: options.Force);
+        }
+        else
+        {
+            // Lightweight tag: points directly to the target object.
+            tag = repository.Tags.Add(options.Name, target, allowOverwrite: options.Force);
+        }
+
+        return MapTag(tag);
     }
 
     private static string? ParseVersion(string tagName)
