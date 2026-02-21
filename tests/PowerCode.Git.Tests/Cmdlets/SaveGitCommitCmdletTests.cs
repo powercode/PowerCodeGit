@@ -1,6 +1,7 @@
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Tests.Stubs;
 
 namespace PowerCode.Git.Tests.Cmdlets;
 
@@ -138,23 +139,5 @@ public sealed class SaveGitCommitCmdletTests
         Assert.AreSame(prebuilt, options);
     }
 
-    private sealed class StubGitHistoryService : IGitHistoryService
-    {
-        public IReadOnlyList<GitCommitInfo> GetLog(GitLogOptions options) =>
-            Array.Empty<GitCommitInfo>();
-
-        public GitCommitInfo Commit(GitCommitOptions options) =>
-            new(
-                "abc1234",
-                "Test User",
-                "test@example.com",
-                DateTimeOffset.Now,
-                "Test User",
-                "test@example.com",
-                DateTimeOffset.Now,
-                options.Message ?? "test",
-                options.Message ?? "test",
-                []);
-    }
 }
 

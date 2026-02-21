@@ -1,6 +1,7 @@
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Tests.Stubs;
 
 namespace PowerCode.Git.Tests.Cmdlets;
 
@@ -110,28 +111,4 @@ public sealed class ReceiveGitBranchCmdletTests
         Assert.AreSame(predefined, options);
     }
 
-    private sealed class StubGitRemoteService : IGitRemoteService
-    {
-        public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>
-            Array.Empty<GitRemoteInfo>();
-
-        public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
-            "cloned-repo";
-
-        public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
-            new("main", true, false, "abc1234", null, null, null);
-
-        public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>
-            new(
-                "abc1234",
-                "Test User",
-                "test@example.com",
-                DateTimeOffset.Now,
-                "Test User",
-                "test@example.com",
-                DateTimeOffset.Now,
-                "test",
-                "test",
-                []);
-    }
 }

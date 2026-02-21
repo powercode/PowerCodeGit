@@ -1,6 +1,7 @@
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Tests.Stubs;
 
 namespace PowerCode.Git.Tests.Cmdlets;
 
@@ -108,20 +109,5 @@ public sealed class SwitchGitBranchCmdletTests
         };
 
         Assert.AreEqual("develop", cmdlet.Name);
-    }
-
-    private sealed class StubGitBranchService : IGitBranchService
-    {
-        public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) =>
-            Array.Empty<GitBranchInfo>();
-
-        public GitBranchInfo SwitchBranch(GitSwitchOptions options) =>
-            new GitBranchInfo(options.BranchName ?? "HEAD", true, false, "abc1234", null, null, null);
-
-        public GitBranchInfo CreateBranch(GitBranchCreateOptions options) =>
-            throw new NotImplementedException();
-
-        public void DeleteBranch(GitBranchDeleteOptions options) =>
-            throw new NotImplementedException();
     }
 }

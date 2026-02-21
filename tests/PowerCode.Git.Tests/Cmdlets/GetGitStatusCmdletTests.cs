@@ -1,6 +1,7 @@
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Tests.Stubs;
 
 namespace PowerCode.Git.Tests.Cmdlets;
 
@@ -82,23 +83,4 @@ public sealed class GetGitStatusCmdletTests
         Assert.AreSame(expected, cmdlet.Options);
     }
 
-    private sealed class StubGitWorkingTreeService : IGitWorkingTreeService
-    {
-        public GitStatusResult GetStatus(GitStatusOptions options)
-        {
-            return new GitStatusResult(options.RepositoryPath, "main", Array.Empty<GitStatusEntry>(), 0, 0, 0);
-        }
-
-        public IReadOnlyList<GitDiffEntry> GetDiff(GitDiffOptions options)
-        {
-            return Array.Empty<GitDiffEntry>();
-        }
-
-        public void Stage(GitStageOptions options) => throw new NotImplementedException();
-
-        public void Unstage(string repositoryPath, IReadOnlyList<string>? paths = null) =>
-            throw new NotImplementedException();
-
-        public void Reset(GitResetOptions options) => throw new NotImplementedException();
-    }
 }
