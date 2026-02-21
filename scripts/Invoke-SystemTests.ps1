@@ -34,12 +34,10 @@ param(
     [Parameter()]
     [switch]$NoBuild,
 
-    [ArgumentCompleter({
+    [ArgumentCompleter({param($command, $parameter, $wordToComplete, $commandAst, $fakeBoundParameters)
         $TestDir = Join-Path -Path (Resolve-Path -Path "$PSScriptRoot/..").Path -ChildPath 'tests/PowerCode.Git.SystemTests'
         if (Test-Path -Path $TestDir) {
-            Get-ChildItem -Path $TestDir -Filter '*.Tests.ps1' -File | ForEach-Object {
-                $_.BaseName -replace '\.Tests$'
-            }
+            Get-ChildItem -Path $TestDir\$wordToComplete* -Filter '*.Tests.ps1' -File | ForEach-Object { $_.BaseName -replace '\.Tests$' }
         }
     })]
     [Parameter()]
