@@ -43,7 +43,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the paths to stage. Mutually exclusive with <see cref="All"/> and <see cref="Update"/>.
     /// </summary>
-    [Parameter(Position = 0, ValueFromPipeline = true, ParameterSetName = "Path")]
+    [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "Path")]
     [ValidateNotNullOrEmpty]
     [GitPathCompleter]
     public string[]? Path { get; set; }
