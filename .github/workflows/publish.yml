@@ -8,66 +8,13 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          global-json-file: global.json
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Unit Tests
-        run: dotnet test --configuration Release --no-build --logger trx --results-directory ./test-results
-
-      - name: Build MAML Help
-        shell: pwsh
-        run: ./scripts/Build-MamlHelp.ps1 -Configuration Release
-
-      - name: Install Pester
-        shell: pwsh
-        run: |
-          $Existing = Get-Module -Name Pester -ListAvailable | Where-Object { $_.Version.Major -ge 5 } | Select-Object -First 1
-          if (-not $Existing) {
-              Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
-          }
-
-      - name: System Tests
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          ./scripts/Invoke-SystemTests.ps1 -Configuration Release -NoBuild
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: ./test-results/
-          retention-days: 14
-
-      - name: Upload Module Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PowerCode.Git-module
-          path: artifacts/module/PowerCode.Git/
-          retention-days: 30
+  ci:
+    name: CI
+    uses: ./.github/workflows/ci.yml
 
   publish:
     name: Publish
-    needs: build-and-test
+    needs: ci
     runs-on: ubuntu-latest
     environment: psgallery
 

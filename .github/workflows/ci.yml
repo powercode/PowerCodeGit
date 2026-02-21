@@ -3,8 +3,10 @@ name: CI
 on:
   push:
     branches: [main, preview]
+    tags: ['v*']
   pull_request:
     branches: [main, preview]
+  workflow_call:
 
 permissions:
   contents: read
