@@ -136,6 +136,40 @@
       </ListControl>
     </View>
 
+    <View>
+      <Name>GitStatusResult-Default</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitStatusResult</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <ItemSelectionCondition><ScriptBlock>$_.RepositoryPath -ne $pwd</ScriptBlock></ItemSelectionCondition>
+                <PropertyName>RepositoryPath</PropertyName>
+              </ListItem>              
+              <ListItem>
+                <PropertyName>Branch</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>ModifiedCount</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>StagedCount</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>UntrackedCount</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>Entries</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
 
     <!-- Default table view for GitStatusResult — colored branch and counts -->
     <View>
@@ -193,7 +227,7 @@
         <TableHeaders>
           <TableColumnHeader>
             <Label>Status</Label>
-            <Width>4</Width>
+            <Width>6</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Path</Label>
