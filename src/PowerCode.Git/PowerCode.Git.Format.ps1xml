@@ -225,22 +225,19 @@
         <TypeName>PowerCode.Git.Abstractions.Models.GitDiffEntry</TypeName>
       </ViewSelectedBy>
       <TableControl>
+        <AutoSize />
         <TableHeaders>
           <TableColumnHeader>
             <Label>Status</Label>
-            <Width>10</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Path</Label>
-            <Width>40</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Added</Label>
-            <Width>7</Width>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>Deleted</Label>
-            <Width>7</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Path</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -258,13 +255,13 @@
                 </ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>NewPath</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
                 <ScriptBlock>if ($_.LinesAdded -gt 0) { "`e[32m+$($_.LinesAdded)`e[0m" } else { $_.LinesAdded }</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>if ($_.LinesDeleted -gt 0) { "`e[31m-$($_.LinesDeleted)`e[0m" } else { $_.LinesDeleted }</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>NewPath</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
