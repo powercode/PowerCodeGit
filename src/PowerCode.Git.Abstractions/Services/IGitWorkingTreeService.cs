@@ -39,6 +39,12 @@ public interface IGitWorkingTreeService
     void Unstage(string repositoryPath, IReadOnlyList<string>? paths = null);
 
     /// <summary>
+    /// Resets HEAD to the given revision with the specified mode, or resets specific paths.
+    /// </summary>
+    /// <param name="options">The reset options.</param>
+    void Reset(GitResetOptions options);
+
+    /// <summary>
     /// Resets HEAD to the given revision with the specified mode.
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
@@ -47,5 +53,6 @@ public interface IGitWorkingTreeService
     /// unstaging with <see cref="GitResetMode.Mixed"/>).
     /// </param>
     /// <param name="mode">The reset mode (Mixed, Soft, or Hard).</param>
-    void Reset(string repositoryPath, string? revision, GitResetMode mode);
+    void Reset(string repositoryPath, string? revision, GitResetMode mode)
+        => Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = revision, Mode = mode });
 }

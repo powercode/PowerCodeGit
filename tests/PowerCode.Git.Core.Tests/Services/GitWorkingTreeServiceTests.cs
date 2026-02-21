@@ -433,6 +433,60 @@ public sealed class GitWorkingTreeServiceTests
         }
     }
 
+    [TestMethod]
+    public void Reset_WithPaths_UnstagesSpecificFiles()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+
+            // Stage a new file
+            var newFile = Path.Combine(repositoryPath, "to-unstage.txt");
+            File.WriteAllText(newFile, "content");
+            Commands.Stage(repository, newFile);
+
+            var statusBefore = new GitWorkingTreeService().GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
+            Assert.IsTrue(statusBefore.StagedCount >= 1);
+
+            // Reset just that path
+            var service = new GitWorkingTreeService();
+            service.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Paths = ["to-unstage.txt"] });
+
+            var statusAfter = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
+            Assert.AreEqual(0, statusAfter.StagedCount);
+            Assert.IsTrue(statusAfter.UntrackedCount >= 1);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void Reset_HardMode_DiscardsWorkingTreeChanges()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            // Modify the committed file
+            var trackedFile = Path.Combine(repositoryPath, "file-0.txt");
+            File.WriteAllText(trackedFile, "changed content");
+
+            var service = new GitWorkingTreeService();
+            service.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Mode = GitResetMode.Hard });
+
+            var content = File.ReadAllText(trackedFile);
+            Assert.AreEqual("initial content", content);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static string CreateRepositoryWithCommit()
     {
         var repositoryPath = CreateTemporaryDirectory();

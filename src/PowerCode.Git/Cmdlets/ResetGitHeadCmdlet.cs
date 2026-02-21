@@ -14,8 +14,11 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>Reset-GitHead -Revision HEAD~1 -Hard</code>
 /// </example>
+/// <example>
+/// <code>Reset-GitHead -Path file.txt</code>
+/// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Reset, "GitHead", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
+[Cmdlet(VerbsCommon.Reset, "GitHead", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = "Mixed")]
 public sealed class ResetGitHeadCmdlet : GitCmdlet
 {
     /// <summary>
@@ -61,11 +64,98 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     public SwitchParameter Soft { get; set; }
 
     /// <summary>
+    /// Gets or sets the paths to reset (unstage). When specified, only the
+    /// given files are unstaged and the <see cref="Revision"/> and mode parameters
+    /// are ignored.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Paths", ValueFromPipeline = true)]
+    [ValidateNotNullOrEmpty]
+    [GitPathCompleter]
+    public string[]? Path { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built <see cref="GitResetOptions"/> instance.
+    /// When specified, all other parameters are ignored.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitResetOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds a <see cref="GitResetOptions"/> from the current parameter set.
+    /// </summary>
+    /// <param name="currentFileSystemPath">The current working directory to use when resolving the repository path.</param>
+    /// <returns>A fully populated <see cref="GitResetOptions"/> instance.</returns>
+    internal GitResetOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (Options is not null)
+        {
+            return Options;
+        }
+
+        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
+
+        if (ParameterSetName == "Paths")
+        {
+            return new GitResetOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = Path,
+            };
+        }
+
+        return new GitResetOptions
+        {
+            RepositoryPath = repositoryPath,
+            Revision = Revision,
+            Mode = ResolveResetMode(),
+        };
+    }
+
+    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
         var repositoryPath = ResolveRepositoryPath();
+
+        if (Options is not null)
+        {
+            if (!ShouldProcess(Options.RepositoryPath, "Reset HEAD"))
+            {
+                return;
+            }
+
+            try
+            {
+                workingTreeService.Reset(Options);
+            }
+            catch (Exception exception)
+            {
+                WriteError(new ErrorRecord(exception, "ResetGitHeadFailed", ErrorCategory.InvalidOperation, Options.RepositoryPath));
+            }
+
+            return;
+        }
+
+        if (ParameterSetName == "Paths")
+        {
+            if (!ShouldProcess(repositoryPath, $"Reset {Path?.Length ?? 0} file(s)"))
+            {
+                return;
+            }
+
+            try
+            {
+                workingTreeService.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Paths = Path });
+            }
+            catch (Exception exception)
+            {
+                WriteError(new ErrorRecord(exception, "ResetGitHeadFailed", ErrorCategory.InvalidOperation, repositoryPath));
+            }
+
+            return;
+        }
+
         var mode = ResolveResetMode();
         var description = $"Reset HEAD to '{Revision ?? "HEAD"}' ({mode})";
 
@@ -76,7 +166,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
 
         try
         {
-            workingTreeService.Reset(repositoryPath, Revision, mode);
+            workingTreeService.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = Revision, Mode = mode });
         }
         catch (Exception exception)
         {

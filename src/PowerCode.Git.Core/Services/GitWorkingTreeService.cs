@@ -271,25 +271,40 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
     }
 
     /// <inheritdoc/>
-    public void Reset(string repositoryPath, string? revision, GitResetMode mode)
+    public void Reset(GitResetOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
 
-        var resetMode = mode switch
+        if (options.Paths is { Count: > 0 })
+        {
+            // Path-based reset: unstage specific files (git reset -- <path>)
+            foreach (var path in options.Paths)
+            {
+                Commands.Unstage(repository, path);
+            }
+
+            return;
+        }
+
+        var resetMode = options.Mode switch
         {
             GitResetMode.Soft => ResetMode.Soft,
             GitResetMode.Hard => ResetMode.Hard,
             _ => ResetMode.Mixed,
         };
 
-        var target = revision is not null
-            ? repository.Lookup<Commit>(revision)
-                ?? throw new ArgumentException($"Revision '{revision}' was not found.", nameof(revision))
+        var target = options.Revision is not null
+            ? repository.Lookup<Commit>(options.Revision)
+                ?? throw new ArgumentException($"Revision '{options.Revision}' was not found.", nameof(options))
             : repository.Head.Tip
                 ?? throw new InvalidOperationException("Repository has no commits to reset to.");
 
         repository.Reset(resetMode, target);
     }
+
+    /// <inheritdoc/>
+    public void Reset(string repositoryPath, string? revision, GitResetMode mode)
+        => Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = revision, Mode = mode });
 }

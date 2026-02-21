@@ -146,7 +146,7 @@ public sealed class AddGitItemCmdletTests
         {
         }
 
-        public void Reset(string repositoryPath, string? target, GitResetMode mode)
+        public void Reset(GitResetOptions options)
         {
         }
     }

@@ -125,7 +125,6 @@ public sealed class GetGitDiffCmdletTests
         public void Unstage(string repositoryPath, IReadOnlyList<string>? paths = null) =>
             throw new NotImplementedException();
 
-        public void Reset(string repositoryPath, string? target, GitResetMode mode) =>
-            throw new NotImplementedException();
+        public void Reset(GitResetOptions options) => throw new NotImplementedException();
     }
 }
