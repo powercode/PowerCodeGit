@@ -2,13 +2,14 @@ using System;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
 namespace PowerCode.Git.Cmdlets;
 
 /// <summary>
 /// Lists branches in a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitBranch")]
+[Cmdlet(VerbsCommon.Get, "GitBranch", DefaultParameterSetName = "List")]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class GetGitBranchCmdlet : GitCmdlet
 {
@@ -32,15 +33,66 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     private readonly IGitBranchService branchService;
 
     /// <summary>
+    /// Gets or sets a value indicating whether to list only remote-tracking branches.
+    /// Equivalent to <c>git branch -r</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    public SwitchParameter Remote { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to list both local and remote-tracking branches.
+    /// Equivalent to <c>git branch -a</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    [Alias("a")]
+    public SwitchParameter All { get; set; }
+
+    /// <summary>
+    /// Gets or sets a glob pattern to filter branch names.
+    /// Equivalent to <c>git branch -l &lt;pattern&gt;</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    public string? Pattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets a committish; only branches containing this commit are shown.
+    /// Equivalent to <c>git branch --contains &lt;commit&gt;</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    [GitCommittishCompleter]
+    public string? Contains { get; set; }
+
+    /// <summary>
+    /// Gets or sets a committish; only branches merged into this commit are shown.
+    /// Equivalent to <c>git branch --merged [&lt;commit&gt;]</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    [GitCommittishCompleter]
+    public string? Merged { get; set; }
+
+    /// <summary>
+    /// Gets or sets a committish; only branches NOT merged into this commit are shown.
+    /// Equivalent to <c>git branch --no-merged [&lt;commit&gt;]</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = "List")]
+    [GitCommittishCompleter]
+    public string? NoMerged { get; set; }
+
+    /// <summary>
+    /// Gets or sets a pre-built options object for full control over branch listing.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitBranchListOptions Options { get; set; } = null!;
+
+    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
-
         try
         {
-            var branches = branchService.GetBranches(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+            var branches = branchService.GetBranches(options);
 
             foreach (var branch in branches)
             {
@@ -49,13 +101,38 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
         }
         catch (Exception exception)
         {
-            var errorRecord = new ErrorRecord(
+            WriteError(new ErrorRecord(
                 exception,
                 "GetGitBranchFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
-
-            WriteError(errorRecord);
+                RepoPath));
         }
+    }
+
+    /// <summary>
+    /// Builds a <see cref="GitBranchListOptions"/> from the current cmdlet parameters.
+    /// </summary>
+    /// <param name="currentFileSystemPath">
+    /// The current file-system path, used to resolve <see cref="GitCmdlet.RepoPath"/> when not
+    /// explicitly provided.
+    /// </param>
+    /// <returns>The resolved options object.</returns>
+    internal GitBranchListOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (ParameterSetName == "Options")
+        {
+            return Options;
+        }
+
+        return new GitBranchListOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
+            ListRemote = Remote.IsPresent,
+            ListAll = All.IsPresent,
+            Pattern = Pattern,
+            ContainsCommit = Contains,
+            MergedInto = Merged,
+            NotMergedInto = NoMerged,
+        };
     }
 }

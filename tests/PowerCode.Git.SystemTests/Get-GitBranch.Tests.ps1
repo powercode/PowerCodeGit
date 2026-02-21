@@ -80,3 +80,160 @@ Describe 'Get-GitBranch error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitBranch -Remote flag' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemote
+        $script:RepoPath = $script:Repos.WorkingPath
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:Repos.WorkingPath
+        Remove-TestGitRepository -Path $script:Repos.BarePath
+    }
+
+    It 'Returns only remote-tracking branches when -Remote is specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Remote)
+        $Branches | Should -Not -BeNullOrEmpty
+        $Branches | Where-Object { -not $_.IsRemote } | Should -BeNullOrEmpty
+    }
+
+    It 'Returns no local branches when -Remote is specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Remote)
+        foreach ($Branch in $Branches) {
+            $Branch.IsRemote | Should -BeTrue -Because "All returned branches should be remote-tracking"
+        }
+    }
+}
+
+Describe 'Get-GitBranch -All flag' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemote
+        $script:RepoPath = $script:Repos.WorkingPath
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:Repos.WorkingPath
+        Remove-TestGitRepository -Path $script:Repos.BarePath
+    }
+
+    It 'Returns both local and remote-tracking branches when -All is specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -All)
+        $LocalBranches = @($Branches | Where-Object { -not $_.IsRemote })
+        $RemoteBranches = @($Branches | Where-Object { $_.IsRemote })
+        $LocalBranches | Should -Not -BeNullOrEmpty
+        $RemoteBranches | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitBranch -Pattern filter' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature/login  2>&1 | Out-Null
+            git checkout -b feature/dashboard 2>&1 | Out-Null
+            git checkout -b bugfix/crash 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns only feature/* branches when -Pattern feature/* is specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Pattern 'feature/*')
+        $Branches.Count | Should -Be 2
+        $Branches | ForEach-Object { $_.Name | Should -BeLike 'feature/*' }
+    }
+
+    It 'Returns no results when pattern does not match any branch' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Pattern 'release/*')
+        $Branches | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitBranch -Merged and -NoMerged filters' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Create merged-branch: branch off, commit, merge back to main
+            git checkout -b merged-branch 2>&1 | Out-Null
+            Set-Content -Path 'merged.txt' -Value 'merged'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Merged feature' 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+            git merge --ff-only merged-branch 2>&1 | Out-Null
+
+            # Create unmerged-branch: branch off, commit but do NOT merge
+            git checkout -b unmerged-branch 2>&1 | Out-Null
+            Set-Content -Path 'unmerged.txt' -Value 'unmerged'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Unmerged feature' 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It '-Merged HEAD shows merged-branch' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Merged HEAD)
+        $Branches | Where-Object { $_.Name -eq 'merged-branch' } | Should -Not -BeNullOrEmpty
+    }
+
+    It '-Merged HEAD excludes unmerged-branch' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -Merged HEAD)
+        $Branches | Where-Object { $_.Name -eq 'unmerged-branch' } | Should -BeNullOrEmpty
+    }
+
+    It '-NoMerged HEAD shows unmerged-branch' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -NoMerged HEAD)
+        $Branches | Where-Object { $_.Name -eq 'unmerged-branch' } | Should -Not -BeNullOrEmpty
+    }
+
+    It '-NoMerged HEAD excludes merged-branch' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -NoMerged HEAD)
+        $Branches | Where-Object { $_.Name -eq 'merged-branch' } | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitBranch -Options catch-all' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature/x 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Accepts a GitBranchListOptions object via -Options' {
+        $Opts = [PowerCode.Git.Abstractions.Models.GitBranchListOptions]::new()
+        $Opts.RepositoryPath = $script:RepoPath
+        $Opts.Pattern = 'feature/*'
+
+        $Branches = @(Get-GitBranch -Options $Opts)
+        $Branches.Count | Should -Be 1
+        $Branches[0].Name | Should -Be 'feature/x'
+    }
+}

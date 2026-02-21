@@ -168,7 +168,7 @@ public sealed class GitBranchCompleterTests
 
     private sealed class StubGitBranchService(IReadOnlyList<GitBranchInfo> branches) : IGitBranchService
     {
-        public IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath) => branches;
+        public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) => branches;
 
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>
             throw new NotImplementedException();
@@ -182,7 +182,7 @@ public sealed class GitBranchCompleterTests
 
     private sealed class ThrowingGitBranchService : IGitBranchService
     {
-        public IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath) =>
+        public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options) =>
             throw new InvalidOperationException("Not a git repository");
 
         public GitBranchInfo SwitchBranch(string repositoryPath, string branchName) =>

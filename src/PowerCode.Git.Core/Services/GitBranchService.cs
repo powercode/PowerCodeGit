@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using LibGit2Sharp;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
@@ -13,15 +14,102 @@ namespace PowerCode.Git.Core.Services;
 public sealed class GitBranchService : IGitBranchService
 {
     /// <inheritdoc/>
-    public IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath)
+    public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
 
-        return repository.Branches
-            .Select(MapBranch)
-            .ToList();
+        IEnumerable<Branch> branches = repository.Branches;
+
+        // Filter by local/remote/all
+        if (options.ListRemote)
+        {
+            branches = branches.Where(b => b.IsRemote);
+        }
+        else if (!options.ListAll)
+        {
+            branches = branches.Where(b => !b.IsRemote);
+        }
+        // else: ListAll — include both local and remote
+
+        var result = branches.Select(MapBranch).ToList();
+
+        // Pattern filter (glob-like: supports * and ?)
+        if (options.Pattern is not null)
+        {
+            var regex = GlobToRegex(options.Pattern);
+            result = result.Where(b => regex.IsMatch(b.Name)).ToList();
+        }
+
+        // --contains: only branches whose tip is a descendant of the given commit
+        if (options.ContainsCommit is not null)
+        {
+            var commit = repository.Lookup<Commit>(options.ContainsCommit)
+                ?? throw new ArgumentException($"Commit '{options.ContainsCommit}' was not found.", nameof(options));
+            result = result.Where(b =>
+            {
+                var branchTip = repository.Branches[b.Name]?.Tip;
+                return branchTip is not null &&
+                       (branchTip.Sha == commit.Sha ||
+                        repository.ObjectDatabase.FindMergeBase(branchTip, commit)?.Sha == commit.Sha);
+            }).ToList();
+        }
+
+        // --merged: only branches fully merged into the reference commit
+        if (options.MergedInto is not null)
+        {
+            var reference = ResolveCommitOrHead(repository, options.MergedInto);
+            result = result.Where(b =>
+            {
+                var branchTip = repository.Branches[b.Name]?.Tip;
+                if (branchTip is null)
+                {
+                    return true;
+                }
+
+                var mergeBase = repository.ObjectDatabase.FindMergeBase(reference, branchTip);
+                return mergeBase?.Sha == branchTip.Sha;
+            }).ToList();
+        }
+
+        // --no-merged: only branches NOT fully merged
+        if (options.NotMergedInto is not null)
+        {
+            var reference = ResolveCommitOrHead(repository, options.NotMergedInto);
+            result = result.Where(b =>
+            {
+                var branchTip = repository.Branches[b.Name]?.Tip;
+                if (branchTip is null)
+                {
+                    return false;
+                }
+
+                var mergeBase = repository.ObjectDatabase.FindMergeBase(reference, branchTip);
+                return mergeBase?.Sha != branchTip.Sha;
+            }).ToList();
+        }
+
+        return result;
+    }
+
+    private static Commit ResolveCommitOrHead(Repository repo, string committish)
+    {
+        if (string.IsNullOrWhiteSpace(committish) || committish == "HEAD")
+        {
+            return repo.Head.Tip ?? throw new InvalidOperationException("Repository has no commits.");
+        }
+
+        return repo.Lookup<Commit>(committish)
+            ?? throw new ArgumentException($"Commit '{committish}' was not found.");
+    }
+
+    private static Regex GlobToRegex(string pattern)
+    {
+        var escaped = Regex.Escape(pattern)
+            .Replace("\\*", ".*", StringComparison.Ordinal)
+            .Replace("\\?", ".", StringComparison.Ordinal);
+        return new Regex($"^{escaped}$", RegexOptions.IgnoreCase);
     }
 
     /// <inheritdoc/>

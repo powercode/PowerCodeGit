@@ -9,11 +9,19 @@ namespace PowerCode.Git.Abstractions.Services;
 public interface IGitBranchService
 {
     /// <summary>
+    /// Gets branches in the repository filtered by the specified options.
+    /// </summary>
+    /// <param name="options">Options controlling which branches are returned.</param>
+    /// <returns>A list of branch information objects.</returns>
+    IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options);
+
+    /// <summary>
     /// Gets all branches in the repository.
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
     /// <returns>A list of branch information objects.</returns>
-    IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath);
+    IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath)
+        => GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
 
     /// <summary>
     /// Switches the repository HEAD to the specified branch.

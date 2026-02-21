@@ -1,5 +1,6 @@
 using LibGit2Sharp;
 using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Core.Services;
 using System.Threading;
 
@@ -13,7 +14,7 @@ public sealed class GitBranchServiceTests
     [TestMethod]
     public void GetBranches_InvalidRepositoryPath_ThrowsArgumentException()
     {
-        var service = new GitBranchService();
+        IGitBranchService service = new GitBranchService();
 
         Assert.Throws<ArgumentException>(() => service.GetBranches("X:\\not-a-real-repo"));
     }
@@ -21,7 +22,7 @@ public sealed class GitBranchServiceTests
     [TestMethod]
     public void GetBranches_EmptyPath_ThrowsArgumentException()
     {
-        var service = new GitBranchService();
+        IGitBranchService service = new GitBranchService();
 
         Assert.Throws<ArgumentException>(() => service.GetBranches(string.Empty));
     }
@@ -35,7 +36,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-            var branches = service.GetBranches(repositoryPath);
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
 
             Assert.IsGreaterThanOrEqualTo(branches.Count, 2);
             Assert.IsTrue(branches.Any(b => b.Name == DefaultBranchName));
@@ -56,7 +57,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-            var branches = service.GetBranches(repositoryPath);
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
 
             var headBranches = branches.Where(b => b.IsHead).ToList();
             Assert.HasCount(1, headBranches);
@@ -77,7 +78,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-            var branches = service.GetBranches(repositoryPath);
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
 
             foreach (var branch in branches.Where(b => !b.IsRemote))
             {
@@ -155,6 +156,226 @@ public sealed class GitBranchServiceTests
         {
             DeleteDirectory(repositoryPath);
         }
+    }
+
+    [TestMethod]
+    public void GetBranches_OptionsWithNoFilters_ReturnsAllLocalBranches()
+    {
+        var repositoryPath = CreateRepositoryWithBranches();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions { RepositoryPath = repositoryPath });
+
+            Assert.IsGreaterThanOrEqualTo(branches.Count, 2);
+            Assert.IsTrue(branches.Any(b => b.Name == DefaultBranchName));
+            Assert.IsTrue(branches.Any(b => b.Name == "feature"));
+            Assert.IsTrue(branches.All(b => !b.IsRemote));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_ListAll_ReturnsBothLocalAndRemoteBranches()
+    {
+        var repositoryPath = CreateRepositoryWithRemote();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions
+            {
+                RepositoryPath = repositoryPath,
+                ListAll = true,
+            });
+
+            Assert.IsTrue(branches.Any(b => !b.IsRemote), "Expected at least one local branch.");
+            Assert.IsTrue(branches.Any(b => b.IsRemote), "Expected at least one remote branch.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_ListRemote_ReturnsOnlyRemoteBranches()
+    {
+        var repositoryPath = CreateRepositoryWithRemote();
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions
+            {
+                RepositoryPath = repositoryPath,
+                ListRemote = true,
+            });
+
+            Assert.IsTrue(branches.All(b => b.IsRemote));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_PatternFilter_MatchesGlob()
+    {
+        var repositoryPath = CreateRepositoryWithNamedBranches("feature/login", "feature/dashboard", "bugfix/crash");
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions
+            {
+                RepositoryPath = repositoryPath,
+                Pattern = "feature/*",
+            });
+
+            Assert.HasCount(2, branches);
+            Assert.IsTrue(branches.All(b => b.Name.StartsWith("feature/", StringComparison.OrdinalIgnoreCase)));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_MergedFilter_ReturnsOnlyMergedBranches()
+    {
+        var repositoryPath = CreateRepositoryWithMergedBranch(out var mergedBranch, out var unmergedBranch);
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions
+            {
+                RepositoryPath = repositoryPath,
+                MergedInto = "HEAD",
+            });
+
+            Assert.IsTrue(branches.Any(b => b.Name == mergedBranch), $"Merged branch '{mergedBranch}' should appear.");
+            Assert.IsFalse(branches.Any(b => b.Name == unmergedBranch), $"Unmerged branch '{unmergedBranch}' should not appear.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetBranches_NotMergedFilter_ReturnsOnlyUnmergedBranches()
+    {
+        var repositoryPath = CreateRepositoryWithMergedBranch(out var mergedBranch, out var unmergedBranch);
+
+        try
+        {
+            var service = new GitBranchService();
+
+            var branches = service.GetBranches(new GitBranchListOptions
+            {
+                RepositoryPath = repositoryPath,
+                NotMergedInto = "HEAD",
+            });
+
+            Assert.IsFalse(branches.Any(b => b.Name == mergedBranch), $"Merged branch '{mergedBranch}' should not appear.");
+            Assert.IsTrue(branches.Any(b => b.Name == unmergedBranch), $"Unmerged branch '{unmergedBranch}' should appear.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    private static string CreateRepositoryWithRemote()
+    {
+        // Create a "remote" repo and a clone of it so remote-tracking refs exist
+        var remotePath = CreateTemporaryDirectory();
+        var localPath = CreateTemporaryDirectory();
+        Repository.Init(remotePath);
+
+        using (var remote = new Repository(remotePath))
+        {
+            var sig = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow);
+            var filePath = Path.Combine(remotePath, "file.txt");
+            File.WriteAllText(filePath, "content");
+            Commands.Stage(remote, filePath);
+            remote.Commit("Initial commit", sig, sig);
+        }
+
+        Repository.Clone(remotePath, localPath);
+        return localPath;
+    }
+
+    private static string CreateRepositoryWithNamedBranches(params string[] branchNames)
+    {
+        var repositoryPath = CreateTemporaryDirectory();
+        Repository.Init(repositoryPath);
+
+        using var repository = new Repository(repositoryPath);
+        var sig = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow);
+        var filePath = Path.Combine(repositoryPath, "file.txt");
+        File.WriteAllText(filePath, "initial content");
+        Commands.Stage(repository, filePath);
+        repository.Commit("Initial commit", sig, sig);
+
+        foreach (var branchName in branchNames)
+        {
+            repository.CreateBranch(branchName);
+        }
+
+        return repositoryPath;
+    }
+
+    private static string CreateRepositoryWithMergedBranch(out string mergedBranchName, out string unmergedBranchName)
+    {
+        var repositoryPath = CreateTemporaryDirectory();
+        Repository.Init(repositoryPath);
+
+        using var repository = new Repository(repositoryPath);
+        var sig = new Signature("PowerCode.Git", "PowerCode.Git@example.com", DateTimeOffset.UtcNow);
+
+        // Initial commit on master/main
+        var filePath = Path.Combine(repositoryPath, "file.txt");
+        File.WriteAllText(filePath, "initial");
+        Commands.Stage(repository, filePath);
+        repository.Commit("Initial commit", sig, sig);
+
+        // Create 'merged-branch', add a commit, then merge it back
+        var toMerge = repository.CreateBranch("merged-branch");
+        Commands.Checkout(repository, toMerge);
+        File.WriteAllText(filePath, "merged change");
+        Commands.Stage(repository, filePath);
+        repository.Commit("Merged feature commit", sig, sig);
+
+        Commands.Checkout(repository, repository.Branches[DefaultBranchName]!);
+        repository.Merge(toMerge, sig, new MergeOptions { FastForwardStrategy = FastForwardStrategy.FastForwardOnly });
+
+        // Create 'unmerged-branch' with its own ahead commit
+        var ahead = repository.CreateBranch("unmerged-branch");
+        Commands.Checkout(repository, ahead);
+        File.WriteAllText(filePath, "unmerged change");
+        Commands.Stage(repository, filePath);
+        repository.Commit("Unmerged feature commit", sig, sig);
+
+        // Go back to default branch (so HEAD is not unmerged-branch)
+        Commands.Checkout(repository, repository.Branches[DefaultBranchName]!);
+
+        mergedBranchName = "merged-branch";
+        unmergedBranchName = "unmerged-branch";
+        return repositoryPath;
     }
 
     private static string CreateRepositoryWithBranches()

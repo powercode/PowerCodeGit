@@ -47,7 +47,7 @@ public sealed class SwitchGitBranchCmdletTests
 
     private sealed class StubGitBranchService : IGitBranchService
     {
-        public IReadOnlyList<GitBranchInfo> GetBranches(string repositoryPath)
+        public IReadOnlyList<GitBranchInfo> GetBranches(GitBranchListOptions options)
         {
             return Array.Empty<GitBranchInfo>();
         }
