@@ -95,3 +95,69 @@ Describe 'Get-GitDiff error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitDiff -Commit' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        Push-Location -Path $script:RepoPath
+        try {
+            $script:InitialSha = git rev-parse HEAD 2>&1
+            Set-Content -Path 'file.txt' -Value 'changed'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Diffs working tree against the specified commit' {
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath -Commit $script:InitialSha)
+        $Diffs | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitDiff range (FromCommit / ToCommit)' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit', 'Second commit')
+        Push-Location -Path $script:RepoPath
+        try {
+            $Commits = git log --format="%H" 2>&1
+            $script:FirstSha = $Commits | Select-Object -Last 1
+            $script:SecondSha = $Commits | Select-Object -First 1
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Diffs between two commits' {
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath -FromCommit $script:FirstSha -ToCommit $script:SecondSha)
+        $Diffs | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitDiff -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns diff via -Options parameter set' {
+        $Options = [PowerCode.Git.Abstractions.Models.GitDiffOptions]@{
+            RepositoryPath = $script:RepoPath
+        }
+
+        $Diffs = @(Get-GitDiff -Options $Options)
+        $Diffs | Should -HaveCount 0
+    }
+}

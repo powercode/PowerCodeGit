@@ -55,6 +55,59 @@ public sealed class GetGitDiffCmdletTests
         Assert.IsTrue(options.Staged);
     }
 
+    [TestMethod]
+    public void BuildOptions_CommitSet_CommitPropagated()
+    {
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
+        {
+            Commit = "abc1234",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("abc1234", options.Commit);
+    }
+
+    [TestMethod]
+    public void BuildOptions_RangeSet_FromAndToPropagated()
+    {
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
+        {
+            FromCommit = "abc1",
+            ToCommit = "def2",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("abc1", options.FromCommit);
+        Assert.AreEqual("def2", options.ToCommit);
+    }
+
+    [TestMethod]
+    public void BuildOptions_IgnoreWhitespaceSet_Propagated()
+    {
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
+        {
+            IgnoreWhitespace = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.IgnoreWhitespace);
+    }
+
+    [TestMethod]
+    public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
+    {
+        var expected = new GitDiffOptions { RepositoryPath = "D:\\repo" };
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
+        {
+            Options = expected,
+        };
+
+        Assert.AreSame(expected, cmdlet.Options);
+    }
+
     private sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     {
         public GitStatusResult GetStatus(GitStatusOptions options)

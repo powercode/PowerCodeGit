@@ -69,9 +69,38 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         using var repository = new Repository(options.RepositoryPath);
 
-        using var changes = options.Staged
-            ? repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index)
-            : repository.Diff.Compare<Patch>();
+        // Note: LibGit2Sharp CompareOptions does not expose an IgnoreWhitespace property.
+        // The IgnoreWhitespace option is accepted in GitDiffOptions for future support
+        // and for use by callers that process the result set further.
+
+        Patch changes;
+
+        if (options.FromCommit is not null && options.ToCommit is not null)
+        {
+            // Range diff: git diff <from> <to>
+            var fromCommit = repository.Lookup<Commit>(options.FromCommit)
+                ?? throw new ArgumentException($"Commit '{options.FromCommit}' was not found.", nameof(options));
+            var toCommit = repository.Lookup<Commit>(options.ToCommit)
+                ?? throw new ArgumentException($"Commit '{options.ToCommit}' was not found.", nameof(options));
+            changes = repository.Diff.Compare<Patch>(fromCommit.Tree, toCommit.Tree);
+        }
+        else if (options.Commit is not null)
+        {
+            // Diff working tree against a commit: git diff <commit>
+            var commit = repository.Lookup<Commit>(options.Commit)
+                ?? throw new ArgumentException($"Commit '{options.Commit}' was not found.", nameof(options));
+            changes = repository.Diff.Compare<Patch>(commit.Tree, DiffTargets.WorkingDirectory);
+        }
+        else if (options.Staged)
+        {
+            // Staged diff: git diff --staged
+            changes = repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index);
+        }
+        else
+        {
+            // Default: working directory diff
+            changes = repository.Diff.Compare<Patch>();
+        }
 
         var entries = changes.AsEnumerable();
 
@@ -84,9 +113,12 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
                     string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
         }
 
-        return entries
+        var result = entries
             .Select(MapDiffEntry)
             .ToList();
+
+        changes.Dispose();
+        return result;
     }
 
     private static void MapStatusEntry(StatusEntry entry, List<GitStatusEntry> results)

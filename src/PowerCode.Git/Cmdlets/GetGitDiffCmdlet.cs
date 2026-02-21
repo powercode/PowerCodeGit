@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Retrieves diff entries for working tree or staged changes in a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitDiff")]
+[Cmdlet(VerbsCommon.Get, "GitDiff", DefaultParameterSetName = "WorkingTree")]
 [OutputType(typeof(GitDiffEntry))]
 public sealed class GetGitDiffCmdlet : GitCmdlet
 {
@@ -32,20 +32,95 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    // ── WorkingTree parameter set ────────────────────────────────────────────
+
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to restrict
-    /// the diff output.
+    /// Gets or sets one or more repository-relative file paths to restrict the diff output.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "WorkingTree")]
+    [Parameter(ParameterSetName = "Staged")]
+    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = "Range")]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether to show staged (index) changes
-    /// instead of unstaged (working directory) changes.
+    /// Gets or sets a value indicating whether to ignore whitespace changes.
     /// </summary>
-    [Parameter]
+    [Parameter(ParameterSetName = "WorkingTree")]
+    [Parameter(ParameterSetName = "Staged")]
+    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = "Range")]
+    public SwitchParameter IgnoreWhitespace { get; set; }
+
+    // ── Staged parameter set ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to show staged (index) changes.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Staged")]
     public SwitchParameter Staged { get; set; }
+
+    // ── Commit parameter set ─────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets a committish to diff the working tree against.
+    /// </summary>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Commit")]
+    [GitCommittishCompleter]
+    public string? Commit { get; set; }
+
+    // ── Range parameter set ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets the starting committish for a range diff.
+    /// </summary>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Range")]
+    [GitCommittishCompleter]
+    public string? FromCommit { get; set; }
+
+    /// <summary>
+    /// Gets or sets the ending committish for a range diff.
+    /// </summary>
+    [Parameter(Mandatory = true, Position = 1, ParameterSetName = "Range")]
+    [GitCommittishCompleter]
+    public string? ToCommit { get; set; }
+
+    // ── Options parameter set ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets a pre-built options object, allowing full control over the operation.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitDiffOptions Options { get; set; } = null!;
+
+    // ────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Creates diff options from cmdlet parameters.
+    /// </summary>
+    /// <param name="currentFileSystemPath">The current PowerShell file system path.</param>
+    /// <returns>A populated diff options object.</returns>
+    internal GitDiffOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (ParameterSetName == "Options")
+        {
+            return Options;
+        }
+
+        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
+
+        return new GitDiffOptions
+        {
+            RepositoryPath = repositoryPath,
+            Staged = Staged.IsPresent,
+            Commit = Commit,
+            FromCommit = FromCommit,
+            ToCommit = ToCommit,
+            IgnoreWhitespace = IgnoreWhitespace.IsPresent,
+            Paths = Path,
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
@@ -73,22 +148,5 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
 
             WriteError(errorRecord);
         }
-    }
-
-    /// <summary>
-    /// Creates diff options from cmdlet parameters.
-    /// </summary>
-    /// <param name="currentFileSystemPath">The current PowerShell file system path.</param>
-    /// <returns>A populated diff options object.</returns>
-    internal GitDiffOptions BuildOptions(string currentFileSystemPath)
-    {
-        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
-
-        return new GitDiffOptions
-        {
-            RepositoryPath = repositoryPath,
-            Staged = Staged.IsPresent,
-            Paths = Path,
-        };
     }
 }

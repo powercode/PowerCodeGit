@@ -299,6 +299,68 @@ public sealed class GitWorkingTreeServiceTests
         }
     }
 
+    [TestMethod]
+    public void GetDiff_CommitMode_DiffsWorkingTreeAgainstCommit()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            var sha = repository.Head.Tip.Sha;
+
+            // Modify file after last commit
+            File.WriteAllText(Path.Combine(repositoryPath, "file-0.txt"), "changed after initial");
+
+            var service = new GitWorkingTreeService();
+            var entries = service.GetDiff(new GitDiffOptions
+            {
+                RepositoryPath = repositoryPath,
+                Commit = sha,
+            });
+
+            Assert.IsTrue(entries.Count > 0);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetDiff_RangeMode_DiffsBetweenCommits()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            using var repository = new Repository(repositoryPath);
+            var firstSha = repository.Head.Tip.Sha;
+
+            // Make a second commit
+            var sig = new Signature("Test", "t@t.com", DateTimeOffset.UtcNow);
+            File.WriteAllText(Path.Combine(repositoryPath, "file-0.txt"), "second commit content");
+            Commands.Stage(repository, Path.Combine(repositoryPath, "file-0.txt"));
+            repository.Commit("Second commit", sig, sig);
+            var secondSha = repository.Head.Tip.Sha;
+
+            var service = new GitWorkingTreeService();
+            var entries = service.GetDiff(new GitDiffOptions
+            {
+                RepositoryPath = repositoryPath,
+                FromCommit = firstSha,
+                ToCommit = secondSha,
+            });
+
+            Assert.IsTrue(entries.Count > 0);
+            Assert.AreEqual(GitFileStatus.Modified, entries[0].Status);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
     private static string CreateRepositoryWithCommit()
     {
         var repositoryPath = CreateTemporaryDirectory();
