@@ -156,7 +156,7 @@ public sealed class GitStatusFormatterTests
 
         var result = GitStatusFormatter.FormatEntryStatus(entry);
 
-        Assert.IsFalse(result.Contains("should-not-appear.cs"),
-            "FormatEntryStatus should return only the indicator, not the file path.");
+        Assert.DoesNotContain("should-not-appear.cs",
+result, "FormatEntryStatus should return only the indicator, not the file path.");
     }
 }

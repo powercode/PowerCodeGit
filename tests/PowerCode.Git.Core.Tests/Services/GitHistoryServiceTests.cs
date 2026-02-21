@@ -176,7 +176,7 @@ public sealed class GitHistoryServiceTests
             var firstParentCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath, FirstParent = true });
 
             // FirstParent should return fewer or equal commits (filters side-branch commits)
-            Assert.IsTrue(firstParentCommits.Count <= allCommits.Count);
+            Assert.IsLessThanOrEqualTo(allCommits.Count, firstParentCommits.Count);
         }
         finally
         {
@@ -197,7 +197,7 @@ public sealed class GitHistoryServiceTests
             var noMergeCommits = service.GetLog(new GitLogOptions { RepositoryPath = repositoryPath, NoMerges = true });
 
             // All commits from noMerges should have at most 1 parent
-            Assert.IsTrue(noMergeCommits.Count <= allCommits.Count);
+            Assert.IsLessThanOrEqualTo(allCommits.Count, noMergeCommits.Count);
         }
         finally
         {
