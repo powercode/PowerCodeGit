@@ -103,6 +103,7 @@
               </ListItem>
               <ListItem>
                 <Label>Refs</Label>
+                <ItemSelectionCondition><PropertyName>Decorations</PropertyName></ItemSelectionCondition>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatDecorations($_.Decorations)</ScriptBlock>
               </ListItem>
               <ListItem>
