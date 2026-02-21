@@ -8,6 +8,40 @@
         <TypeName>PowerCode.Git.Abstractions.Models.GitCommitInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
+        <AutoSize />
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Commit</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Message</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.ShortSha)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  $refs = [PowerCode.Git.Formatting.GitLogFormatter]::FormatDecorations($_.Decorations)
+                  if ($refs) { "$refs $($_.MessageShort)" } else { $_.MessageShort }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- Detailed table view for GitCommitInfo: Commit, Refs, Author, Date, Message -->
+    <View>
+      <Name>GitCommitInfo-Detailed</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitCommitInfo</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
         <TableHeaders>
           <TableColumnHeader>
             <Label>Commit</Label>
@@ -53,9 +87,9 @@
       </TableControl>
     </View>
 
-    <!-- Detailed list view for GitCommitInfo -->
+    <!-- Full list view for GitCommitInfo -->
     <View>
-      <Name>GitCommitInfo-Detailed</Name>
+      <Name>GitCommitInfo-Full</Name>
       <ViewSelectedBy>
         <TypeName>PowerCode.Git.Abstractions.Models.GitCommitInfo</TypeName>
       </ViewSelectedBy>
