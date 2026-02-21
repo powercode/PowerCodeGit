@@ -256,4 +256,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. Use Switch-GitBranch t
 - [Get-GitBranch](Get-GitBranch.md)
 - [Remove-GitBranch](Remove-GitBranch.md)
 - [Switch-GitBranch](Switch-GitBranch.md)
-

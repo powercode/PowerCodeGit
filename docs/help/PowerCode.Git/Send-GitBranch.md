@@ -386,4 +386,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. Progress is reported v
 - [Receive-GitBranch](Receive-GitBranch.md)
 - [Copy-GitRepository](Copy-GitRepository.md)
 - [Get-GitBranch](Get-GitBranch.md)
-

@@ -232,4 +232,3 @@ Progress is reported via Write-Progress during the fetch.
 - [Send-GitBranch](Send-GitBranch.md)
 - [Copy-GitRepository](Copy-GitRepository.md)
 - [Get-GitLog](Get-GitLog.md)
-

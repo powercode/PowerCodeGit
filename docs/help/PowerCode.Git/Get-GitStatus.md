@@ -192,4 +192,3 @@ The returned object provides summary counts and detailed per-file status entries
 - [Add-GitItem](Add-GitItem.md)
 - [Get-GitDiff](Get-GitDiff.md)
 - [Save-GitCommit](Save-GitCommit.md)
-

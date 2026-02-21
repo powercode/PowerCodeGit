@@ -265,4 +265,3 @@ Use New-GitBranch to create a branch and Remove-GitBranch to delete one.
 - [New-GitBranch](New-GitBranch.md)
 - [Remove-GitBranch](Remove-GitBranch.md)
 - [Switch-GitBranch](Switch-GitBranch.md)
-

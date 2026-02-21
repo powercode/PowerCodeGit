@@ -330,4 +330,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 - [Get-GitBranch](Get-GitBranch.md)
 - [New-GitBranch](New-GitBranch.md)
 - [Remove-GitBranch](Remove-GitBranch.md)
-

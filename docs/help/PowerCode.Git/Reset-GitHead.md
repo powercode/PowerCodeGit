@@ -301,4 +301,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. The confirm impact is 
 - [Add-GitItem](Add-GitItem.md)
 - [Get-GitStatus](Get-GitStatus.md)
 - [Save-GitCommit](Save-GitCommit.md)
-

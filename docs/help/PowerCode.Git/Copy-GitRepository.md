@@ -300,4 +300,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 - [Get-GitLog](Get-GitLog.md)
 - [Send-GitBranch](Send-GitBranch.md)
 - [Receive-GitBranch](Receive-GitBranch.md)
-

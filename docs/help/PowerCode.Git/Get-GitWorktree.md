@@ -92,4 +92,3 @@ The main working tree is always included in the output.
 - [Remove-GitWorktree](Remove-GitWorktree.md)
 - [Lock-GitWorktree](Lock-GitWorktree.md)
 - [Unlock-GitWorktree](Unlock-GitWorktree.md)
-

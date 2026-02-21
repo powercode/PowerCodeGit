@@ -310,4 +310,3 @@ Use Add-GitItem to stage changes and Reset-GitHead to unstage them.
 - [Add-GitItem](Add-GitItem.md)
 - [Get-GitStatus](Get-GitStatus.md)
 - [Reset-GitHead](Reset-GitHead.md)
-

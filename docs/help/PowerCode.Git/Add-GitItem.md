@@ -296,4 +296,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 - [Get-GitStatus](Get-GitStatus.md)
 - [Reset-GitHead](Reset-GitHead.md)
 - [Save-GitCommit](Save-GitCommit.md)
-

@@ -248,4 +248,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. Use Remove-GitWorktree
 - [Get-GitWorktree](Get-GitWorktree.md)
 - [Remove-GitWorktree](Remove-GitWorktree.md)
 - [Lock-GitWorktree](Lock-GitWorktree.md)
-

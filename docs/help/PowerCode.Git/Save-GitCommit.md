@@ -308,4 +308,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 - [Add-GitItem](Add-GitItem.md)
 - [Get-GitLog](Get-GitLog.md)
 - [Reset-GitHead](Reset-GitHead.md)
-

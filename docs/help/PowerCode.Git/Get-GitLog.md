@@ -340,4 +340,3 @@ Commits are returned in reverse chronological order (newest first).
 - [Save-GitCommit](Save-GitCommit.md)
 - [Get-GitDiff](Get-GitDiff.md)
 - [Get-GitBranch](Get-GitBranch.md)
-

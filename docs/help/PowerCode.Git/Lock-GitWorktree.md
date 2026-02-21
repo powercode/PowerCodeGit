@@ -216,4 +216,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. Use Unlock-GitWorktree
 - [Unlock-GitWorktree](Unlock-GitWorktree.md)
 - [Get-GitWorktree](Get-GitWorktree.md)
 - [New-GitWorktree](New-GitWorktree.md)
-

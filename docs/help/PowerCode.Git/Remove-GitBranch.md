@@ -216,4 +216,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. The confirm impact is 
 - [Get-GitBranch](Get-GitBranch.md)
 - [New-GitBranch](New-GitBranch.md)
 - [Switch-GitBranch](Switch-GitBranch.md)
-

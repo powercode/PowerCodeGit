@@ -216,4 +216,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. The confirm impact is 
 - [Get-GitWorktree](Get-GitWorktree.md)
 - [New-GitWorktree](New-GitWorktree.md)
 - [Lock-GitWorktree](Lock-GitWorktree.md)
-

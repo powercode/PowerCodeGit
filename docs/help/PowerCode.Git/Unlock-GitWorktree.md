@@ -186,4 +186,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 - [Lock-GitWorktree](Lock-GitWorktree.md)
 - [Get-GitWorktree](Get-GitWorktree.md)
 - [Remove-GitWorktree](Remove-GitWorktree.md)
-

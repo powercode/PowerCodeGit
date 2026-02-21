@@ -191,4 +191,3 @@ Annotated tags include tagger information; lightweight tags point directly to a 
 
 - [Get-GitLog](Get-GitLog.md)
 - [Get-GitBranch](Get-GitBranch.md)
-
