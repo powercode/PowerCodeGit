@@ -135,6 +135,7 @@
       </ListControl>
     </View>
 
+
     <!-- Default table view for GitStatusResult — colored branch and counts -->
     <View>
       <Name>GitStatusResult-Default</Name>
@@ -179,46 +180,6 @@
           </TableRowEntry>
         </TableRowEntries>
       </TableControl>
-    </View>
-
-    <!-- Detailed list view for GitStatusResult — grouped entries with section headers -->
-    <View>
-      <Name>GitStatusResult-Detailed</Name>
-      <ViewSelectedBy>
-        <TypeName>PowerCode.Git.Abstractions.Models.GitStatusResult</TypeName>
-      </ViewSelectedBy>
-      <ListControl>
-        <ListEntries>
-          <ListEntry>
-            <ListItems>
-              <ListItem>
-                <Label>RepositoryPath</Label>
-                <PropertyName>RepositoryPath</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>Branch</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatBranch($_.CurrentBranch)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Staged</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatStagedCount($_.StagedCount)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Modified</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatModifiedCount($_.ModifiedCount)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Untracked</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatUntrackedCount($_.UntrackedCount)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Entries</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntries($_.Entries)</ScriptBlock>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-        </ListEntries>
-      </ListControl>
     </View>
 
     <!-- Default table view for GitStatusEntry — colored status indicators -->
