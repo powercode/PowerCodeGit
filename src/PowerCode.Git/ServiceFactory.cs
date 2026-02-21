@@ -62,4 +62,13 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitRemoteService();
     }
+
+    /// <summary>
+    /// Creates a git worktree service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitWorktreeService"/> instance.</returns>
+    public static IGitWorktreeService CreateGitWorktreeService()
+    {
+        return DependencyContext.CreateGitWorktreeService();
+    }
 }

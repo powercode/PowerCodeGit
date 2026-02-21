@@ -22,6 +22,7 @@ internal static class DependencyContext
     private const string TagServiceTypeName = "PowerCode.Git.Core.Services.GitTagService";
     private const string PathServiceTypeName = "PowerCode.Git.Core.Services.GitPathService";
     private const string RemoteServiceTypeName = "PowerCode.Git.Core.Services.GitRemoteService";
+    private const string WorktreeServiceTypeName = "PowerCode.Git.Core.Services.GitWorktreeService";
 
     private static readonly object Gate = new();
     private static PowerCodeGitDependencyLoadContext? loadContext;
@@ -98,6 +99,12 @@ internal static class DependencyContext
     /// </summary>
     /// <returns>A strongly-typed <see cref="IGitRemoteService"/>.</returns>
     public static IGitRemoteService CreateGitRemoteService() => CreateService<IGitRemoteService>();
+
+    /// <summary>
+    /// Creates a new <see cref="IGitWorktreeService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitWorktreeService"/>.</returns>
+    public static IGitWorktreeService CreateGitWorktreeService() => CreateService<IGitWorktreeService>();
     private static T CreateService<T>()
     {
         EnsureInitialized();
@@ -119,6 +126,7 @@ internal static class DependencyContext
             var t when t == typeof(IGitTagService) => TagServiceTypeName,
             var t when t == typeof(IGitPathService) => PathServiceTypeName,
             var t when t == typeof(IGitRemoteService) => RemoteServiceTypeName,
+            var t when t == typeof(IGitWorktreeService) => WorktreeServiceTypeName,
             _ => throw new NotSupportedException($"No mapping for service type '{typeof(T).FullName}'")
         };
     }
