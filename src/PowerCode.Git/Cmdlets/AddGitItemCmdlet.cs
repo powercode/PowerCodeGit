@@ -17,6 +17,9 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>Add-GitItem -Update</code>
 /// </example>
+/// <example>
+/// <code>Get-GitStatus | Select-Object -ExpandProperty Entries | Where-Object Status -EQ Modified | Add-GitItem</code>
+/// </example>
 /// </summary>
 [Cmdlet(VerbsCommon.Add, "GitItem", SupportsShouldProcess = true, DefaultParameterSetName = "Path")]
 public sealed class AddGitItemCmdlet : GitCmdlet
@@ -45,6 +48,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// </summary>
     [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "Path")]
     [ValidateNotNullOrEmpty]
+    [Alias("FilePath")]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

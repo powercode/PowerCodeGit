@@ -79,6 +79,14 @@ Stages modifications to already-tracked files without adding new untracked files
 Add-GitItem -Update
 ```
 
+### Example 4 - Stage only modified files from pipeline
+
+Pipes status entries from Get-GitStatus through a filter to stage only modified files, binding the FilePath property to the -Path parameter.
+
+```powershell
+Get-GitStatus | Select-Object -ExpandProperty Entries | Where-Object Status -EQ Modified | Add-GitItem
+```
+
 ## PARAMETERS
 
 ### -All
@@ -186,13 +194,14 @@ One or more repository-relative file paths to stage. Accepts pipeline input.
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
-Aliases: []
+Aliases:
+- FilePath
 ParameterSets:
 - Name: Path
   Position: 0
   IsRequired: false
   ValueFromPipeline: true
-  ValueFromPipelineByPropertyName: false
+  ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -280,6 +289,10 @@ A file path passed via `-Path`.
 ### System.String[]
 
 An array of file paths passed via `-Path`.
+
+### PowerCode.Git.Abstractions.Models.GitStatusEntry
+
+A status entry whose `FilePath` property binds to `-Path` by property name.
 
 ## OUTPUTS
 

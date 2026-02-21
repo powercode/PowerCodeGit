@@ -123,3 +123,33 @@ Describe 'Add-GitItem -Options' {
         $Status.StagedCount | Should -BeGreaterOrEqual 2
     }
 }
+
+Describe 'Add-GitItem pipeline from GitStatusEntry' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages only modified files when filtered by Status' {
+        # Modify an existing tracked file
+        $ExistingFile = Get-ChildItem -Path $script:RepoPath -Filter 'file_*.txt' | Select-Object -First 1
+        Set-Content -Path $ExistingFile.FullName -Value 'modified via pipeline'
+
+        # Create an untracked file that should NOT be staged
+        $UntrackedFile = Join-Path -Path $script:RepoPath -ChildPath 'untracked-pipeline.txt'
+        Set-Content -Path $UntrackedFile -Value 'should stay untracked'
+
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.Entries | Where-Object { $_.Status -eq 'Modified' } | Add-GitItem -RepoPath $script:RepoPath
+
+        $UpdatedStatus = Get-GitStatus -RepoPath $script:RepoPath
+        # The modified tracked file should now be staged
+        $StagedEntry = $UpdatedStatus.Entries | Where-Object { $_.FilePath -eq $ExistingFile.Name -and $_.StagingState -eq 'Staged' }
+        $StagedEntry | Should -Not -BeNullOrEmpty
+        # The untracked file should remain unstaged
+        $UpdatedStatus.UntrackedCount | Should -BeGreaterOrEqual 1
+    }
+}
