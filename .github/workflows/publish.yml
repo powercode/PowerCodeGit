@@ -32,6 +32,10 @@ jobs:
       - name: Unit Tests
         run: dotnet test --configuration Release --no-build --logger trx --results-directory ./test-results
 
+      - name: Build MAML Help
+        shell: pwsh
+        run: ./scripts/Build-MamlHelp.ps1 -Configuration Release
+
       - name: Install Pester
         shell: pwsh
         run: |
