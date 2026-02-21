@@ -91,7 +91,7 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var options = BuildOptions(currentFileSystemPath: string.Empty);
+        var options = BuildOptions(currentFileSystemPath: SessionState.Path.CurrentFileSystemLocation.Path);
 
         try
         {

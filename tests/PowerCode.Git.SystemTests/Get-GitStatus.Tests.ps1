@@ -43,6 +43,52 @@ Describe 'Get-GitStatus clean repository' {
     }
 }
 
+Describe 'Get-GitStatus from current directory' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Create a .gitignore and an ignored file for Example 2
+            Set-Content -Path '.gitignore' -Value '*.log'
+            git add .gitignore 2>&1 | Out-Null
+            git commit -m 'Add .gitignore' 2>&1 | Out-Null
+            Set-Content -Path 'debug.log' -Value 'ignored log content'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Gets repository status from the current directory (Example 1)' {
+        Push-Location -Path $script:RepoPath
+        try {
+            $Status = Get-GitStatus
+            $Status | Should -Not -BeNullOrEmpty
+            $Status.CurrentBranch | Should -BeExactly 'main'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    It 'Includes ignored files from the current directory (Example 2)' {
+        Push-Location -Path $script:RepoPath
+        try {
+            $Status = Get-GitStatus -IncludeIgnored
+            $IgnoredEntries = $Status.Entries | Where-Object { $_.FilePath -like '*.log' }
+            $IgnoredEntries | Should -Not -BeNullOrEmpty
+        }
+        finally {
+            Pop-Location
+        }
+    }
+}
+
 Describe 'Get-GitStatus with changes' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
