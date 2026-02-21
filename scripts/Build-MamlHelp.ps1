@@ -86,9 +86,16 @@ Write-Host "  Output: $OutputPath" -ForegroundColor DarkGray
 # When on main or preview, replace the {{BranchName}} placeholder in HelpUri
 # with the actual branch name. Work on a temp copy so the repo files stay unchanged.
 # In CI (GitHub Actions) the checkout is detached, so fall back to GITHUB_REF_NAME.
+# For tag-triggered builds (publish workflow) derive the branch from the tag name:
+#   tags containing 'preview' → 'preview', otherwise → 'main'.
 $BranchName = git -C $RepoRoot rev-parse --abbrev-ref HEAD 2>$null
 if ($BranchName -eq 'HEAD' -and $env:GITHUB_REF_NAME) {
-    $BranchName = $env:GITHUB_REF_NAME
+    if ($env:GITHUB_REF_TYPE -eq 'tag') {
+        $BranchName = if ($env:GITHUB_REF_NAME -match 'preview') { 'preview' } else { 'main' }
+    }
+    else {
+        $BranchName = $env:GITHUB_REF_NAME
+    }
 }
 
 # Always export from a temp copy so local builds never dirty the source tree.
