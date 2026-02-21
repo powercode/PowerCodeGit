@@ -26,7 +26,7 @@ param(
     [string]$Configuration = 'debug'
 )
 
-Set-StrictMode -Version Latest
+# Microsoft.PowerShell.PlatyPS cannot be used with Set-StrictMode v2+ because of its use of dynamic objects
 $ErrorActionPreference = 'Stop'
 
 $RepoRoot    = (Resolve-Path -Path "$PSScriptRoot/..").Path
