@@ -19,9 +19,14 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
         using var repository = new Repository(options.RepositoryPath);
+
+        var showUntracked = options.UntrackedFilesMode != GitUntrackedFilesMode.No;
+
         var status = repository.RetrieveStatus(new StatusOptions
         {
             IncludeIgnored = options.IncludeIgnored,
+            IncludeUntracked = showUntracked,
+            RecurseUntrackedDirs = options.UntrackedFilesMode == GitUntrackedFilesMode.All,
         });
 
         var entries = new List<GitStatusEntry>();
@@ -29,6 +34,17 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         foreach (var entry in status)
         {
             MapStatusEntry(entry, entries);
+        }
+
+        // Filter by paths if specified
+        if (options.Paths is { Length: > 0 })
+        {
+            var paths = options.Paths;
+            entries = entries
+                .Where(e => paths.Any(p =>
+                    string.Equals(e.FilePath, p, StringComparison.OrdinalIgnoreCase) ||
+                    e.FilePath.StartsWith(p.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase)))
+                .ToList();
         }
 
         var stagedCount = entries.Count(e => e.StagingState == GitStagingState.Staged);

@@ -139,6 +139,57 @@ public sealed class GitWorkingTreeServiceTests
     }
 
     [TestMethod]
+    public void GetStatus_WithPaths_FiltersEntriesToMatchingPaths()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var service = new GitWorkingTreeService();
+            // Create two untracked files in different locations
+            File.WriteAllText(System.IO.Path.Combine(repositoryPath, "match.txt"), "a");
+            File.WriteAllText(System.IO.Path.Combine(repositoryPath, "other.txt"), "b");
+
+            var result = service.GetStatus(new GitStatusOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = ["match.txt"],
+            });
+
+            Assert.IsTrue(result.Entries.Any(e => e.FilePath == "match.txt"));
+            Assert.IsFalse(result.Entries.Any(e => e.FilePath == "other.txt"));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void GetStatus_NoUntrackedFiles_ExcludesUntracked()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var service = new GitWorkingTreeService();
+            File.WriteAllText(System.IO.Path.Combine(repositoryPath, "untracked.txt"), "x");
+
+            var result = service.GetStatus(new GitStatusOptions
+            {
+                RepositoryPath = repositoryPath,
+                UntrackedFilesMode = GitUntrackedFilesMode.No,
+            });
+
+            Assert.IsFalse(result.Entries.Any(e => e.Status == GitFileStatus.Untracked));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
     public void GetDiff_InvalidRepositoryPath_ThrowsArgumentException()
     {
         var service = new GitWorkingTreeService();

@@ -129,3 +129,71 @@ Describe 'Get-GitStatus error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitStatus -Path' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            Set-Content -Path 'match.txt' -Value 'a'
+            Set-Content -Path 'other.txt' -Value 'b'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns only entries matching the specified path' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath -Path 'match.txt'
+        $Status.Entries | Where-Object { $_.FilePath -eq 'match.txt' } | Should -Not -BeNullOrEmpty
+        $Status.Entries | Where-Object { $_.FilePath -eq 'other.txt' } | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitStatus -UntrackedFiles' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            Set-Content -Path 'untracked.txt' -Value 'x'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Excludes untracked files when -UntrackedFiles No is specified' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath -UntrackedFiles No
+        $Status.Entries | Where-Object { $_.Status -eq 'Untracked' } | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Get-GitStatus -Options' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns status via -Options parameter set' {
+        $Options = [PowerCode.Git.Abstractions.Models.GitStatusOptions]@{
+            RepositoryPath = $script:RepoPath
+        }
+
+        $Status = Get-GitStatus -Options $Options
+        $Status | Should -Not -BeNullOrEmpty
+        $Status.CurrentBranch | Should -Not -BeNullOrEmpty
+    }
+}
