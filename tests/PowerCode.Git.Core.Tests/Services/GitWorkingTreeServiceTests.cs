@@ -319,7 +319,7 @@ public sealed class GitWorkingTreeServiceTests
                 Commit = sha,
             });
 
-            Assert.IsTrue(entries.Count > 0);
+            Assert.IsNotEmpty(entries);
         }
         finally
         {
@@ -352,7 +352,7 @@ public sealed class GitWorkingTreeServiceTests
                 ToCommit = secondSha,
             });
 
-            Assert.IsTrue(entries.Count > 0);
+            Assert.IsNotEmpty(entries);
             Assert.AreEqual(GitFileStatus.Modified, entries[0].Status);
         }
         finally
@@ -384,10 +384,10 @@ public sealed class GitWorkingTreeServiceTests
             var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             // The tracked modified file should be staged
-            Assert.IsTrue(result.StagedCount >= 1);
+            Assert.IsGreaterThanOrEqualTo(1, result.StagedCount);
 
             // The untracked file should still be untracked (not staged)
-            Assert.IsTrue(result.UntrackedCount >= 1);
+            Assert.IsGreaterThanOrEqualTo(1, result.UntrackedCount);
         }
         finally
         {
@@ -425,7 +425,7 @@ public sealed class GitWorkingTreeServiceTests
             var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             // The forced-staged ignored file should be staged
-            Assert.IsTrue(result.StagedCount >= 1);
+            Assert.IsGreaterThanOrEqualTo(1, result.StagedCount);
         }
         finally
         {
@@ -448,7 +448,7 @@ public sealed class GitWorkingTreeServiceTests
             Commands.Stage(repository, newFile);
 
             var statusBefore = new GitWorkingTreeService().GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
-            Assert.IsTrue(statusBefore.StagedCount >= 1);
+            Assert.IsGreaterThanOrEqualTo(1, statusBefore.StagedCount);
 
             // Reset just that path
             var service = new GitWorkingTreeService();
@@ -456,7 +456,7 @@ public sealed class GitWorkingTreeServiceTests
 
             var statusAfter = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
             Assert.AreEqual(0, statusAfter.StagedCount);
-            Assert.IsTrue(statusAfter.UntrackedCount >= 1);
+            Assert.IsGreaterThanOrEqualTo(1, statusAfter.UntrackedCount);
         }
         finally
         {
