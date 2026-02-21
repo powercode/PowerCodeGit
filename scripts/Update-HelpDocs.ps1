@@ -29,8 +29,10 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$RepoRoot = (Resolve-Path -Path "$PSScriptRoot/..").Path
-$HelpDocsPath = Join-Path -Path $RepoRoot -ChildPath 'docs/help/PowerCode.Git'
+$RepoRoot    = (Resolve-Path -Path "$PSScriptRoot/..").Path
+# PlatyPS appends a <ModuleName> subfolder, so point at the parent.
+$HelpRoot    = Join-Path -Path $RepoRoot -ChildPath 'docs/help'
+$HelpDocsPath = Join-Path -Path $HelpRoot -ChildPath 'PowerCode.Git'
 
 # Locate the built module
 $ModuleLayoutDir = Join-Path -Path $RepoRoot -ChildPath 'artifacts/module/PowerCode.Git'
@@ -47,12 +49,13 @@ if (-not (Test-Path -Path $ModulePath)) {
     return
 }
 
-# Ensure Microsoft.PowerShell.PlatyPS is available
+# Ensure Microsoft.PowerShell.PlatyPS v2 (1.0.0+) is available
 $PlatyPSModule = Get-Module -Name Microsoft.PowerShell.PlatyPS -ListAvailable |
+    Where-Object { $_.Version -ge [version]'1.0.0' } |
     Select-Object -First 1
 if (-not $PlatyPSModule) {
     Write-Host 'Installing Microsoft.PowerShell.PlatyPS...' -ForegroundColor Yellow
-    Install-PSResource -Name Microsoft.PowerShell.PlatyPS -TrustRepository -Repository PSGallery
+    Install-PSResource -Name Microsoft.PowerShell.PlatyPS -MinimumVersion 1.0.0 -TrustRepository -Repository PSGallery
 }
 
 Import-Module -Name Microsoft.PowerShell.PlatyPS -Force
@@ -74,16 +77,16 @@ if (-not (Test-Path -Path $HelpDocsPath)) {
 $ExistingFiles = Get-ChildItem -Path $HelpDocsPath -Filter '*.md' -File |
     ForEach-Object { $_.BaseName }
 
-$NewCommands = $Commands | Where-Object { $_.Name -notin $ExistingFiles }
-$ExistingCommands = $Commands | Where-Object { $_.Name -in $ExistingFiles }
+$NewCommands      = @($Commands | Where-Object { $_.Name -notin $ExistingFiles })
+$ExistingCommands = @($Commands | Where-Object { $_.Name -in $ExistingFiles })
 
 # Create markdown for new commands
 if ($NewCommands.Count -gt 0) {
     Write-Host "Creating help for $($NewCommands.Count) new command(s)..." -ForegroundColor Yellow
     foreach ($Command in $NewCommands) {
         $CommandHelp = New-CommandHelp -Command $Command
-        $FilePath = Join-Path -Path $HelpDocsPath -ChildPath "$($Command.Name).md"
-        Export-CommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpDocsPath -Force
+        # Export-MarkdownCommandHelp appends a <ModuleName> subfolder, so pass $HelpRoot.
+        Export-MarkdownCommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpRoot -Force
         Write-Host "  Created: $($Command.Name).md" -ForegroundColor Green
     }
 }
@@ -93,9 +96,9 @@ if ($ExistingCommands.Count -gt 0) {
     Write-Host "Updating help for $($ExistingCommands.Count) existing command(s)..." -ForegroundColor Cyan
     foreach ($Command in $ExistingCommands) {
         $FilePath = Join-Path -Path $HelpDocsPath -ChildPath "$($Command.Name).md"
-        $CommandHelp = Import-CommandHelp -Path $FilePath
-        $CommandHelp = Update-CommandHelp -CommandHelp $CommandHelp -Command $Command
-        Export-CommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpDocsPath -Force
+        $CommandHelp = Import-MarkdownCommandHelp -Path $FilePath
+        $CommandHelp = Update-MarkdownCommandHelp -CommandHelp $CommandHelp -Command $Command
+        Export-MarkdownCommandHelp -CommandHelp $CommandHelp -OutputFolder $HelpRoot -Force
         Write-Host "  Updated: $($Command.Name).md" -ForegroundColor DarkGray
     }
 }
