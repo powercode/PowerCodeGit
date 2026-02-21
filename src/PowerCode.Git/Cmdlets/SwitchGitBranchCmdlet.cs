@@ -37,7 +37,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the name of the branch to switch to.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Switch")]
+    [Parameter(Position = 0, ParameterSetName = "Switch", ValueFromPipelineByPropertyName = true)]
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Create")]
     [ValidateNotNullOrEmpty]
     [GitBranchCompleter(IncludeRemote = true)]

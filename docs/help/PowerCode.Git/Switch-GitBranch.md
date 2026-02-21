@@ -71,6 +71,14 @@ Creates a new branch and switches to it.
 Switch-GitBranch -Name feature/new -Create
 ```
 
+### Example 3 - Switch via pipeline input
+
+Pipes a branch from Get-GitBranch to switch to it by name.
+
+```powershell
+Get-GitBranch | Where-Object { $_.Name -eq 'feature' } | Switch-GitBranch
+```
+
 ## PARAMETERS
 
 ### -Committish

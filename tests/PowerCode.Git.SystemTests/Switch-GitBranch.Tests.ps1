@@ -95,6 +95,35 @@ Describe 'Switch-GitBranch -Create' {
     }
 }
 
+Describe 'Switch-GitBranch pipeline input' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b pipeline-branch 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Switches branch when Name is bound from the pipeline by property name' {
+        $Result = Get-GitBranch -RepoPath $script:RepoPath |
+            Where-Object { $_.Name -eq 'pipeline-branch' } |
+            Switch-GitBranch -RepoPath $script:RepoPath
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'pipeline-branch'
+        $Result.IsHead | Should -BeTrue
+    }
+}
+
 Describe 'Switch-GitBranch -Options' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
