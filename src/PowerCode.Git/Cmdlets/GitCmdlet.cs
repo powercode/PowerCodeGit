@@ -19,6 +19,28 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
     public string? RepoPath { get; set; }
 
     /// <summary>
+    /// Gets or sets the path resolver used to translate PowerShell provider
+    /// paths to absolute file-system paths.  At runtime this is initialised
+    /// in <see cref="BeginProcessing"/> to a
+    /// <see cref="SessionStatePathResolver"/>.  Unit tests that run outside
+    /// the PowerShell engine can set a stub implementation instead.
+    /// When <c>null</c>, <see cref="ResolvePSPath"/> returns the input path
+    /// unchanged — a safe fallback for unit-test scenarios.
+    /// </summary>
+    internal IPathResolver? PathResolver { get; set; }
+
+    /// <summary>
+    /// Binds the <see cref="PathResolver"/> to the current
+    /// <see cref="PSCmdlet.SessionState"/> so that subsequent calls to
+    /// <see cref="ResolveRepositoryPath"/> can resolve PS provider paths.
+    /// </summary>
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        PathResolver ??= new SessionStatePathResolver(SessionState);
+    }
+
+    /// <summary>
     /// Resolves the repository path from <see cref="RepoPath"/> or the
     /// current PowerShell location.
     /// </summary>
@@ -30,16 +52,25 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
     {
         if (!string.IsNullOrWhiteSpace(RepoPath))
         {
-            return SessionState.Path.GetUnresolvedProviderPathFromPSPath(RepoPath);
+            return ResolvePSPath(RepoPath);
         }
 
         if (!string.IsNullOrWhiteSpace(currentFileSystemPath))
         {
-            return SessionState.Path.GetUnresolvedProviderPathFromPSPath(currentFileSystemPath);
+            return ResolvePSPath(currentFileSystemPath);
         }
 
         return GetCurrentFileSystemLocation();
     }
+
+    /// <summary>
+    /// Resolves a single PowerShell path using the configured
+    /// <see cref="PathResolver"/>.  When no resolver is available (typical
+    /// in unit tests that do not call <see cref="BeginProcessing"/>), the
+    /// raw <paramref name="path"/> is returned unchanged.
+    /// </summary>
+    private string ResolvePSPath(string path) =>
+        PathResolver?.ResolvePath(path) ?? path;
 
     /// <inheritdoc />
     public string GetCurrentFileSystemLocation() => SessionState.Path.CurrentFileSystemLocation.Path;
