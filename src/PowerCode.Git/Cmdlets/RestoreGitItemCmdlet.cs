@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Text;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Completers;
@@ -159,18 +160,67 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     }
 
     /// <summary>
-    /// Executes the cmdlet operation.
+    /// Executes the cmdlet operation by dispatching to the handler for the
+    /// active parameter set.
     /// </summary>
     protected override void ProcessRecord()
     {
-        // Hunk set: invert the patch and apply it immediately for each pipeline call.
-        if (ParameterSetName == "Hunk" && Hunk is { Length: > 0 })
+        switch (ParameterSetName)
         {
-            var repositoryPath = ResolveRepositoryPath();
+            case "Hunk" when Hunk is { Length: > 0 }:
+                ProcessHunks(Hunk);
+                break;
 
-            if (!ShouldProcess(repositoryPath, $"Restore {Hunk.Length} hunk(s)"))
+            case "InputObject" when InputObject is not null:
+                AccumulateInputObject(InputObject);
+                break;
+
+            case "Options" when Options is not null:
+                ExecuteRestore(Options);
+                break;
+
+            default:
+                ExecutePathOrAllRestore();
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Dispatches accumulated InputObject paths (if any) as a single restore operation.
+    /// </summary>
+    protected override void EndProcessing()
+    {
+        if (inputObjectPaths.Count == 0)
+        {
+            return;
+        }
+
+        var options = new GitRestoreOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(),
+            Paths = inputObjectPaths,
+            Staged = Staged.IsPresent,
+            Source = Source,
+        };
+
+        ExecuteRestore(options);
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Confirms and applies each hunk individually so the user can accept or
+    /// reject every change when <c>-Confirm</c> or <c>-WhatIf</c> is active.
+    /// </summary>
+    private void ProcessHunks(GitDiffHunk[] hunks)
+    {
+        var repositoryPath = ResolveRepositoryPath();
+
+        foreach (var hunk in hunks)
+        {
+            if (!ShouldProcess(repositoryPath, FormatHunkDescription("Restore", hunk)))
             {
-                return;
+                continue;
             }
 
             try
@@ -178,7 +228,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
                 workingTreeService.RestoreHunks(new GitRestoreHunkOptions
                 {
                     RepositoryPath = repositoryPath,
-                    Hunks = Hunk,
+                    Hunks = [hunk],
                     Staged = Staged.IsPresent,
                 });
             }
@@ -186,50 +236,56 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
             {
                 WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, repositoryPath));
             }
-
-            return;
         }
+    }
 
-        // InputObject set: accumulate paths across all pipeline objects; the restore
-        // call is deferred to EndProcessing for a single git invocation.
-        if (ParameterSetName == "InputObject" && InputObject is not null)
+    /// <summary>
+    /// Accumulates a path from an <see cref="InputObject"/> pipeline object.
+    /// The actual restore call is deferred to <see cref="EndProcessing"/>.
+    /// </summary>
+    private void AccumulateInputObject(PSObject inputObject)
+    {
+        var path = ResolveInputObjectPath(inputObject);
+
+        if (path is not null)
         {
-            var path = ResolveInputObjectPath(InputObject);
-
-            if (path is not null)
-            {
-                inputObjectPaths.Add(path);
-            }
-            else
-            {
-                WriteWarning(
-                    $"InputObject of type '{InputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
-            }
-
-            return;
+            inputObjectPaths.Add(path);
         }
-
-        // Options set.
-        if (Options is not null)
+        else
         {
-            if (!ShouldProcess(Options.RepositoryPath, "Restore files"))
-            {
-                return;
-            }
+            WriteWarning(
+                $"InputObject of type '{inputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
+        }
+    }
 
-            try
-            {
-                workingTreeService.Restore(Options);
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, Options.RepositoryPath));
-            }
-
+    /// <summary>
+    /// Performs a restore operation using a pre-built <see cref="GitRestoreOptions"/>.
+    /// Gates on <see cref="Cmdlet.ShouldProcess(string, string)"/> and emits a
+    /// non-terminating error on failure.
+    /// </summary>
+    private void ExecuteRestore(GitRestoreOptions options)
+    {
+        if (!ShouldProcess(options.RepositoryPath, "Restore files"))
+        {
             return;
         }
 
-        // Path and All sets.
+        try
+        {
+            workingTreeService.Restore(options);
+        }
+        catch (Exception exception)
+        {
+            WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, options.RepositoryPath));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <c>Path</c> and <c>All</c> parameter sets by building options
+    /// from the current parameters and executing the restore.
+    /// </summary>
+    private void ExecutePathOrAllRestore()
+    {
         var repoPath = ResolveRepositoryPath();
         var targetDescription = All.IsPresent ? "all files" : $"{Path?.Length ?? 0} file(s)";
         var description = Staged.IsPresent
@@ -263,43 +319,43 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     }
 
     /// <summary>
-    /// Dispatches accumulated InputObject paths (if any) as a single restore operation.
+    /// Formats a description for <see cref="Cmdlet.ShouldProcess(string, string)"/> that includes a
+    /// content preview of the specified hunk so the user can make an informed
+    /// decision when <c>-Confirm</c> or <c>-WhatIf</c> is in effect.
     /// </summary>
-    protected override void EndProcessing()
+    /// <param name="verb">The action verb (e.g. "Restore").</param>
+    /// <param name="hunk">The hunk to describe.</param>
+    /// <param name="maxPreviewLines">Maximum number of diff lines to show.</param>
+    /// <returns>A multi-line description string.</returns>
+    private static string FormatHunkDescription(string verb, GitDiffHunk hunk, int maxPreviewLines = 5)
     {
-        if (inputObjectPaths.Count == 0)
-        {
-            return;
-        }
+        var sb = new StringBuilder();
+        sb.AppendLine($"{verb} hunk in {hunk.FilePath} {hunk.Header}");
 
-        var repositoryPath = ResolveRepositoryPath();
-        var description = Staged.IsPresent
-            ? $"Restore (unstage) {inputObjectPaths.Count} file(s)"
-            : $"Restore working-tree {inputObjectPaths.Count} file(s)";
+        var contentLines = hunk.Content.Split('\n');
+        var shown = 0;
 
-        if (!ShouldProcess(repositoryPath, description))
+        // Skip index 0 — the @@ header line.
+        for (var i = 1; i < contentLines.Length && shown < maxPreviewLines; i++)
         {
-            return;
-        }
+            var line = contentLines[i].TrimEnd('\r');
 
-        try
-        {
-            workingTreeService.Restore(new GitRestoreOptions
+            if (line.Length == 0)
             {
-                RepositoryPath = repositoryPath,
-                Paths = inputObjectPaths,
-                Staged = Staged.IsPresent,
-                Source = Source,
-            });
+                continue;
+            }
+
+            var display = line.Length > 80 ? line[..80] + "\u2026" : line;
+            sb.AppendLine($"  {display}");
+            shown++;
         }
-        catch (Exception exception)
+
+        if (shown >= maxPreviewLines)
         {
-            WriteError(new ErrorRecord(
-                exception,
-                "RestoreGitItemFailed",
-                ErrorCategory.InvalidOperation,
-                repositoryPath));
+            sb.AppendLine("  \u2026");
         }
+
+        return sb.ToString().TrimEnd();
     }
 
     /// <summary>

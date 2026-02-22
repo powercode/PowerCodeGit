@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Text;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Completers;
@@ -130,134 +131,28 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     }
 
     /// <summary>
-    /// Executes the cmdlet operation.
+    /// Executes the cmdlet operation by dispatching to the handler for the
+    /// active parameter set.
     /// </summary>
     protected override void ProcessRecord()
     {
-        // InputObject set — accumulate resolved paths; the stage call is deferred to
-        // EndProcessing so all pipeline objects are batched into a single git invocation.
-        if (ParameterSetName == "InputObject" && InputObject is not null)
+        switch (ParameterSetName)
         {
-            // If the wrapped object is a GitDiffHunk, delegate to hunk staging directly.
-            if (InputObject.BaseObject is GitDiffHunk hunkObj)
-            {
-                var hunkRepoPath = ResolveRepositoryPath();
+            case "InputObject" when InputObject is not null:
+                AccumulateInputObject(InputObject);
+                break;
 
-                if (!ShouldProcess(hunkRepoPath, "Stage 1 hunk(s)"))
-                {
-                    return;
-                }
+            case "Hunk" when Hunk is { Length: > 0 }:
+                ProcessHunks(Hunk);
+                break;
 
-                try
-                {
-                    workingTreeService.StageHunks(new GitStageHunkOptions
-                    {
-                        RepositoryPath = hunkRepoPath,
-                        Hunks = [hunkObj],
-                    });
-                }
-                catch (Exception exception)
-                {
-                    WriteError(new ErrorRecord(exception, "AddGitItemFailed", ErrorCategory.InvalidOperation, hunkRepoPath));
-                }
+            case "Options" when Options is not null:
+                ExecuteStage(Options);
+                break;
 
-                return;
-            }
-
-            var resolvedPath = ResolveInputObjectPath(InputObject);
-
-            if (resolvedPath is not null)
-            {
-                inputObjectPaths.Add(resolvedPath);
-            }
-            else
-            {
-                WriteWarning(
-                    $"InputObject of type '{InputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
-            }
-
-            return;
-        }
-
-        if (ParameterSetName == "Hunk" && Hunk is { Length: > 0 })
-        {
-            var repositoryPath = ResolveRepositoryPath();
-
-            if (!ShouldProcess(repositoryPath, $"Stage {Hunk.Length} hunk(s)"))
-            {
-                return;
-            }
-
-            try
-            {
-                var hunkOptions = new GitStageHunkOptions
-                {
-                    RepositoryPath = repositoryPath,
-                    Hunks = Hunk,
-                };
-
-                workingTreeService.StageHunks(hunkOptions);
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "AddGitItemHunkFailed", ErrorCategory.InvalidOperation, repositoryPath));
-            }
-
-            return;
-        }
-
-        var repoPath = ResolveRepositoryPath();
-
-        if (ParameterSetName == "Options" && Options is not null)
-        {
-            if (!ShouldProcess(Options.RepositoryPath, "Stage files"))
-            {
-                return;
-            }
-
-            try
-            {
-                workingTreeService.Stage(Options);
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "AddGitItemFailed", ErrorCategory.InvalidOperation, Options.RepositoryPath));
-            }
-
-            return;
-        }
-
-        var description = All.IsPresent ? "Stage all changes"
-            : Update.IsPresent ? "Stage tracked file changes"
-            : $"Stage {Path?.Length ?? 0} file(s)";
-
-        if (!ShouldProcess(repoPath, description))
-        {
-            return;
-        }
-
-        try
-        {
-            var options = new GitStageOptions
-            {
-                RepositoryPath = repoPath,
-                Paths = Path,
-                All = All.IsPresent,
-                Update = Update.IsPresent,
-                Force = Force.IsPresent,
-            };
-
-            workingTreeService.Stage(options);
-        }
-        catch (Exception exception)
-        {
-            var errorRecord = new ErrorRecord(
-                exception,
-                "AddGitItemFailed",
-                ErrorCategory.InvalidOperation,
-                repoPath);
-
-            WriteError(errorRecord);
+            default:
+                ExecutePathOrAllStage();
+                break;
         }
     }
 
@@ -271,9 +166,107 @@ public sealed class AddGitItemCmdlet : GitCmdlet
             return;
         }
 
+        ExecuteStage(new GitStageOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(),
+            Paths = inputObjectPaths,
+        });
+    }
+
+    // ── Private helpers ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Accumulates a path from an <see cref="InputObject"/> pipeline object.
+    /// If the wrapped object is a <see cref="GitDiffHunk"/>, it is staged
+    /// immediately; otherwise the resolved path is deferred to
+    /// <see cref="EndProcessing"/>.
+    /// </summary>
+    private void AccumulateInputObject(PSObject inputObject)
+    {
+        if (inputObject.BaseObject is GitDiffHunk hunkObj)
+        {
+            ProcessHunks([hunkObj]);
+            return;
+        }
+
+        var resolvedPath = ResolveInputObjectPath(inputObject);
+
+        if (resolvedPath is not null)
+        {
+            inputObjectPaths.Add(resolvedPath);
+        }
+        else
+        {
+            WriteWarning(
+                $"InputObject of type '{inputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
+        }
+    }
+
+    /// <summary>
+    /// Confirms and applies each hunk individually so the user can accept or
+    /// reject every change when <c>-Confirm</c> or <c>-WhatIf</c> is active.
+    /// </summary>
+    private void ProcessHunks(GitDiffHunk[] hunks)
+    {
         var repositoryPath = ResolveRepositoryPath();
 
-        if (!ShouldProcess(repositoryPath, $"Stage {inputObjectPaths.Count} file(s)"))
+        foreach (var hunk in hunks)
+        {
+            if (!ShouldProcess(repositoryPath, FormatHunkDescription("Stage", hunk)))
+            {
+                continue;
+            }
+
+            try
+            {
+                workingTreeService.StageHunks(new GitStageHunkOptions
+                {
+                    RepositoryPath = repositoryPath,
+                    Hunks = [hunk],
+                });
+            }
+            catch (Exception exception)
+            {
+                WriteError(new ErrorRecord(exception, "AddGitItemHunkFailed", ErrorCategory.InvalidOperation, repositoryPath));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Performs a stage operation using a pre-built <see cref="GitStageOptions"/>.
+    /// Gates on <see cref="Cmdlet.ShouldProcess(string, string)"/> and emits a
+    /// non-terminating error on failure.
+    /// </summary>
+    private void ExecuteStage(GitStageOptions options)
+    {
+        if (!ShouldProcess(options.RepositoryPath, "Stage files"))
+        {
+            return;
+        }
+
+        try
+        {
+            workingTreeService.Stage(options);
+        }
+        catch (Exception exception)
+        {
+            WriteError(new ErrorRecord(exception, "AddGitItemFailed", ErrorCategory.InvalidOperation, options.RepositoryPath));
+        }
+    }
+
+    /// <summary>
+    /// Handles the <c>Path</c>, <c>All</c>, and <c>Update</c> parameter sets
+    /// by building options from the current parameters and executing the stage.
+    /// </summary>
+    private void ExecutePathOrAllStage()
+    {
+        var repoPath = ResolveRepositoryPath();
+
+        var description = All.IsPresent ? "Stage all changes"
+            : Update.IsPresent ? "Stage tracked file changes"
+            : $"Stage {Path?.Length ?? 0} file(s)";
+
+        if (!ShouldProcess(repoPath, description))
         {
             return;
         }
@@ -282,8 +275,11 @@ public sealed class AddGitItemCmdlet : GitCmdlet
         {
             workingTreeService.Stage(new GitStageOptions
             {
-                RepositoryPath = repositoryPath,
-                Paths = inputObjectPaths,
+                RepositoryPath = repoPath,
+                Paths = Path,
+                All = All.IsPresent,
+                Update = Update.IsPresent,
+                Force = Force.IsPresent,
             });
         }
         catch (Exception exception)
@@ -292,8 +288,48 @@ public sealed class AddGitItemCmdlet : GitCmdlet
                 exception,
                 "AddGitItemFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath));
+                repoPath));
         }
+    }
+
+    /// <summary>
+    /// Formats a description for <see cref="Cmdlet.ShouldProcess(string, string)"/> that includes a
+    /// content preview of the specified hunk so the user can make an informed
+    /// decision when <c>-Confirm</c> or <c>-WhatIf</c> is in effect.
+    /// </summary>
+    /// <param name="verb">The action verb (e.g. "Stage").</param>
+    /// <param name="hunk">The hunk to describe.</param>
+    /// <param name="maxPreviewLines">Maximum number of diff lines to show.</param>
+    /// <returns>A multi-line description string.</returns>
+    private static string FormatHunkDescription(string verb, GitDiffHunk hunk, int maxPreviewLines = 5)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine($"{verb} hunk in {hunk.FilePath} {hunk.Header}");
+
+        var contentLines = hunk.Content.Split('\n');
+        var shown = 0;
+
+        // Skip index 0 — the @@ header line.
+        for (var i = 1; i < contentLines.Length && shown < maxPreviewLines; i++)
+        {
+            var line = contentLines[i].TrimEnd('\r');
+
+            if (line.Length == 0)
+            {
+                continue;
+            }
+
+            var display = line.Length > 80 ? line[..80] + "\u2026" : line;
+            sb.AppendLine($"  {display}");
+            shown++;
+        }
+
+        if (shown >= maxPreviewLines)
+        {
+            sb.AppendLine("  \u2026");
+        }
+
+        return sb.ToString().TrimEnd();
     }
 
     /// <summary>
