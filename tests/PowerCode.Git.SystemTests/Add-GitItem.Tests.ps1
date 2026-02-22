@@ -198,3 +198,90 @@ Describe 'Add-GitItem stages only piped hunks' {
         $UnstagedDiff[0].Patch | Should -Match 'MODIFIED line 19'
     }
 }
+
+Describe 'Add-GitItem stages only hunks filtered by Lines content' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        # Create two files: one with a metadata line, one without.
+        $MetadataFile = Join-Path -Path $script:RepoPath -ChildPath 'metadata.txt'
+        $NormalFile = Join-Path -Path $script:RepoPath -ChildPath 'normal.txt'
+
+        Set-Content -Path $MetadataFile -Value "header`nms.date: 01-01-2026`ndescription: test file`nfooter"
+        Set-Content -Path $NormalFile -Value "header`nregular content`nmore content`nfooter"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git add metadata.txt normal.txt 2>&1 | Out-Null
+            git commit -m 'Add test files' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        # Modify the metadata line in one file and the regular line in the other.
+        Set-Content -Path $MetadataFile -Value "header`nms.date: 02-22-2026`ndescription: test file`nfooter"
+        Set-Content -Path $NormalFile -Value "header`nMODIFIED content`nmore content`nfooter"
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages only hunks whose Lines match a content filter' {
+        Get-GitDiff -RepoPath $script:RepoPath -Hunk |
+            Where-Object { $_.Lines.Content -match 'ms\.date' } |
+            Add-GitItem -RepoPath $script:RepoPath
+
+        # Staged diff should contain the metadata change
+        $StagedDiffs = @(Get-GitDiff -RepoPath $script:RepoPath -Staged)
+        $StagedDiffs | Should -Not -BeNullOrEmpty
+        ($StagedDiffs.Patch -join '') | Should -Match 'ms\.date'
+
+        # Unstaged diff should still have the normal.txt change
+        $UnstagedDiffs = @(Get-GitDiff -RepoPath $script:RepoPath)
+        $UnstagedDiffs | Should -Not -BeNullOrEmpty
+        ($UnstagedDiffs.Patch -join '') | Should -Match 'MODIFIED content'
+    }
+}
+
+Describe 'Add-GitItem stages hunks in files with BOM encoding' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $BomFile = Join-Path -Path $script:RepoPath -ChildPath 'bom-file.md'
+        $Utf8Bom = [System.Text.UTF8Encoding]::new($true)
+
+        [System.IO.File]::WriteAllText(
+            $BomFile,
+            "---`nms.date: 01-01-2026`ndescription: test`n---`n",
+            $Utf8Bom)
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git add bom-file.md 2>&1 | Out-Null
+            git commit -m 'Add BOM file' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        [System.IO.File]::WriteAllText(
+            $BomFile,
+            "---`nms.date: 02-22-2026`ndescription: test`n---`n",
+            $Utf8Bom)
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages a hunk from a BOM-encoded file without error' {
+        $Hunks = @(Get-GitDiff -RepoPath $script:RepoPath -Hunk)
+        $Hunks | Should -Not -BeNullOrEmpty
+
+        { $Hunks | Add-GitItem -RepoPath $script:RepoPath } | Should -Not -Throw
+
+        $StagedDiff = @(Get-GitDiff -RepoPath $script:RepoPath -Staged)
+        $StagedDiff | Should -Not -BeNullOrEmpty
+    }
+}

@@ -39,6 +39,16 @@ internal static class GitCredentialHelper
                 CreateNoWindow = true,
             };
 
+            // Prevent Git Credential Manager from showing interactive UI or
+            // terminal prompts. This helper should only return already-cached
+            // credentials silently.
+            startInfo.Environment["GIT_TERMINAL_PROMPT"] = "0";
+            startInfo.Environment["GCM_INTERACTIVE"] = "never";
+            // VS Code sets GIT_ASKPASS to its own helper that shows a dialog.
+            // Clear it so git does not invoke an external askpass program.
+            startInfo.Environment["GIT_ASKPASS"] = "";
+            startInfo.Environment["SSH_ASKPASS"] = "";
+
             using var process = Process.Start(startInfo);
 
             if (process is null)

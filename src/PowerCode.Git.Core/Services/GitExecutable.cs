@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
@@ -40,6 +41,10 @@ public sealed class GitExecutable : IGitExecutable
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true,
+            // Use UTF-8 without BOM preamble for stdin so that patch text
+            // containing non-ASCII characters (e.g. BOM U+FEFF in file
+            // content) is transmitted correctly to git apply.
+            StandardInputEncoding = needsStdin ? new UTF8Encoding(false) : null,
         };
 
         using var process = Process.Start(startInfo)
