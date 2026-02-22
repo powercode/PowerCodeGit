@@ -665,6 +665,191 @@ public sealed class GitWorkingTreeServiceTests
         }
     }
 
+    // ── StubGitExecutable-based unit tests ─────────────────────────────────
+
+    [TestMethod]
+    public void StageHunks_PassesApplyCachedWithPatchToGitExecutable()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            Assert.HasCount(1, stub.Invocations);
+            var invocation = stub.Invocations[0];
+            Assert.AreEqual(repoPath, invocation.WorkingDirectory);
+            CollectionAssert.AreEqual(new[] { "apply", "--cached" }, (System.Collections.ICollection)invocation.Args);
+            Assert.IsNotNull(invocation.StandardInput);
+            StringAssert.Contains(invocation.StandardInput, "@@ -1,1 +1,1 @@");
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void Restore_PassesCorrectArgsToGitExecutable()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            service.Restore(new GitRestoreOptions
+            {
+                RepositoryPath = repoPath,
+                Paths = ["file.txt"],
+            });
+
+            Assert.HasCount(1, stub.Invocations);
+            var invocation = stub.Invocations[0];
+            Assert.AreEqual(repoPath, invocation.WorkingDirectory);
+            CollectionAssert.AreEqual(
+                new[] { "restore", "--", "file.txt" },
+                (System.Collections.ICollection)invocation.Args);
+            Assert.IsNull(invocation.StandardInput);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void Restore_Staged_IncludesStagedFlag()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            service.Restore(new GitRestoreOptions
+            {
+                RepositoryPath = repoPath,
+                Staged = true,
+                All = true,
+            });
+
+            Assert.HasCount(1, stub.Invocations);
+            var args = stub.Invocations[0].Args;
+            CollectionAssert.AreEqual(
+                new[] { "restore", "--staged", "." },
+                (System.Collections.ICollection)args);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void RestoreHunks_PassesApplyReverseWithPatchToGitExecutable()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            service.RestoreHunks(new GitRestoreHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            Assert.HasCount(1, stub.Invocations);
+            var invocation = stub.Invocations[0];
+            CollectionAssert.AreEqual(
+                new[] { "apply", "-R" },
+                (System.Collections.ICollection)invocation.Args);
+            Assert.IsNotNull(invocation.StandardInput);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void RestoreHunks_Staged_IncludesCachedFlag()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            service.RestoreHunks(new GitRestoreHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+                Staged = true,
+            });
+
+            Assert.HasCount(1, stub.Invocations);
+            CollectionAssert.AreEqual(
+                new[] { "apply", "-R", "--cached" },
+                (System.Collections.ICollection)stub.Invocations[0].Args);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_WhenGitFails_PropagatesException()
+    {
+        var stub = new StubGitExecutable
+        {
+            ExceptionToThrow = new InvalidOperationException("git apply failed"),
+        };
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            var ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
+                service.StageHunks(new GitStageHunkOptions
+                {
+                    RepositoryPath = repoPath,
+                    Hunks = [hunk],
+                }));
+
+            Assert.AreEqual("git apply failed", ex.Message);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
     private static string CreateRepositoryWithCommit()
     {
         var repositoryPath = CreateTemporaryDirectory();
