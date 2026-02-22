@@ -33,9 +33,6 @@ Get-GitBranch -Options <GitBranchListOptions> [-RepoPath <string>] [<CommonParam
 
 ## ALIASES
 
-This cmdlet has the following aliases,
-  None.
-
 ## DESCRIPTION
 
 The Get-GitBranch cmdlet lists branches in a git repository. By default, only local branches are shown. Use `-Remote` to show only remote-tracking branches, or `-All` to show both.
@@ -314,8 +311,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
-
-None. This cmdlet does not accept pipeline input.
 
 ## OUTPUTS
 

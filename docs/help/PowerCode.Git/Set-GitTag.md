@@ -236,7 +236,7 @@ HelpMessage: ''
 
 ### -WhatIf
 
-Shows what would happen if the cmdlet runs without actually creating the tag.
+Runs the command in a mode that only reports what would happen without performing the actions.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -285,4 +285,3 @@ users who already fetched the old tag will not have it updated automatically.
 - [Get-GitTag](Get-GitTag.md)
 - [Get-GitLog](Get-GitLog.md)
 - [git-tag documentation](https://git-scm.com/docs/git-tag)
-

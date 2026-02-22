@@ -1,4 +1,4 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Restore-GitItem.md
@@ -357,17 +357,27 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String[]
+### System.String
 
 One or more file paths, bound via the `-Path` parameter.
 
-### PowerCode.Git.Abstractions.Models.GitDiffHunk[]
+### PowerCode.Git.Abstractions.Models.GitDiffHunk
 
 Diff hunks piped from `Get-GitDiff -Hunk`, bound via the `-Hunk` parameter.
 
+### System.String[]
+
+An array of repository-relative file paths bound via the `-Path` parameter.
+
+### PowerCode.Git.Abstractions.Models.GitDiffHunk[]
+
+An array of diff hunk objects bound via the `-Hunk` parameter.
+
 ## OUTPUTS
 
-None. This cmdlet does not produce output.
+### System.Object
+
+This cmdlet does not produce pipeline output.
 
 ## NOTES
 

@@ -33,7 +33,6 @@ Save-GitCommit -Options <GitCommitOptions> [-RepoPath <string>] [-WhatIf] [-Conf
 
 ## ALIASES
 
-None.
 ## DESCRIPTION
 
 The Save-GitCommit cmdlet creates a new commit from the currently staged changes. Use `-Message` to set the commit message, `-Amend` to modify the previous commit, `-All` to automatically stage tracked modified files before committing, and `-AllowEmpty` to create a commit with no changes.
@@ -288,8 +287,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
-
-None. This cmdlet does not accept pipeline input.
 
 ## OUTPUTS
 

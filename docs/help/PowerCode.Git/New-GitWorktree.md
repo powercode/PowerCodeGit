@@ -231,8 +231,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-None. This cmdlet does not accept pipeline input.
-
 ## OUTPUTS
 
 ### PowerCode.Git.Abstractions.Models.GitWorktreeInfo

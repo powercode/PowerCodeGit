@@ -46,13 +46,19 @@ Add-GitItem -Options <GitStageOptions> [-RepoPath <string>] [-WhatIf] [-Confirm]
 ### Hunk
 
 ```
-Add-GitItem -Hunk <GitDiffHunk[]> [-RepoPath <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Add-GitItem -Hunk <GitDiffHunk[]> [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### InputObject
+
+```
+Add-GitItem -InputObject <psobject> [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 None.
+
 
 ## DESCRIPTION
 
@@ -203,6 +209,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -InputObject
+
+An object whose path is resolved by inspecting its `FilePath`, `NewPath`, or `Path` property (in that order). Use this parameter explicitly (e.g. `-InputObject $entry`) when piping objects whose type is not covered by the `-Hunk` or `-Path` parameter sets.
+
+```yaml
+Type: System.Management.Automation.PSObject
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: InputObject
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Options
 
 A pre-built GitStageOptions object for full programmatic control. When specified, all other parameters are ignored.
@@ -331,6 +358,14 @@ A status entry whose `FilePath` property binds to `-Path` by property name.
 ### PowerCode.Git.Abstractions.Models.GitDiffHunk
 
 A diff hunk object from `Get-GitDiff -Hunk`, accepted via the `-Hunk` parameter for selective hunk staging.
+
+### System.String[]
+
+An array of repository-relative file paths bound via the `-Path` parameter.
+
+### PowerCode.Git.Abstractions.Models.GitDiffHunk[]
+
+An array of diff hunk objects bound via the `-Hunk` parameter.
 
 ## OUTPUTS
 

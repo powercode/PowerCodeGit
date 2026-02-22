@@ -1,4 +1,4 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Get-GitDiff.md
@@ -26,7 +26,8 @@ Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>] 
 ### Staged
 
 ```
-Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>]
+ [<CommonParameters>]
 ```
 
 ### Commit
@@ -39,8 +40,8 @@ Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-
 ### Range
 
 ```
-Get-GitDiff [-FromCommit] <string> [-ToCommit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk]
- [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff [-FromCommit] <string> [-ToCommit] <string> [-Path <string[]>] [-IgnoreWhitespace]
+ [-Hunk] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Options
@@ -149,9 +150,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -IgnoreWhitespace
+### -Hunk
 
-Ignores whitespace changes in the diff output.
+Emits individual GitDiffHunk objects instead of file-level GitDiffEntry objects. Each hunk represents a single `@@ ... @@` block from the unified diff output. Hunk objects can be filtered and piped to `Add-GitItem` for selective staging.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -188,9 +189,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Hunk
+### -IgnoreWhitespace
 
-Emits individual GitDiffHunk objects instead of file-level GitDiffEntry objects. Each hunk represents a single `@@ ... @@` block from the unified diff output. Hunk objects can be filtered and piped to `Add-GitItem` for selective staging.
+Ignores whitespace changes in the diff output.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -359,8 +360,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
-
-None. This cmdlet does not accept pipeline input.
 
 ## OUTPUTS
 

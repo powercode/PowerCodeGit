@@ -1,4 +1,4 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Stop-GitRebase.md
@@ -118,11 +118,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-None. This cmdlet does not accept pipeline input.
-
 ## OUTPUTS
 
-None. This cmdlet does not produce output.
+### System.Object
+
+This cmdlet does not produce pipeline output.
 
 ## NOTES
 
