@@ -15,7 +15,7 @@
 .EXAMPLE
     .\scripts\Publish-PowerGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
 #>
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -43,7 +43,9 @@ if (-not (Test-Path -Path $ManifestPath)) {
     return
 }
 
-Write-Host "Publishing module from: $($VersionedDir.FullName)"
-
-Publish-PSResource -Path $VersionedDir.FullName -ApiKey $ApiKey -Repository PSGallery -Verbose
-Write-Host 'Module published successfully.'
+if ($PSCmdlet.ShouldProcess($VersionedDir.FullName, 'Publish module to PSGallery'))
+{
+    Write-Verbose "Publishing module from: $($VersionedDir.FullName)"
+    Publish-PSResource -Path $VersionedDir.FullName -ApiKey $ApiKey -Repository PSGallery -Verbose
+    Write-Verbose 'Module published successfully.'
+}

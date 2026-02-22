@@ -22,7 +22,7 @@
 .EXAMPLE
     .\scripts\Update-PowerGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3' -Prerelease 'beta1'
 #>
-[CmdletBinding()]
+[CmdletBinding(SupportsShouldProcess = $true)]
 param(
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
@@ -52,9 +52,12 @@ if (-not (Test-Path -Path $ManifestPath)) {
     return
 }
 
-Write-Host "Updating manifest at: $ManifestPath"
-Write-Host "  ModuleVersion: $ModuleVersion"
-Write-Host "  Prerelease:    $Prerelease"
+if ($PSCmdlet.ShouldProcess($ManifestPath, 'Update module manifest version'))
+{
+    Write-Verbose "Updating manifest at: $ManifestPath"
+    Write-Verbose "  ModuleVersion: $ModuleVersion"
+    Write-Verbose "  Prerelease:    $Prerelease"
+}
 
 # Directly patch the psd1 content instead of using Update-ModuleManifest,
 # which enforces that the folder name matches the version and fails when
