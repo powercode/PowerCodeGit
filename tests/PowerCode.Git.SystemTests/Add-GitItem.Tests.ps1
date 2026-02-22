@@ -69,7 +69,7 @@ Describe 'Add-GitItem -All' {
 
 Describe 'Add-GitItem error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Add-GitItem -RepoPath 'C:\nonexistent\repo\path' -Path 'file.txt' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Add-GitItem -RepoPath $NonExistentRepoPath -Path 'file.txt' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

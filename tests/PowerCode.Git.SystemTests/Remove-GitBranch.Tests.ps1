@@ -95,7 +95,7 @@ Describe 'Remove-GitBranch error handling' {
     }
 
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Remove-GitBranch -RepoPath 'C:\nonexistent\repo\path' -Name 'test' -Confirm:$false -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Remove-GitBranch -RepoPath $NonExistentRepoPath -Name 'test' -Confirm:$false -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

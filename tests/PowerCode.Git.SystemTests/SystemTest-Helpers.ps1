@@ -24,6 +24,9 @@ if (-not (Test-Path -Path $ModulePath)) {
 
 Import-Module -Name $ModulePath -Force -ErrorAction Stop
 
+# Platform-agnostic non-existent repo path for tests (avoids Windows-only C:\ paths on Linux)
+$NonExistentRepoPath = if ($IsWindows) { 'C:\nonexistent\repo\path' } else { '/nonexistent/repo/path' }
+
 function New-TestGitRepository {
     [CmdletBinding()]
     param(

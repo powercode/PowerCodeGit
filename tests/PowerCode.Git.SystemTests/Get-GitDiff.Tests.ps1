@@ -90,7 +90,7 @@ Describe 'Get-GitDiff -Staged' {
 
 Describe 'Get-GitDiff error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Get-GitDiff -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Get-GitDiff -RepoPath $NonExistentRepoPath -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

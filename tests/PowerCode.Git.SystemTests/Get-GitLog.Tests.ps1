@@ -224,7 +224,7 @@ Describe 'Get-GitLog -Branch' {
 
 Describe 'Get-GitLog error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Commits = Get-GitLog -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Commits = Get-GitLog -RepoPath $NonExistentRepoPath -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Commits | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

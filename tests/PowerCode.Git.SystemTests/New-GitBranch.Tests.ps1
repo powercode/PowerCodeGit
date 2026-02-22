@@ -75,7 +75,7 @@ Describe 'New-GitBranch error handling' {
     }
 
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = New-GitBranch -RepoPath 'C:\nonexistent\repo\path' -Name 'test' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = New-GitBranch -RepoPath $NonExistentRepoPath -Name 'test' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

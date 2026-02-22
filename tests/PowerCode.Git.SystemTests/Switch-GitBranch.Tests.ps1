@@ -72,7 +72,7 @@ Describe 'Switch-GitBranch error handling' {
     }
 
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Switch-GitBranch -RepoPath 'C:\nonexistent\repo\path' -Name 'main' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Switch-GitBranch -RepoPath $NonExistentRepoPath -Name 'main' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

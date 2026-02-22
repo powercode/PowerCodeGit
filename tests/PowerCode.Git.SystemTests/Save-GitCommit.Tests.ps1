@@ -91,7 +91,7 @@ Describe 'Save-GitCommit -AllowEmpty' {
 
 Describe 'Save-GitCommit error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Save-GitCommit -RepoPath 'C:\nonexistent\repo\path' -Message 'test' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Save-GitCommit -RepoPath $NonExistentRepoPath -Message 'test' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

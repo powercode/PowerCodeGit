@@ -91,7 +91,7 @@ Describe 'Reset-GitHead -Hard' {
 
 Describe 'Reset-GitHead error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Reset-GitHead -RepoPath 'C:\nonexistent\repo\path' -Confirm:$false -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Reset-GitHead -RepoPath $NonExistentRepoPath -Confirm:$false -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

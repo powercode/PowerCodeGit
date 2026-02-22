@@ -170,7 +170,7 @@ Describe 'Get-GitStatus -IncludeIgnored' {
 
 Describe 'Get-GitStatus error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Get-GitStatus -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Get-GitStatus -RepoPath $NonExistentRepoPath -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }

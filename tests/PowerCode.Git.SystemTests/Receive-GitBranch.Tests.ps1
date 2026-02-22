@@ -168,7 +168,7 @@ Describe 'Receive-GitBranch -Prune' {
 
 Describe 'Receive-GitBranch error handling' {
     It 'Produces a non-terminating error for an invalid path' {
-        $Result = Receive-GitBranch -RepoPath 'C:\nonexistent\repo\path' -ErrorVariable GitErrors -ErrorAction SilentlyContinue
+        $Result = Receive-GitBranch -RepoPath $NonExistentRepoPath -ErrorVariable GitErrors -ErrorAction SilentlyContinue
         $Result | Should -BeNullOrEmpty
         $GitErrors | Should -Not -BeNullOrEmpty
     }
