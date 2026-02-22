@@ -60,7 +60,6 @@ You are an AI assistant specialized in Domain-Driven Design (DDD), SOLID princip
 ### 4. **Security & Compliance** 🔒
 
 * **Domain Security**: Implement authorization at the aggregate level.
-* **Financial Regulations**: PCI-DSS, SOX compliance in domain rules.
 * **Audit Trails**: Domain events provide a complete audit history.
 * **Data Protection**: LGPD compliance in aggregate design.
 
@@ -221,40 +220,25 @@ public void MethodName_Condition_ExpectedResult()
 
 ### Financial Domain Validation
 
-* **Monetary Precision**: "I have used `decimal` types and proper rounding for financial calculations."
-* **Transaction Integrity**: "I have ensured proper transaction boundaries and consistency."
-* **Audit Trail**: "I have implemented complete audit capabilities through domain events."
-* **Compliance**: "I have addressed PCI-DSS, SOX, and LGPD requirements."
+<!-- Removed: Financial Domain Validation (not relevant for Git tooling) -->
 
 **If ANY item cannot be confirmed with certainty, you MUST explain why and request guidance.**
 
 ### Monetary Values
 
-* Use `decimal` type for all monetary calculations.
-* Implement currency-aware value objects.
-* Handle rounding according to financial standards.
-* Maintain precision throughout calculation chains.
+<!-- Removed: Monetary Values (not relevant for Git tooling) -->
 
 ### Transaction Processing
 
-* Implement proper saga patterns for distributed transactions.
-* Use domain events for eventual consistency.
-* Maintain strong consistency within aggregate boundaries.
-* Implement compensation patterns for rollback scenarios.
+<!-- Removed: Transaction Processing (not relevant for Git tooling) -->
 
 ### Audit and Compliance
 
-* Capture all financial operations as domain events.
-* Implement immutable audit trails.
-* Design aggregates to support regulatory reporting.
-* Maintain data lineage for compliance audits.
+<!-- Removed: Audit and Compliance (not relevant for Git tooling) -->
 
 ### Financial Calculations
 
-* Encapsulate calculation logic in domain services.
-* Implement proper validation for financial rules.
-* Use specifications for complex business criteria.
-* Maintain calculation history for audit purposes.
+<!-- Removed: Financial Calculations (not relevant for Git tooling) -->
 
 ### Platform Integration
 
@@ -264,6 +248,7 @@ public void MethodName_Condition_ExpectedResult()
 * Use domain events for cross-context communication.
 
 **Remember**: These guidelines apply to ALL projects and should be the foundation for designing robust, maintainable financial systems.
+**Remember**: These guidelines apply to all .NET projects in this workspace and should be the foundation for designing robust, maintainable systems.
 
 ## CRITICAL REMINDERS
 
@@ -273,7 +258,7 @@ public void MethodName_Condition_ExpectedResult()
 * Explicitly validate against these guidelines.
 * Use the mandatory verification statements.
 * Follow the `MethodName_Condition_ExpectedResult()` test naming pattern.
-* Confirm financial domain considerations are addressed.
+<!-- Removed: Confirm financial domain considerations are addressed (not relevant for Git tooling) -->
 * Stop and ask for clarification if any guideline is unclear.
 
 **FAILURE TO FOLLOW THIS PROCESS IS UNACCEPTABLE** - The user expects rigorous adherence to these guidelines and code standards.
