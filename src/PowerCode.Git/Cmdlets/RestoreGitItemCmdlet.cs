@@ -147,16 +147,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
             return Options;
         }
 
-        var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
-
-        return new GitRestoreOptions
-        {
-            RepositoryPath = repositoryPath,
-            Paths = Path,
-            All = All.IsPresent,
-            Staged = Staged.IsPresent,
-            Source = Source,
-        };
+        return BuildRestoreOptions(ResolveRepositoryPath(currentFileSystemPath));
     }
 
     /// <summary>
@@ -195,15 +186,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
             return;
         }
 
-        var options = new GitRestoreOptions
-        {
-            RepositoryPath = ResolveRepositoryPath(),
-            Paths = inputObjectPaths,
-            Staged = Staged.IsPresent,
-            Source = Source,
-        };
-
-        ExecuteRestore(options);
+        ExecuteRestore(BuildOptionsForPaths(inputObjectPaths, ResolveRepositoryPath()));
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -218,24 +201,46 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
 
         foreach (var hunk in hunks)
         {
-            if (!ShouldProcess(repositoryPath, GitDiffHunkFormatter.FormatDescription("Restore", hunk)))
-            {
-                continue;
-            }
+            ProcessHunk(hunk, repositoryPath);
+        }
+    }
 
-            try
+    /// <summary>
+    /// Confirms and applies a single hunk restore operation.
+    /// </summary>
+    private void ProcessHunk(GitDiffHunk hunk, string repositoryPath)
+    {
+        if (ConfirmHunkRestore(hunk, repositoryPath))
+        {
+            ExecuteHunkRestore(hunk, repositoryPath);
+        }
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the user confirms the hunk restore
+    /// via <c>ShouldProcess</c>.
+    /// </summary>
+    private bool ConfirmHunkRestore(GitDiffHunk hunk, string repositoryPath)
+        => ShouldProcess(repositoryPath, GitDiffHunkFormatter.FormatDescription("Restore", hunk));
+
+    /// <summary>
+    /// Calls the service to restore a single hunk and emits a non-terminating
+    /// error on failure.
+    /// </summary>
+    private void ExecuteHunkRestore(GitDiffHunk hunk, string repositoryPath)
+    {
+        try
+        {
+            workingTreeService.RestoreHunks(new GitRestoreHunkOptions
             {
-                workingTreeService.RestoreHunks(new GitRestoreHunkOptions
-                {
-                    RepositoryPath = repositoryPath,
-                    Hunks = [hunk],
-                    Staged = Staged.IsPresent,
-                });
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, repositoryPath));
-            }
+                RepositoryPath = repositoryPath,
+                Hunks = [hunk],
+                Staged = Staged.IsPresent,
+            });
+        }
+        catch (Exception exception)
+        {
+            WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, repositoryPath));
         }
     }
 
@@ -253,13 +258,22 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
         }
         else
         {
-            WriteWarning(
-                $"InputObject of type '{inputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
+            WarnUnresolvableInputObject(inputObject);
         }
     }
 
     /// <summary>
-    /// Performs a restore operation using a pre-built <see cref="GitRestoreOptions"/>.
+    /// Emits a warning when an <see cref="InputObject"/> does not expose a
+    /// recognisable path property.
+    /// </summary>
+    private void WarnUnresolvableInputObject(PSObject inputObject)
+        => WriteWarning(
+            $"InputObject of type '{inputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
+
+    /// <summary>
+    /// Confirms and performs a restore operation using a pre-built
+    /// <see cref="GitRestoreOptions"/>. Used by the <c>Options</c> and
+    /// <c>InputObject</c> parameter sets where the description is generic.
     /// Gates on <see cref="Cmdlet.ShouldProcess(string, string)"/> and emits a
     /// non-terminating error on failure.
     /// </summary>
@@ -270,6 +284,34 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
             return;
         }
 
+        PerformRestore(options);
+    }
+
+    /// <summary>
+    /// Handles the <c>Path</c> and <c>All</c> parameter sets by building options
+    /// from the current parameters and executing the restore with a descriptive
+    /// <c>ShouldProcess</c> prompt.
+    /// </summary>
+    private void ExecutePathOrAllRestore()
+    {
+        var repoPath = ResolveRepositoryPath();
+
+        if (!ShouldProcess(repoPath, BuildRestoreDescription()))
+        {
+            return;
+        }
+
+        PerformRestore(BuildRestoreOptions(repoPath));
+    }
+
+    /// <summary>
+    /// Calls the working-tree service to restore files and emits a
+    /// non-terminating error on failure. Does not gate on
+    /// <see cref="Cmdlet.ShouldProcess(string, string)"/>; callers are
+    /// responsible for confirmation before invoking.
+    /// </summary>
+    private void PerformRestore(GitRestoreOptions options)
+    {
         try
         {
             workingTreeService.Restore(options);
@@ -281,42 +323,45 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     }
 
     /// <summary>
-    /// Handles the <c>Path</c> and <c>All</c> parameter sets by building options
-    /// from the current parameters and executing the restore.
+    /// Builds a human-readable description of the restore operation for
+    /// <c>ShouldProcess</c> prompts.
     /// </summary>
-    private void ExecutePathOrAllRestore()
+    private string BuildRestoreDescription()
     {
-        var repoPath = ResolveRepositoryPath();
         var targetDescription = All.IsPresent ? "all files" : $"{Path?.Length ?? 0} file(s)";
-        var description = Staged.IsPresent
+        return Staged.IsPresent
             ? $"Restore (unstage) {targetDescription}"
             : $"Restore working-tree {targetDescription}";
-
-        if (!ShouldProcess(repoPath, description))
-        {
-            return;
-        }
-
-        try
-        {
-            workingTreeService.Restore(new GitRestoreOptions
-            {
-                RepositoryPath = repoPath,
-                Paths = Path,
-                All = All.IsPresent,
-                Staged = Staged.IsPresent,
-                Source = Source,
-            });
-        }
-        catch (Exception exception)
-        {
-            WriteError(new ErrorRecord(
-                exception,
-                "RestoreGitItemFailed",
-                ErrorCategory.InvalidOperation,
-                repoPath));
-        }
     }
+
+    /// <summary>
+    /// Maps the current cmdlet parameters to a <see cref="GitRestoreOptions"/> instance.
+    /// </summary>
+    /// <param name="repositoryPath">The resolved repository root path.</param>
+    private GitRestoreOptions BuildRestoreOptions(string repositoryPath)
+        => new()
+        {
+            RepositoryPath = repositoryPath,
+            Paths = Path,
+            All = All.IsPresent,
+            Staged = Staged.IsPresent,
+            Source = Source,
+        };
+
+    /// <summary>
+    /// Builds a <see cref="GitRestoreOptions"/> for a fixed set of accumulated
+    /// paths, as gathered from <c>InputObject</c> pipeline input.
+    /// </summary>
+    /// <param name="paths">The file paths to restore.</param>
+    /// <param name="repositoryPath">The resolved repository root path.</param>
+    private GitRestoreOptions BuildOptionsForPaths(IReadOnlyList<string> paths, string repositoryPath)
+        => new()
+        {
+            RepositoryPath = repositoryPath,
+            Paths = paths,
+            Staged = Staged.IsPresent,
+            Source = Source,
+        };
 
     /// <summary>
     /// Attempts to extract a file path from a <see cref="PSObject"/> by inspecting
