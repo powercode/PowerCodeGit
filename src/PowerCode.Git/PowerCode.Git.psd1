@@ -30,6 +30,7 @@
         'Remove-GitWorktree'
         'Lock-GitWorktree'
         'Unlock-GitWorktree'
+        'Restore-GitItem'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

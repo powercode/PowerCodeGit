@@ -62,4 +62,18 @@ public interface IGitWorkingTreeService
     /// </summary>
     /// <param name="options">The hunk staging options.</param>
     void StageHunks(GitStageHunkOptions options);
+
+    /// <summary>
+    /// Restores working-tree files or staged changes to their committed state
+    /// (<c>git restore</c>).
+    /// </summary>
+    /// <param name="options">The restore options specifying paths, scope, and source.</param>
+    void Restore(GitRestoreOptions options);
+
+    /// <summary>
+    /// Reverts individual diff hunks by applying an inverted patch
+    /// (<c>git apply -R</c> or <c>git apply -R --cached</c>).
+    /// </summary>
+    /// <param name="options">The hunk restore options.</param>
+    void RestoreHunks(GitRestoreHunkOptions options);
 }

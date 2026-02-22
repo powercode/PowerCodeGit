@@ -29,4 +29,12 @@ internal sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     public void StageHunks(GitStageHunkOptions options)
     {
     }
+
+    public void Restore(GitRestoreOptions options)
+    {
+    }
+
+    public void RestoreHunks(GitRestoreHunkOptions options)
+    {
+    }
 }

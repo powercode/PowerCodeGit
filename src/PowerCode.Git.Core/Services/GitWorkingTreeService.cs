@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using LibGit2Sharp;
@@ -15,6 +14,22 @@ namespace PowerCode.Git.Core.Services;
 /// </summary>
 public sealed class GitWorkingTreeService : IGitWorkingTreeService
 {
+    private readonly IGitExecutable gitExecutable;
+
+    /// <summary>
+    /// Initializes a new instance using the default <see cref="GitExecutable"/>.
+    /// </summary>
+    public GitWorkingTreeService() : this(new GitExecutable()) { }
+
+    /// <summary>
+    /// Initializes a new instance with the specified <see cref="IGitExecutable"/>
+    /// for testability.
+    /// </summary>
+    /// <param name="gitExecutable">The git process runner to use.</param>
+    internal GitWorkingTreeService(IGitExecutable gitExecutable)
+    {
+        this.gitExecutable = gitExecutable;
+    }
     /// <inheritdoc/>
     public GitStatusResult GetStatus(GitStatusOptions options)
     {
@@ -310,8 +325,6 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
     public void Reset(string repositoryPath, string? revision, GitResetMode mode)
         => Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = revision, Mode = mode });
 
-    private static readonly TimeSpan GitApplyTimeout = TimeSpan.FromSeconds(30);
-
     /// <inheritdoc/>
     public void StageHunks(GitStageHunkOptions options)
     {
@@ -324,30 +337,7 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         var patch = BuildPatch(options.Hunks);
 
-        var startInfo = new ProcessStartInfo("git", "apply --cached")
-        {
-            WorkingDirectory = options.RepositoryPath,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        using var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException("Failed to start git process.");
-
-        process.StandardInput.Write(patch);
-        process.StandardInput.Close();
-
-        var stderr = process.StandardError.ReadToEnd();
-        process.WaitForExit(GitApplyTimeout);
-
-        if (process.ExitCode != 0)
-        {
-            throw new InvalidOperationException(
-                $"git apply --cached failed (exit code {process.ExitCode}): {stderr.Trim()}");
-        }
+        gitExecutable.Run(options.RepositoryPath, ["apply", "--cached"], patch);
     }
 
     private static string BuildPatch(IReadOnlyList<GitDiffHunk> hunks)
@@ -375,5 +365,69 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         }
 
         return sb.ToString();
+    }
+
+    /// <inheritdoc/>
+    public void Restore(GitRestoreOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        // Build the git restore argument list.
+        // --worktree is the default target when Staged is false.
+        // --staged restores the index; --source must be provided explicitly in that case
+        // because git restore --staged defaults to HEAD only if a source is given.
+        var args = new List<string> { "restore" };
+
+        if (options.Staged)
+        {
+            args.Add("--staged");
+        }
+
+        if (options.Source is not null)
+        {
+            args.Add($"--source={options.Source}");
+        }
+
+        if (options.All)
+        {
+            args.Add(".");
+        }
+        else if (options.Paths is { Count: > 0 })
+        {
+            args.Add("--");
+
+            foreach (var path in options.Paths)
+            {
+                args.Add(path);
+            }
+        }
+        else
+        {
+            throw new ArgumentException(
+                "Either Paths or All must be specified.", nameof(options));
+        }
+
+        gitExecutable.Run(options.RepositoryPath, args);
+    }
+
+    /// <inheritdoc/>
+    public void RestoreHunks(GitRestoreHunkOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        if (options.Hunks is not { Count: > 0 })
+        {
+            throw new ArgumentException("At least one hunk must be specified.", nameof(options));
+        }
+
+        var patch = BuildPatch(options.Hunks);
+
+        // Apply the patch in reverse (-R). When restoring staged hunks, also
+        // pass --cached so only the index is modified.
+        var args = options.Staged
+            ? (IReadOnlyList<string>)["apply", "-R", "--cached"]
+            : ["apply", "-R"];
+
+        gitExecutable.Run(options.RepositoryPath, args, patch);
     }
 }

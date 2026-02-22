@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
@@ -43,6 +44,9 @@ public sealed class AddGitItemCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    // Paths accumulated from InputObject pipeline calls, dispatched in EndProcessing.
+    private readonly List<string> inputObjectPaths = [];
+
     /// <summary>
     /// Gets or sets the paths to stage. Mutually exclusive with <see cref="All"/> and <see cref="Update"/>.
     /// </summary>
@@ -83,6 +87,18 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     public GitDiffHunk[]? Hunk { get; set; }
 
     /// <summary>
+    /// Gets or sets an object whose path is resolved by inspecting its
+    /// <c>FilePath</c>, <c>NewPath</c>, or <c>Path</c> property (in that
+    /// order). Use this parameter explicitly (e.g. <c>-InputObject $entry</c>)
+    /// when piping objects whose type is not covered by the <c>Hunk</c> or
+    /// <c>Path</c> parameter sets. For pipeline scenarios, prefer relying on
+    /// <c>ValueFromPipelineByPropertyName</c> via the <c>FilePath</c> alias on
+    /// the <c>Path</c> parameter.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "InputObject")]
+    public PSObject? InputObject { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built <see cref="GitStageOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
@@ -118,6 +134,51 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
+        // InputObject set — accumulate resolved paths; the stage call is deferred to
+        // EndProcessing so all pipeline objects are batched into a single git invocation.
+        if (ParameterSetName == "InputObject" && InputObject is not null)
+        {
+            // If the wrapped object is a GitDiffHunk, delegate to hunk staging directly.
+            if (InputObject.BaseObject is GitDiffHunk hunkObj)
+            {
+                var hunkRepoPath = ResolveRepositoryPath();
+
+                if (!ShouldProcess(hunkRepoPath, "Stage 1 hunk(s)"))
+                {
+                    return;
+                }
+
+                try
+                {
+                    workingTreeService.StageHunks(new GitStageHunkOptions
+                    {
+                        RepositoryPath = hunkRepoPath,
+                        Hunks = [hunkObj],
+                    });
+                }
+                catch (Exception exception)
+                {
+                    WriteError(new ErrorRecord(exception, "AddGitItemFailed", ErrorCategory.InvalidOperation, hunkRepoPath));
+                }
+
+                return;
+            }
+
+            var resolvedPath = ResolveInputObjectPath(InputObject);
+
+            if (resolvedPath is not null)
+            {
+                inputObjectPaths.Add(resolvedPath);
+            }
+            else
+            {
+                WriteWarning(
+                    $"InputObject of type '{InputObject.BaseObject?.GetType().Name}' does not expose a FilePath, NewPath, or Path property and will be skipped.");
+            }
+
+            return;
+        }
+
         if (ParameterSetName == "Hunk" && Hunk is { Length: > 0 })
         {
             var repositoryPath = ResolveRepositoryPath();
@@ -198,5 +259,64 @@ public sealed class AddGitItemCmdlet : GitCmdlet
 
             WriteError(errorRecord);
         }
+    }
+
+    /// <summary>
+    /// Dispatches accumulated InputObject paths (if any) as a single stage operation.
+    /// </summary>
+    protected override void EndProcessing()
+    {
+        if (inputObjectPaths.Count == 0)
+        {
+            return;
+        }
+
+        var repositoryPath = ResolveRepositoryPath();
+
+        if (!ShouldProcess(repositoryPath, $"Stage {inputObjectPaths.Count} file(s)"))
+        {
+            return;
+        }
+
+        try
+        {
+            workingTreeService.Stage(new GitStageOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = inputObjectPaths,
+            });
+        }
+        catch (Exception exception)
+        {
+            WriteError(new ErrorRecord(
+                exception,
+                "AddGitItemFailed",
+                ErrorCategory.InvalidOperation,
+                repositoryPath));
+        }
+    }
+
+    /// <summary>
+    /// Attempts to extract a file path from a <see cref="PSObject"/> by inspecting
+    /// its properties in priority order: <c>FilePath</c>, <c>NewPath</c>, <c>Path</c>.
+    /// </summary>
+    /// <param name="obj">The object to inspect.</param>
+    /// <returns>
+    /// The resolved path string, or <see langword="null"/> when no compatible
+    /// property is found.
+    /// </returns>
+    private static string? ResolveInputObjectPath(PSObject obj)
+    {
+        foreach (var propertyName in (string[])["FilePath", "NewPath", "Path"])
+        {
+            var property = obj.Properties[propertyName];
+
+            if (property?.Value is string value && !string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 }
