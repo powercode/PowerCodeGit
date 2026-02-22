@@ -150,19 +150,24 @@
                 <PropertyName>RepositoryPath</PropertyName>
               </ListItem>              
               <ListItem>
-                <PropertyName>Branch</PropertyName>
+                <Label>Branch</Label>
+                <PropertyName>CurrentBranch</PropertyName>
               </ListItem>
               <ListItem>
-                <PropertyName>ModifiedCount</PropertyName>
+                <Label>Modified</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatModifiedCount($_.ModifiedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
-                <PropertyName>StagedCount</PropertyName>
+                <Label>Staged</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatStagedCount($_.StagedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
-                <PropertyName>UntrackedCount</PropertyName>
+                <Label>Untracked</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatUntrackedCount($_.UntrackedCount)</ScriptBlock>
               </ListItem>
               <ListItem>
-                <PropertyName>Entries</PropertyName>
+                <Label>Changes</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntries($_.Entries)</ScriptBlock>                
               </ListItem>
             </ListItems>
           </ListEntry>
