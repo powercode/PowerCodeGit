@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
@@ -56,8 +57,13 @@ public sealed class GitExecutable : IGitExecutable
             process.StandardInput.Close();
         }
 
-        var stdout = process.StandardOutput.ReadToEnd();
+        // Read stdout on a background thread while draining stderr on the current thread.
+        // Sequential ReadToEnd() calls on both streams can deadlock when the process fills
+        // one pipe buffer waiting for the other to be drained.
+        var stdoutTask = Task.Run(() => process.StandardOutput.ReadToEnd());
         var stderr = process.StandardError.ReadToEnd();
+        var stdout = stdoutTask.GetAwaiter().GetResult();
+
         process.WaitForExit(ProcessTimeout);
 
         return new GitProcessResult(process.ExitCode, stdout, stderr);
