@@ -14,7 +14,8 @@
             "matchCommandLine": true
         },
         ".\\scripts\\Invoke-SystemTests.ps1": true,
-        "gh": true
+        "gh": true,
+        "Test-Path": true
     },
     "FSharp.suggestGitignore": false,
     "pester.runTestsInNewProcess": true,
