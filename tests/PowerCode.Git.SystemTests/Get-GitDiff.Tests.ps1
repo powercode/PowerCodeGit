@@ -161,3 +161,60 @@ Describe 'Get-GitDiff -Options' {
         $Diffs | Should -HaveCount 0
     }
 }
+
+Describe 'Get-GitDiff -Hunk returns individual hunks' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        # Create a file with 20 lines, commit it, then modify lines near top and bottom
+        $FilePath = Join-Path -Path $script:RepoPath -ChildPath 'multi-hunk.txt'
+        $Lines = 1..20 | ForEach-Object { "line $_" }
+        Set-Content -Path $FilePath -Value ($Lines -join "`n")
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git add multi-hunk.txt 2>&1 | Out-Null
+            git commit -m 'Add multi-hunk file' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        # Modify two distant lines to produce two separate hunks
+        $Lines[1] = 'MODIFIED line 2'
+        $Lines[18] = 'MODIFIED line 19'
+        Set-Content -Path $FilePath -Value ($Lines -join "`n")
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns more than one hunk object' {
+        $Hunks = @(Get-GitDiff -RepoPath $script:RepoPath -Hunk)
+        $Hunks.Count | Should -BeGreaterOrEqual 2
+    }
+
+    It 'Each hunk has FilePath and Header populated' {
+        $Hunks = @(Get-GitDiff -RepoPath $script:RepoPath -Hunk)
+        foreach ($Hunk in $Hunks) {
+            $Hunk.FilePath | Should -Not -BeNullOrEmpty
+            $Hunk.Header | Should -Not -BeNullOrEmpty
+            $Hunk.Content | Should -Not -BeNullOrEmpty
+        }
+    }
+
+    It 'Each hunk has correct type' {
+        $Hunks = @(Get-GitDiff -RepoPath $script:RepoPath -Hunk)
+        foreach ($Hunk in $Hunks) {
+            $Hunk | Should -BeOfType 'PowerCode.Git.Abstractions.Models.GitDiffHunk'
+        }
+    }
+
+    It 'Each hunk has correct LinesAdded and LinesDeleted counts' {
+        $Hunks = @(Get-GitDiff -RepoPath $script:RepoPath -Hunk)
+        foreach ($Hunk in $Hunks) {
+            ($Hunk.LinesAdded + $Hunk.LinesDeleted) | Should -BeGreaterThan 0
+        }
+    }
+}

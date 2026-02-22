@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using LibGit2Sharp;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
@@ -307,4 +309,71 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
     /// <inheritdoc/>
     public void Reset(string repositoryPath, string? revision, GitResetMode mode)
         => Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = revision, Mode = mode });
+
+    private static readonly TimeSpan GitApplyTimeout = TimeSpan.FromSeconds(30);
+
+    /// <inheritdoc/>
+    public void StageHunks(GitStageHunkOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        if (options.Hunks is not { Count: > 0 })
+        {
+            throw new ArgumentException("At least one hunk must be specified.", nameof(options));
+        }
+
+        var patch = BuildPatch(options.Hunks);
+
+        var startInfo = new ProcessStartInfo("git", "apply --cached")
+        {
+            WorkingDirectory = options.RepositoryPath,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start git process.");
+
+        process.StandardInput.Write(patch);
+        process.StandardInput.Close();
+
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit(GitApplyTimeout);
+
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException(
+                $"git apply --cached failed (exit code {process.ExitCode}): {stderr.Trim()}");
+        }
+    }
+
+    private static string BuildPatch(IReadOnlyList<GitDiffHunk> hunks)
+    {
+        var sb = new StringBuilder();
+
+        // Group hunks by file so each file gets a single diff header.
+        var grouped = hunks
+            .GroupBy(h => (h.OldPath, h.FilePath))
+            .ToList();
+
+        foreach (var group in grouped)
+        {
+            var (oldPath, newPath) = group.Key;
+
+            // Use \n explicitly — git apply rejects \r\n in patch headers.
+            sb.Append("diff --git a/").Append(oldPath).Append(" b/").Append(newPath).Append('\n');
+            sb.Append("--- a/").Append(oldPath).Append('\n');
+            sb.Append("+++ b/").Append(newPath).Append('\n');
+
+            foreach (var hunk in group)
+            {
+                sb.Append(hunk.Content).Append('\n');
+            }
+        }
+
+        return sb.ToString();
+    }
 }

@@ -25,4 +25,8 @@ internal sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     public void Reset(GitResetOptions options)
     {
     }
+
+    public void StageHunks(GitStageHunkOptions options)
+    {
+    }
 }

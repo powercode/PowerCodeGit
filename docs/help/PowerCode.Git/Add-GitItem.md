@@ -43,6 +43,13 @@ Add-GitItem -Options <GitStageOptions> [-RepoPath <string>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
+### Hunk
+
+```
+Add-GitItem -Hunk <GitDiffHunk[]> [-RepoPath <string>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
+```
+
 ## ALIASES
 
 None.
@@ -52,6 +59,8 @@ None.
 The Add-GitItem cmdlet stages files from the working tree into the index for the next commit. This is the PowerShell equivalent of `git add`.
 
 Use the `-Path` parameter to stage specific files, `-All` to stage every change (new, modified, and deleted), or `-Update` to stage only already-tracked files. The `-Force` switch allows staging files that would otherwise be ignored by `.gitignore` rules.
+
+Use the `-Hunk` parameter to stage individual diff hunks from `Get-GitDiff -Hunk`, enabling selective staging of specific changes within a file.
 
 ## EXAMPLES
 
@@ -85,6 +94,14 @@ Pipes status entries from Get-GitStatus through a filter to stage only modified 
 
 ```powershell
 Get-GitStatus | Select-Object -ExpandProperty Entries | Where-Object Status -EQ Modified | Add-GitItem
+```
+
+### Example 5 - Stage only hunks that contain additions
+
+Pipes diff hunks that have added lines to Add-GitItem for selective hunk-level staging.
+
+```powershell
+Get-GitDiff -Hunk | Where-Object LinesAdded -gt 0 | Add-GitItem
 ```
 
 ## PARAMETERS
@@ -158,6 +175,27 @@ ParameterSets:
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Hunk
+
+One or more diff hunk objects to stage. Accepts pipeline input from `Get-GitDiff -Hunk`. Each hunk is applied to the index via `git apply --cached`, enabling selective staging of individual changes within a file.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.GitDiffHunk[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Hunk
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -294,9 +332,9 @@ An array of file paths passed via `-Path`.
 
 A status entry whose `FilePath` property binds to `-Path` by property name.
 
-### System.String[]
+### PowerCode.Git.Abstractions.Models.GitDiffHunk
 
-An array of file paths passed via `-Path`.
+A diff hunk object from `Get-GitDiff -Hunk`, accepted via the `-Hunk` parameter for selective hunk staging.
 
 ## OUTPUTS
 

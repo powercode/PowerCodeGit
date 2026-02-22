@@ -76,6 +76,13 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     public SwitchParameter Force { get; set; }
 
     /// <summary>
+    /// Gets or sets one or more diff hunks to stage. Accepts pipeline input
+    /// from <c>Get-GitDiff -Hunk</c>.
+    /// </summary>
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "Hunk")]
+    public GitDiffHunk[]? Hunk { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built <see cref="GitStageOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
@@ -111,7 +118,34 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
+        if (ParameterSetName == "Hunk" && Hunk is { Length: > 0 })
+        {
+            var repositoryPath = ResolveRepositoryPath();
+
+            if (!ShouldProcess(repositoryPath, $"Stage {Hunk.Length} hunk(s)"))
+            {
+                return;
+            }
+
+            try
+            {
+                var hunkOptions = new GitStageHunkOptions
+                {
+                    RepositoryPath = repositoryPath,
+                    Hunks = Hunk,
+                };
+
+                workingTreeService.StageHunks(hunkOptions);
+            }
+            catch (Exception exception)
+            {
+                WriteError(new ErrorRecord(exception, "AddGitItemHunkFailed", ErrorCategory.InvalidOperation, repositoryPath));
+            }
+
+            return;
+        }
+
+        var repoPath = ResolveRepositoryPath();
 
         if (ParameterSetName == "Options" && Options is not null)
         {
@@ -136,7 +170,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
             : Update.IsPresent ? "Stage tracked file changes"
             : $"Stage {Path?.Length ?? 0} file(s)";
 
-        if (!ShouldProcess(repositoryPath, description))
+        if (!ShouldProcess(repoPath, description))
         {
             return;
         }
@@ -145,7 +179,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
         {
             var options = new GitStageOptions
             {
-                RepositoryPath = repositoryPath,
+                RepositoryPath = repoPath,
                 Paths = Path,
                 All = All.IsPresent,
                 Update = Update.IsPresent,
@@ -160,7 +194,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
                 exception,
                 "AddGitItemFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
+                repoPath);
 
             WriteError(errorRecord);
         }

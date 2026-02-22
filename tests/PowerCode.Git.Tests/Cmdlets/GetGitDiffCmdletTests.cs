@@ -109,4 +109,23 @@ public sealed class GetGitDiffCmdletTests
         Assert.AreSame(expected, cmdlet.Options);
     }
 
+    [TestMethod]
+    public void Hunk_DefaultsToFalse()
+    {
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService());
+
+        Assert.IsFalse(cmdlet.Hunk.IsPresent);
+    }
+
+    [TestMethod]
+    public void Hunk_WhenSet_IsTrue()
+    {
+        var cmdlet = new GetGitDiffCmdlet(new StubGitWorkingTreeService())
+        {
+            Hunk = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        Assert.IsTrue(cmdlet.Hunk.IsPresent);
+    }
+
 }

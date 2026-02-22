@@ -55,4 +55,11 @@ public interface IGitWorkingTreeService
     /// <param name="mode">The reset mode (Mixed, Soft, or Hard).</param>
     void Reset(string repositoryPath, string? revision, GitResetMode mode)
         => Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = revision, Mode = mode });
+
+    /// <summary>
+    /// Stages individual diff hunks into the index by applying their patch
+    /// content via <c>git apply --cached</c>.
+    /// </summary>
+    /// <param name="options">The hunk staging options.</param>
+    void StageHunks(GitStageHunkOptions options);
 }

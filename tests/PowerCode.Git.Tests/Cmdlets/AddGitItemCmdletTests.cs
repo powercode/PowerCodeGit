@@ -131,4 +131,29 @@ public sealed class AddGitItemCmdletTests
         Assert.AreSame(prebuilt, options);
     }
 
+    [TestMethod]
+    public void Hunk_IsSetCorrectly()
+    {
+        var hunk = new GitDiffHunk(
+            filePath: "file.txt",
+            oldPath: "file.txt",
+            status: GitFileStatus.Modified,
+            oldStart: 1,
+            oldLineCount: 3,
+            newStart: 1,
+            newLineCount: 4,
+            header: "@@ -1,3 +1,4 @@",
+            content: "@@ -1,3 +1,4 @@\n context\n+added\n context",
+            linesAdded: 1,
+            linesDeleted: 0);
+
+        var cmdlet = new AddGitItemCmdlet(new StubGitWorkingTreeService())
+        {
+            Hunk = [hunk],
+        };
+
+        Assert.HasCount(1, cmdlet.Hunk);
+        Assert.AreEqual("file.txt", cmdlet.Hunk![0].FilePath);
+    }
+
 }

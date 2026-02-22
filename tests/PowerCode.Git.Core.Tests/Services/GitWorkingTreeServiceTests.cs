@@ -384,10 +384,10 @@ public sealed class GitWorkingTreeServiceTests
             var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             // The tracked modified file should be staged
-            Assert.IsGreaterThanOrEqualTo(1, result.StagedCount);
+            Assert.IsGreaterThanOrEqualTo(result.StagedCount, 1);
 
             // The untracked file should still be untracked (not staged)
-            Assert.IsGreaterThanOrEqualTo(1, result.UntrackedCount);
+            Assert.IsGreaterThanOrEqualTo(result.UntrackedCount, 1);
         }
         finally
         {
@@ -425,7 +425,7 @@ public sealed class GitWorkingTreeServiceTests
             var result = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
 
             // The forced-staged ignored file should be staged
-            Assert.IsGreaterThanOrEqualTo(1, result.StagedCount);
+            Assert.IsGreaterThanOrEqualTo(result.StagedCount, 1);
         }
         finally
         {
@@ -448,7 +448,7 @@ public sealed class GitWorkingTreeServiceTests
             Commands.Stage(repository, newFile);
 
             var statusBefore = new GitWorkingTreeService().GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
-            Assert.IsGreaterThanOrEqualTo(1, statusBefore.StagedCount);
+            Assert.IsGreaterThanOrEqualTo(statusBefore.StagedCount, 1);
 
             // Reset just that path
             var service = new GitWorkingTreeService();
@@ -456,7 +456,7 @@ public sealed class GitWorkingTreeServiceTests
 
             var statusAfter = service.GetStatus(new GitStatusOptions { RepositoryPath = repositoryPath });
             Assert.AreEqual(0, statusAfter.StagedCount);
-            Assert.IsGreaterThanOrEqualTo(1, statusAfter.UntrackedCount);
+            Assert.IsGreaterThanOrEqualTo(statusAfter.UntrackedCount, 1);
         }
         finally
         {
@@ -480,6 +480,184 @@ public sealed class GitWorkingTreeServiceTests
 
             var content = File.ReadAllText(trackedFile);
             Assert.AreEqual("initial content", content);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    // ── StageHunks tests ─────────────────────────────────────────────────────
+
+    [TestMethod]
+    public void StageHunks_InvalidRepository_ThrowsArgumentException()
+    {
+        var service = new GitWorkingTreeService();
+
+        var options = new GitStageHunkOptions
+        {
+            RepositoryPath = "X:\\not-a-real-repo",
+            Hunks =
+            [
+                new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                    1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                    "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1),
+            ],
+        };
+
+        Assert.Throws<ArgumentException>(() => service.StageHunks(options));
+    }
+
+    [TestMethod]
+    public void StageHunks_EmptyHunks_ThrowsArgumentException()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var service = new GitWorkingTreeService();
+
+            var options = new GitStageHunkOptions
+            {
+                RepositoryPath = repositoryPath,
+                Hunks = [],
+            };
+
+            Assert.Throws<ArgumentException>(() => service.StageHunks(options));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_SingleHunk_StagesOnlyThatHunk()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            // Create a file with enough lines to produce two hunks when modified
+            var filePath = Path.Combine(repositoryPath, "multi-hunk.txt");
+            var lines = new string[20];
+            for (var i = 0; i < 20; i++)
+            {
+                lines[i] = $"line {i + 1}";
+            }
+
+            File.WriteAllLines(filePath, lines);
+
+            using (var repo = new Repository(repositoryPath))
+            {
+                Commands.Stage(repo, filePath);
+                var sig = new Signature("Test", "test@test.com", DateTimeOffset.UtcNow);
+                repo.Commit("Add multi-hunk file", sig, sig);
+            }
+
+            // Modify lines near the top and near the bottom to create two hunks
+            lines[1] = "MODIFIED line 2";
+            lines[18] = "MODIFIED line 19";
+            File.WriteAllLines(filePath, lines);
+
+            var service = new GitWorkingTreeService();
+
+            // Get the diff and parse hunks
+            var diffEntries = service.GetDiff(new GitDiffOptions { RepositoryPath = repositoryPath });
+            var entry = diffEntries.Single(e => e.NewPath == "multi-hunk.txt");
+            var hunks = DiffHunkParser.Parse(entry);
+
+            Assert.IsGreaterThanOrEqualTo(hunks.Count, 2, $"Expected at least 2 hunks but got {hunks.Count}");
+
+            // Stage only the first hunk
+            var stageOptions = new GitStageHunkOptions
+            {
+                RepositoryPath = repositoryPath,
+                Hunks = [hunks[0]],
+            };
+
+            service.StageHunks(stageOptions);
+
+            // Verify: staged diff should contain only the first hunk's changes
+            var stagedDiff = service.GetDiff(new GitDiffOptions
+            {
+                RepositoryPath = repositoryPath,
+                Staged = true,
+                Paths = ["multi-hunk.txt"],
+            });
+
+            Assert.HasCount(1, stagedDiff);
+            Assert.Contains("MODIFIED line 2", stagedDiff[0].Patch!);
+            Assert.DoesNotContain("MODIFIED line 19", stagedDiff[0].Patch!);
+
+            // Unstaged diff should still contain the second hunk
+            var unstagedDiff = service.GetDiff(new GitDiffOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = ["multi-hunk.txt"],
+            });
+
+            Assert.HasCount(1, unstagedDiff);
+            Assert.Contains("MODIFIED line 19", unstagedDiff[0].Patch!);
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_MultipleHunksFromSameFile_StagesBoth()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var filePath = Path.Combine(repositoryPath, "multi-hunk.txt");
+            var lines = new string[20];
+            for (var i = 0; i < 20; i++)
+            {
+                lines[i] = $"line {i + 1}";
+            }
+
+            File.WriteAllLines(filePath, lines);
+
+            using (var repo = new Repository(repositoryPath))
+            {
+                Commands.Stage(repo, filePath);
+                var sig = new Signature("Test", "test@test.com", DateTimeOffset.UtcNow);
+                repo.Commit("Add multi-hunk file", sig, sig);
+            }
+
+            // Modify both areas
+            lines[1] = "CHANGED line 2";
+            lines[18] = "CHANGED line 19";
+            File.WriteAllLines(filePath, lines);
+
+            var service = new GitWorkingTreeService();
+            var diffEntries = service.GetDiff(new GitDiffOptions { RepositoryPath = repositoryPath });
+            var entry = diffEntries.Single(e => e.NewPath == "multi-hunk.txt");
+            var hunks = DiffHunkParser.Parse(entry);
+
+            Assert.IsGreaterThanOrEqualTo(hunks.Count, 2, $"Expected at least 2 hunks but got {hunks.Count}");
+
+            // Stage all hunks
+            var stageOptions = new GitStageHunkOptions
+            {
+                RepositoryPath = repositoryPath,
+                Hunks = hunks,
+            };
+
+            service.StageHunks(stageOptions);
+
+            // Verify: no unstaged changes should remain
+            var unstagedDiff = service.GetDiff(new GitDiffOptions
+            {
+                RepositoryPath = repositoryPath,
+                Paths = ["multi-hunk.txt"],
+            });
+
+            Assert.HasCount(0, unstagedDiff);
         }
         finally
         {

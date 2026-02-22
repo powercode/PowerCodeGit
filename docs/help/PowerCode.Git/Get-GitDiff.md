@@ -4,7 +4,7 @@ external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Get-GitDiff.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Get-GitDiff
 ---
@@ -20,26 +20,26 @@ Shows changes between the working tree, index, or commits, equivalent to git dif
 ### WorkingTree (Default)
 
 ```
-Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Staged
 
 ```
-Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Commit
 
 ```
-Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-RepoPath <string>]
+Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>]
  [<CommonParameters>]
 ```
 
 ### Range
 
 ```
-Get-GitDiff [-FromCommit] <string> [-ToCommit] <string> [-Path <string[]>] [-IgnoreWhitespace]
+Get-GitDiff [-FromCommit] <string> [-ToCommit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk]
  [-RepoPath <string>] [<CommonParameters>]
 ```
 
@@ -59,6 +59,8 @@ The Get-GitDiff cmdlet retrieves diff entries showing file-level changes. By def
 
 Each entry is returned as a GitDiffEntry object with properties such as OldPath, NewPath, Status, LinesAdded, LinesDeleted, and Patch.
 
+Use the `-Hunk` switch to break each file's diff into individual GitDiffHunk objects. Hunks can be filtered in the pipeline and piped to `Add-GitItem` for selective staging.
+
 ## EXAMPLES
 
 ### Example 1 - Show unstaged changes
@@ -75,6 +77,22 @@ Shows changes that have been staged for the next commit.
 
 ```powershell
 Get-GitDiff -Staged
+```
+
+### Example 3 - Return individual diff hunks
+
+Returns individual diff hunks instead of file-level entries, useful for filtering and selective staging.
+
+```powershell
+Get-GitDiff -Hunk
+```
+
+### Example 4 - Selectively stage hunks from C# files
+
+Filters hunks to only those in C# files and stages them.
+
+```powershell
+Get-GitDiff -Hunk | Where-Object { $_.FilePath -like '*.cs' } | Add-GitItem
 ```
 
 ## PARAMETERS
@@ -124,6 +142,45 @@ HelpMessage: ''
 ### -IgnoreWhitespace
 
 Ignores whitespace changes in the diff output.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: WorkingTree
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Staged
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Commit
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Range
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Hunk
+
+Emits individual GitDiffHunk objects instead of file-level GitDiffEntry objects. Each hunk represents a single `@@ ... @@` block from the unified diff output. Hunk objects can be filtered and piped to `Add-GitItem` for selective staging.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -299,7 +356,11 @@ None. This cmdlet does not accept pipeline input.
 
 ### PowerCode.Git.Abstractions.Models.GitDiffEntry
 
-A diff entry object with OldPath, NewPath, Status, LinesAdded, LinesDeleted, and Patch properties.
+A diff entry object with OldPath, NewPath, Status, LinesAdded, LinesDeleted, and Patch properties. Emitted by default.
+
+### PowerCode.Git.Abstractions.Models.GitDiffHunk
+
+A diff hunk object with FilePath, OldPath, Status, OldStart, OldLineCount, NewStart, NewLineCount, Header, Content, LinesAdded, and LinesDeleted properties. Emitted when `-Hunk` is specified.
 
 ## NOTES
 

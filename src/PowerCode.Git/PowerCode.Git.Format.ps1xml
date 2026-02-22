@@ -355,6 +355,110 @@
       </TableControl>
     </View>
 
+    <!-- Default table view for GitDiffHunk — colored hunk summary -->
+    <View>
+      <Name>GitDiffHunk-Default</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitDiffHunk</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <AutoSize />
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Status</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Path</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Hunk</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Added</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Deleted</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>
+                  switch ($_.Status.ToString()) {
+                    'Added'    { "`e[32m$($_.Status)`e[0m" }
+                    'Deleted'  { "`e[31m$($_.Status)`e[0m" }
+                    'Modified' { "`e[33m$($_.Status)`e[0m" }
+                    'Renamed'  { "`e[36m$($_.Status)`e[0m" }
+                    default    { $_.Status.ToString() }
+                  }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>FilePath</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>"`e[36m@@ -$($_.OldStart),$($_.OldLineCount) +$($_.NewStart),$($_.NewLineCount) @@`e[0m"</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>if ($_.LinesAdded -gt 0) { "`e[32m+$($_.LinesAdded)`e[0m" } else { $_.LinesAdded }</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>if ($_.LinesDeleted -gt 0) { "`e[31m-$($_.LinesDeleted)`e[0m" } else { $_.LinesDeleted }</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- Detailed list view for GitDiffHunk — full hunk content with colors -->
+    <View>
+      <Name>GitDiffHunk-Detailed</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitDiffHunk</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Status</Label>
+                <PropertyName>Status</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>FilePath</Label>
+                <PropertyName>FilePath</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Header</Label>
+                <ScriptBlock>"`e[36m$($_.Header)`e[0m"</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Content</Label>
+                <ScriptBlock>
+                  ($_.Content -split '\n' | ForEach-Object {
+                    if     ($_ -match '^\+')  { "`e[32m$_`e[0m" }
+                    elseif ($_ -match '^-')   { "`e[31m$_`e[0m" }
+                    elseif ($_ -match '^@@')  { "`e[36m$_`e[0m" }
+                    else                      { $_ }
+                  }) -join "`n"
+                </ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>LinesAdded</Label>
+                <PropertyName>LinesAdded</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>LinesDeleted</Label>
+                <PropertyName>LinesDeleted</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
     <!-- Default table view for GitBranchInfo — colored branch names -->
     <View>
       <Name>GitBranchInfo-Default</Name>

@@ -11,6 +11,7 @@ namespace PowerCode.Git.Cmdlets;
 /// </summary>
 [Cmdlet(VerbsCommon.Get, "GitDiff", DefaultParameterSetName = "WorkingTree")]
 [OutputType(typeof(GitDiffEntry))]
+[OutputType(typeof(GitDiffHunk))]
 public sealed class GetGitDiffCmdlet : GitCmdlet
 {
     /// <summary>
@@ -89,6 +90,17 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     // ── Options parameter set ────────────────────────────────────────────────
 
     /// <summary>
+    /// Gets or sets a value indicating whether to emit individual
+    /// <see cref="GitDiffHunk"/> objects instead of file-level
+    /// <see cref="GitDiffEntry"/> objects.
+    /// </summary>
+    [Parameter(ParameterSetName = "WorkingTree")]
+    [Parameter(ParameterSetName = "Staged")]
+    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = "Range")]
+    public SwitchParameter Hunk { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the operation.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = "Options")]
@@ -133,9 +145,24 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
         {
             var entries = workingTreeService.GetDiff(options);
 
-            foreach (var entry in entries)
+            if (Hunk.IsPresent)
             {
-                WriteObject(entry);
+                foreach (var entry in entries)
+                {
+                    var hunks = DiffHunkParser.Parse(entry);
+
+                    foreach (var hunk in hunks)
+                    {
+                        WriteObject(hunk);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var entry in entries)
+                {
+                    WriteObject(entry);
+                }
             }
         }
         catch (Exception exception)

@@ -153,3 +153,48 @@ Describe 'Add-GitItem pipeline from GitStatusEntry' {
         $UpdatedStatus.UntrackedCount | Should -BeGreaterOrEqual 1
     }
 }
+
+Describe 'Add-GitItem stages only piped hunks' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        # Create a file with 20 lines, commit, then modify lines near top and bottom
+        $FilePath = Join-Path -Path $script:RepoPath -ChildPath 'hunk-file.txt'
+        $Lines = 1..20 | ForEach-Object { "line $_" }
+        Set-Content -Path $FilePath -Value ($Lines -join "`n")
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git add hunk-file.txt 2>&1 | Out-Null
+            git commit -m 'Add hunk file' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $Lines[1] = 'MODIFIED line 2'
+        $Lines[18] = 'MODIFIED line 19'
+        Set-Content -Path $FilePath -Value ($Lines -join "`n")
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages only the first hunk when piped through Select-Object -First 1' {
+        # Stage only first hunk
+        Get-GitDiff -RepoPath $script:RepoPath -Hunk |
+            Select-Object -First 1 |
+            Add-GitItem -RepoPath $script:RepoPath
+
+        # Staged diff should contain the first hunk change
+        $StagedDiff = Get-GitDiff -RepoPath $script:RepoPath -Staged
+        $StagedDiff | Should -Not -BeNullOrEmpty
+        $StagedDiff[0].Patch | Should -Match 'MODIFIED line 2'
+
+        # Unstaged diff should still have the second hunk
+        $UnstagedDiff = Get-GitDiff -RepoPath $script:RepoPath
+        $UnstagedDiff | Should -Not -BeNullOrEmpty
+        $UnstagedDiff[0].Patch | Should -Match 'MODIFIED line 19'
+    }
+}
