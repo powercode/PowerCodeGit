@@ -80,4 +80,13 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitRebaseService();
     }
+
+    /// <summary>
+    /// Creates a git commit file service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitCommitFileService"/> instance.</returns>
+    public static IGitCommitFileService CreateGitCommitFileService()
+    {
+        return DependencyContext.CreateGitCommitFileService();
+    }
 }

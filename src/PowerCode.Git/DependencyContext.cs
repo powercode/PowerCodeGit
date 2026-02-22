@@ -24,6 +24,7 @@ internal static class DependencyContext
     private const string RemoteServiceTypeName = "PowerCode.Git.Core.Services.GitRemoteService";
     private const string WorktreeServiceTypeName = "PowerCode.Git.Core.Services.GitWorktreeService";
     private const string RebaseServiceTypeName = "PowerCode.Git.Core.Services.GitRebaseService";
+    private const string CommitFileServiceTypeName = "PowerCode.Git.Core.Services.GitCommitFileService";
 
     private static readonly object Gate = new();
     private static PowerCodeGitDependencyLoadContext? loadContext;
@@ -113,6 +114,12 @@ internal static class DependencyContext
     /// <returns>A strongly-typed <see cref="IGitRebaseService"/>.</returns>
     public static IGitRebaseService CreateGitRebaseService() => CreateService<IGitRebaseService>();
 
+    /// <summary>
+    /// Creates a new <see cref="IGitCommitFileService"/> instance from the isolated context.
+    /// </summary>
+    /// <returns>A strongly-typed <see cref="IGitCommitFileService"/>.</returns>
+    public static IGitCommitFileService CreateGitCommitFileService() => CreateService<IGitCommitFileService>();
+
     private static T CreateService<T>()
     {
         EnsureInitialized();
@@ -136,6 +143,7 @@ internal static class DependencyContext
             var t when t == typeof(IGitRemoteService) => RemoteServiceTypeName,
             var t when t == typeof(IGitWorktreeService) => WorktreeServiceTypeName,
             var t when t == typeof(IGitRebaseService) => RebaseServiceTypeName,
+            var t when t == typeof(IGitCommitFileService) => CommitFileServiceTypeName,
             _ => throw new NotSupportedException($"No mapping for service type '{typeof(T).FullName}'")
         };
     }
