@@ -16,6 +16,14 @@ public interface IGitWorktreeService
     IReadOnlyList<GitWorktreeInfo> GetWorktrees(string repositoryPath);
 
     /// <summary>
+    /// Gets all worktrees in the repository using the specified options.
+    /// </summary>
+    /// <param name="options">Options identifying the repository to list worktrees for.</param>
+    /// <returns>A list of worktree information objects.</returns>
+    IReadOnlyList<GitWorktreeInfo> GetWorktrees(GitWorktreeListOptions options)
+        => GetWorktrees(options.RepositoryPath);
+
+    /// <summary>
     /// Adds a new worktree using the specified options.
     /// </summary>
     /// <param name="options">Options controlling the worktree creation.</param>

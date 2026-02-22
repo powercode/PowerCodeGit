@@ -34,4 +34,12 @@ public interface IGitRebaseService
     /// </summary>
     /// <param name="repositoryPath">The path to the git repository.</param>
     void Abort(string repositoryPath);
+
+    /// <summary>
+    /// Aborts the current rebase and restores the branch to its original state
+    /// (<c>git rebase --abort</c>).
+    /// </summary>
+    /// <param name="options">Options identifying the repository against which to abort the rebase.</param>
+    void Abort(GitStopRebaseOptions options)
+        => Abort(options.RepositoryPath);
 }
