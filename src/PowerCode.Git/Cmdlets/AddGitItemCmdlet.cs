@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
-using System.Text;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Completers;
+using PowerCode.Git.Formatting;
 
 namespace PowerCode.Git.Cmdlets;
 
@@ -212,7 +212,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
 
         foreach (var hunk in hunks)
         {
-            if (!ShouldProcess(repositoryPath, FormatHunkDescription("Stage", hunk)))
+            if (!ShouldProcess(repositoryPath, GitDiffHunkFormatter.FormatDescription("Stage", hunk)))
             {
                 continue;
             }
@@ -290,46 +290,6 @@ public sealed class AddGitItemCmdlet : GitCmdlet
                 ErrorCategory.InvalidOperation,
                 repoPath));
         }
-    }
-
-    /// <summary>
-    /// Formats a description for <see cref="Cmdlet.ShouldProcess(string, string)"/> that includes a
-    /// content preview of the specified hunk so the user can make an informed
-    /// decision when <c>-Confirm</c> or <c>-WhatIf</c> is in effect.
-    /// </summary>
-    /// <param name="verb">The action verb (e.g. "Stage").</param>
-    /// <param name="hunk">The hunk to describe.</param>
-    /// <param name="maxPreviewLines">Maximum number of diff lines to show.</param>
-    /// <returns>A multi-line description string.</returns>
-    private static string FormatHunkDescription(string verb, GitDiffHunk hunk, int maxPreviewLines = 5)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine($"{verb} hunk in {hunk.FilePath} {hunk.Header}");
-
-        var contentLines = hunk.Content.Split('\n');
-        var shown = 0;
-
-        // Skip index 0 — the @@ header line.
-        for (var i = 1; i < contentLines.Length && shown < maxPreviewLines; i++)
-        {
-            var line = contentLines[i].TrimEnd('\r');
-
-            if (line.Length == 0)
-            {
-                continue;
-            }
-
-            var display = line.Length > 80 ? line[..80] + "\u2026" : line;
-            sb.AppendLine($"  {display}");
-            shown++;
-        }
-
-        if (shown >= maxPreviewLines)
-        {
-            sb.AppendLine("  \u2026");
-        }
-
-        return sb.ToString().TrimEnd();
     }
 
     /// <summary>
