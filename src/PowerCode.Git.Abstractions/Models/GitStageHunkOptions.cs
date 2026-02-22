@@ -16,4 +16,12 @@ public sealed class GitStageHunkOptions
     /// Gets or sets the hunks to stage.
     /// </summary>
     public required IReadOnlyList<GitDiffHunk> Hunks { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitStageHunkOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(Hunks), Hunks));
+    }
 }

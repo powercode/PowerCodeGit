@@ -53,4 +53,16 @@ public sealed class GitCloneOptions
     /// Gets or sets a value indicating whether to recursively clone submodules (--recurse-submodules).
     /// </summary>
     public bool RecurseSubmodules { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitCloneOptions),
+            (nameof(Url), Url),
+            (nameof(LocalPath), LocalPath),
+            (nameof(CredentialUsername), CredentialUsername),
+            (nameof(CredentialPassword), CredentialPassword),
+            (nameof(SingleBranch), SingleBranch),
+            (nameof(Depth), Depth));
+    }
 }

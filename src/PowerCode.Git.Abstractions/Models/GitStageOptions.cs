@@ -32,4 +32,15 @@ public sealed class GitStageOptions
     /// Gets or sets a value indicating whether to allow staging ignored files (git add -f).
     /// </summary>
     public bool Force { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitStageOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(Paths), Paths),
+            (nameof(All), All),
+            (nameof(Update), Update),
+            (nameof(Force), Force));
+    }
 }

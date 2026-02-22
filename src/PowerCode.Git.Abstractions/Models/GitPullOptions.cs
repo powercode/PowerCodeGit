@@ -52,4 +52,16 @@ public sealed class GitPullOptions
     /// Gets or sets the maximum depth to fetch (shallow pull). Null performs a full fetch.
     /// </summary>
     public int? Depth { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitPullOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(RemoteName), RemoteName),
+            (nameof(MergeStrategy), MergeStrategy),
+            (nameof(Prune), Prune),
+            (nameof(CredentialUsername), CredentialUsername),
+            (nameof(CredentialPassword), CredentialPassword));
+    }
 }

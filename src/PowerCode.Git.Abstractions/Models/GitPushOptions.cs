@@ -65,4 +65,16 @@ public sealed class GitPushOptions
     /// Gets or sets a value indicating whether to perform a dry run without actually pushing.
     /// </summary>
     public bool DryRun { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitPushOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(RemoteName), RemoteName),
+            (nameof(BranchName), BranchName),
+            (nameof(SetUpstream), SetUpstream),
+            (nameof(CredentialUsername), CredentialUsername),
+            (nameof(CredentialPassword), CredentialPassword));
+    }
 }

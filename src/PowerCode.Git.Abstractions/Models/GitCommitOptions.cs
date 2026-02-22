@@ -46,4 +46,15 @@ public sealed class GitCommitOptions
     /// the current time is used.
     /// </summary>
     public DateTimeOffset? Date { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitCommitOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(Message), Message),
+            (nameof(Amend), Amend),
+            (nameof(AllowEmpty), AllowEmpty),
+            (nameof(All), All));
+    }
 }

@@ -24,4 +24,13 @@ public sealed class GitRestoreHunkOptions
     /// patch is applied to the index only (<c>git apply -R --cached</c>).
     /// </summary>
     public bool Staged { get; init; }
+    
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitRestoreHunkOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(Hunks), Hunks),
+            (nameof(Staged), Staged));
+    }
 }

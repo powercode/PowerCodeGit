@@ -10,6 +10,9 @@ namespace PowerCode.Git.Formatting;
 /// </summary>
 public static class GitDiffHunkFormatter
 {
+    private const int MaxLineWidth = 80;
+    private const string Ellipsis = "\u2026";
+
     /// <summary>
     /// Formats a description that includes a content preview of the specified
     /// hunk, showing only changed lines (<c>+</c>/<c>-</c>) so the user can

@@ -36,4 +36,15 @@ public sealed class GitRestoreOptions
     /// Equivalent to <c>git restore --source=&lt;tree&gt;</c>.
     /// </summary>
     public string? Source { get; init; }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        return OptionsFormatter.Format(nameof(GitRestoreOptions),
+            (nameof(RepositoryPath), RepositoryPath),
+            (nameof(Paths), Paths),
+            (nameof(All), All),
+            (nameof(Staged), Staged),
+            (nameof(Source), Source));
+    }
 }
