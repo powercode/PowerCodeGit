@@ -28,7 +28,7 @@ public sealed class GitTagInfo
     {
         Name = name;
         Sha = sha;
-        ShortSha = sha.Length > 7 ? sha[..7] : sha;
+        ShortSha = sha.Length > GitConstants.ShortShaLength ? sha[..GitConstants.ShortShaLength] : sha;
         IsAnnotated = isAnnotated;
         TaggerName = taggerName;
         TaggerEmail = taggerEmail;

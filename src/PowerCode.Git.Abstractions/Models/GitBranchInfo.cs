@@ -28,7 +28,7 @@ public sealed class GitBranchInfo
         IsHead = isHead;
         IsRemote = isRemote;
         TipSha = tipSha;
-        TipShortSha = tipSha.Length > 7 ? tipSha[..7] : tipSha;
+        TipShortSha = tipSha.Length > GitConstants.ShortShaLength ? tipSha[..GitConstants.ShortShaLength] : tipSha;
         TrackedBranchName = trackedBranchName;
         AheadBy = aheadBy;
         BehindBy = behindBy;

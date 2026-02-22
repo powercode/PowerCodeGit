@@ -48,7 +48,7 @@ public static class GitDiffHunkFormatter
                 break;
             }
 
-            var display = line.Length > 80 ? line[..80] + "\u2026" : line;
+            var display = line.Length > MaxLineWidth ? line[..MaxLineWidth] + Ellipsis : line;
             sb.AppendLine($"  {display}");
             shown++;
         }
