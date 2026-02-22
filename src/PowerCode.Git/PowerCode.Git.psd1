@@ -31,6 +31,9 @@
         'Lock-GitWorktree'
         'Unlock-GitWorktree'
         'Restore-GitItem'
+        'Start-GitRebase'
+        'Resume-GitRebase'
+        'Stop-GitRebase'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

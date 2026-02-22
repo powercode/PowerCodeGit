@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
 namespace PowerCode.Git.Core.Services;
@@ -15,6 +16,18 @@ public sealed class GitExecutable : IGitExecutable
 
     /// <inheritdoc/>
     public void Run(string workingDirectory, IReadOnlyList<string> args, string? standardInput = null)
+    {
+        var result = RunWithResult(workingDirectory, args, standardInput);
+
+        if (!result.IsSuccess)
+        {
+            throw new InvalidOperationException(
+                $"git {args[0]} failed (exit code {result.ExitCode}): {result.StdErr.Trim()}");
+        }
+    }
+
+    /// <inheritdoc/>
+    public GitProcessResult RunWithResult(string workingDirectory, IReadOnlyList<string> args, string? standardInput = null)
     {
         var arguments = string.Join(' ', args.Select(EscapeArgument));
         var needsStdin = standardInput is not null;
@@ -38,14 +51,32 @@ public sealed class GitExecutable : IGitExecutable
             process.StandardInput.Close();
         }
 
+        var stdout = process.StandardOutput.ReadToEnd();
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit(ProcessTimeout);
 
-        if (process.ExitCode != 0)
+        return new GitProcessResult(process.ExitCode, stdout, stderr);
+    }
+
+    /// <inheritdoc/>
+    public int RunInteractive(string workingDirectory, IReadOnlyList<string> args)
+    {
+        var arguments = string.Join(' ', args.Select(EscapeArgument));
+
+        // Do NOT redirect any streams so that the user's editor and terminal work normally.
+        var startInfo = new ProcessStartInfo("git", arguments)
         {
-            throw new InvalidOperationException(
-                $"git {args[0]} failed (exit code {process.ExitCode}): {stderr.Trim()}");
-        }
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            CreateNoWindow = false,
+        };
+
+        using var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException("Failed to start git process.");
+
+        process.WaitForExit();
+
+        return process.ExitCode;
     }
 
     /// <summary>

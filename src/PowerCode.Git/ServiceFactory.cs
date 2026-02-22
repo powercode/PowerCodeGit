@@ -71,4 +71,13 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitWorktreeService();
     }
+
+    /// <summary>
+    /// Creates a git rebase service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitRebaseService"/> instance.</returns>
+    public static IGitRebaseService CreateGitRebaseService()
+    {
+        return DependencyContext.CreateGitRebaseService();
+    }
 }
