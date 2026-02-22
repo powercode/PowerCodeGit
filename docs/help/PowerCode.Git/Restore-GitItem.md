@@ -378,4 +378,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. The confirm impact is 
 - [Add-GitItem](Add-GitItem.md)
 - [Get-GitDiff](Get-GitDiff.md)
 - [Get-GitStatus](Get-GitStatus.md)
-

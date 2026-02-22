@@ -267,4 +267,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. Only one branch may be
 - [Resume-GitRebase](Resume-GitRebase.md)
 - [Stop-GitRebase](Stop-GitRebase.md)
 - [Get-GitBranch](Get-GitBranch.md)
-

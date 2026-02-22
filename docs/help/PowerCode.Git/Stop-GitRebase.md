@@ -132,4 +132,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety. The confirm impact is 
 
 - [Start-GitRebase](Start-GitRebase.md)
 - [Resume-GitRebase](Resume-GitRebase.md)
-

@@ -191,4 +191,3 @@ This cmdlet supports `-WhatIf` and `-Confirm` for safety.
 
 - [Start-GitRebase](Start-GitRebase.md)
 - [Stop-GitRebase](Stop-GitRebase.md)
-
