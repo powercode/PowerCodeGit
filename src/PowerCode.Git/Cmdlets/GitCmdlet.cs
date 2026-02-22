@@ -32,9 +32,13 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
         {
             return SessionState.Path.GetUnresolvedProviderPathFromPSPath(RepoPath);
         }
-        
 
-        return SessionState.Path.GetUnresolvedProviderPathFromPSPath(currentFileSystemPath) ?? GetCurrentFileSystemLocation();
+        if (!string.IsNullOrWhiteSpace(currentFileSystemPath))
+        {
+            return SessionState.Path.GetUnresolvedProviderPathFromPSPath(currentFileSystemPath);
+        }
+
+        return GetCurrentFileSystemLocation();
     }
 
     /// <inheritdoc />
