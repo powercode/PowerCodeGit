@@ -95,6 +95,16 @@ Filters hunks to only those in C# files and stages them.
 Get-GitDiff -Hunk | Where-Object { $_.FilePath -like '*.cs' } | Add-GitItem
 ```
 
+### Example 5 - Stage only hunks that contain added lines
+
+Uses the `Lines` property to inspect each hunk's parsed diff lines and stages only hunks that contain at least one added line. Hunks that only delete lines are skipped.
+
+```powershell
+Get-GitDiff -Hunk |
+    Where-Object { $_.Lines | Where-Object Kind -eq 'Added' } |
+    Add-GitItem
+```
+
 ## PARAMETERS
 
 ### -Commit
@@ -360,7 +370,7 @@ A diff entry object with OldPath, NewPath, Status, LinesAdded, LinesDeleted, and
 
 ### PowerCode.Git.Abstractions.Models.GitDiffHunk
 
-A diff hunk object with FilePath, OldPath, Status, OldStart, OldLineCount, NewStart, NewLineCount, Header, Content, LinesAdded, and LinesDeleted properties. Emitted when `-Hunk` is specified.
+A diff hunk object with FilePath, OldPath, Status, OldStart, OldLineCount, NewStart, NewLineCount, Header, Content, LinesAdded, and LinesDeleted properties. Emitted when `-Hunk` is specified. The `Lines` property returns a lazily-parsed, cached collection of `GitDiffLine` objects, each with `OldLineNumber`, `NewLineNumber`, `Kind` (`Added`, `Removed`, or `Modified`), and `Content`.
 
 ## NOTES
 

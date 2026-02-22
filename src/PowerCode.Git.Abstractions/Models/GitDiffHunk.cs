@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
@@ -45,6 +47,8 @@ public sealed class GitDiffHunk
         LinesAdded = linesAdded;
         LinesDeleted = linesDeleted;
     }
+
+    private IReadOnlyList<GitDiffLine>? _lines;
 
     /// <summary>
     /// Gets the repository-relative file path after the change.
@@ -100,6 +104,85 @@ public sealed class GitDiffHunk
     /// Gets the number of deleted lines in this hunk.
     /// </summary>
     public int LinesDeleted { get; }
+
+    /// <summary>
+    /// Gets the parsed changed lines in this hunk, with old/new line numbers and
+    /// <see cref="GitDiffLineKind"/> classification. Context lines are excluded.
+    /// Adjacent remove/add pairs at the same logical position are emitted as
+    /// <see cref="GitDiffLineKind.Modified"/>.
+    /// This property is calculated once and cached.
+    /// </summary>
+    public IReadOnlyList<GitDiffLine> Lines => _lines ??= ParseLines();
+
+    private IReadOnlyList<GitDiffLine> ParseLines()
+    {
+        var result = new List<GitDiffLine>();
+        var rawLines = Content.Split('\n');
+
+        var oldLine = OldStart;
+        var newLine = NewStart;
+
+        // Buffer of removed lines waiting to be paired with an add.
+        // Each entry is (oldLineNumber, text).
+        var removedBuffer = new Queue<(int OldNo, string Text)>();
+
+        // Skip index 0 — the @@ header line.
+        for (var i = 1; i < rawLines.Length; i++)
+        {
+            var raw = rawLines[i].TrimEnd('\r');
+
+            if (raw.Length == 0)
+            {
+                continue;
+            }
+
+            var sigil = raw[0];
+            var text  = raw.Length > 1 ? raw[1..] : string.Empty;
+
+            switch (sigil)
+            {
+                case '-':
+                    removedBuffer.Enqueue((oldLine, text));
+                    oldLine++;
+                    break;
+
+                case '+':
+                    if (removedBuffer.Count > 0)
+                    {
+                        var (removedOldNo, removedText) = removedBuffer.Dequeue();
+                        // Pair as Modified — use the removed line's text as Content
+                        // since the new text is what the line became.
+                        result.Add(new GitDiffLine(removedOldNo, newLine, GitDiffLineKind.Modified, text));
+                    }
+                    else
+                    {
+                        result.Add(new GitDiffLine(null, newLine, GitDiffLineKind.Added, text));
+                    }
+                    newLine++;
+                    break;
+
+                default:
+                    // Context line — flush any pending removes before advancing.
+                    while (removedBuffer.Count > 0)
+                    {
+                        var (removedOldNo, removedText) = removedBuffer.Dequeue();
+                        result.Add(new GitDiffLine(removedOldNo, null, GitDiffLineKind.Removed, removedText));
+                    }
+                    oldLine++;
+                    newLine++;
+                    break;
+            }
+        }
+
+        // Flush any trailing removes that were not paired with an add.
+        while (removedBuffer.Count > 0)
+        {
+            var (removedOldNo, removedText) = removedBuffer.Dequeue();
+            result.Add(new GitDiffLine(removedOldNo, null, GitDiffLineKind.Removed, removedText));
+        }
+
+        return result;
+    }
 
     /// <inheritdoc/>
     public override string ToString() =>

@@ -162,6 +162,58 @@ Describe 'Get-GitDiff -Options' {
     }
 }
 
+Describe 'Get-GitDiff Example 5 - Stage only hunks that contain added lines' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        # Create a file with content to produce two distant hunks:
+        # one that only removes a line, and one that adds a line.
+        $FilePath = Join-Path -Path $script:RepoPath -ChildPath 'example5.txt'
+        1..20 | ForEach-Object { "line $_" } | Set-Content -Path $FilePath
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git add example5.txt 2>&1 | Out-Null
+            git commit -m 'Add example5 file' 2>&1 | Out-Null
+
+            # Hunk A (near top): remove line 2, do NOT add a replacement
+            $Content = Get-Content -Path $FilePath
+            $Content = $Content | Where-Object { $_ -ne 'line 2' }
+            Set-Content -Path $FilePath -Value $Content
+
+            # Hunk B (near bottom): add a brand-new line at the end
+            Add-Content -Path $FilePath -Value 'new line at end'
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Stages only hunks that have at least one Added line' {
+        # Run the pipeline from Example 5
+        Get-GitDiff -RepoPath $script:RepoPath -Hunk |
+            Where-Object { $_.Lines | Where-Object Kind -eq 'Added' } |
+            Add-GitItem -RepoPath $script:RepoPath
+
+        # After staging, the staged diff should contain the added line
+        $StagedDiffs = @(Get-GitDiff -RepoPath $script:RepoPath -Staged)
+        $StagedDiffs | Should -Not -BeNullOrEmpty
+        $StagedContent = $StagedDiffs.Patch -join ''
+        $StagedContent | Should -Match 'new line at end'
+    }
+
+    It 'Does not stage deletion-only hunks' {
+        # The removal-only hunk should still be unstaged (working tree)
+        $UnstagedDiffs = @(Get-GitDiff -RepoPath $script:RepoPath)
+        $UnstagedContent = $UnstagedDiffs.Patch -join ''
+        $UnstagedContent | Should -Match 'line 2'
+    }
+}
+
 Describe 'Get-GitDiff -Hunk returns individual hunks' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
