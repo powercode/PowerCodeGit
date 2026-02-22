@@ -54,23 +54,63 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// <c>Get-GitBranch</c>.
     /// </summary>
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Rebase")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Interactive")]
     [Alias("Name")]
     [ValidateNotNullOrEmpty]
     [GitBranchCompleter(IncludeRemote = true)]
     public string Upstream { get; set; } = string.Empty;
 
+    // ── Interactive parameter set ────────────────────────────────────────────
+
     /// <summary>
     /// Gets or sets a value indicating whether to open an interactive rebase session
-    /// (<c>git rebase -i</c>).
+    /// (<c>git rebase -i</c>). When set, the <c>Interactive</c> parameter set is
+    /// activated, unlocking <c>-AutoSquash</c>, <c>-Exec</c>, <c>-RebaseMerges</c>,
+    /// and <c>-UpdateRefs</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Rebase")]
+    [Parameter(Mandatory = true, ParameterSetName = "Interactive")]
     public SwitchParameter Interactive { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically apply <c>fixup!</c>
+    /// and <c>squash!</c> commits when creating the interactive todo list
+    /// (<c>git rebase -i --autosquash</c>).
+    /// </summary>
+    [Parameter(ParameterSetName = "Interactive")]
+    public SwitchParameter AutoSquash { get; set; }
+
+    /// <summary>
+    /// Gets or sets a shell command to run after each rebased commit
+    /// (<c>git rebase -i --exec &lt;cmd&gt;</c>).
+    /// An <c>exec</c> line is inserted after every <c>pick</c> line in the todo list.
+    /// </summary>
+    [Parameter(ParameterSetName = "Interactive")]
+    [ValidateNotNullOrEmpty]
+    public string? Exec { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to recreate merge commits rather than
+    /// linearising history (<c>git rebase --rebase-merges</c>).
+    /// </summary>
+    [Parameter(ParameterSetName = "Interactive")]
+    public SwitchParameter RebaseMerges { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to automatically update any branch refs
+    /// that point to commits being rebased — useful for stacked branches
+    /// (<c>git rebase --update-refs</c>).
+    /// </summary>
+    [Parameter(ParameterSetName = "Interactive")]
+    public SwitchParameter UpdateRefs { get; set; }
+
+    // ── Shared optional (Rebase + Interactive) ───────────────────────────────
 
     /// <summary>
     /// Gets or sets an optional target ref for a three-way rebase
     /// (<c>git rebase --onto &lt;Onto&gt; &lt;Upstream&gt;</c>).
     /// </summary>
     [Parameter(ParameterSetName = "Rebase")]
+    [Parameter(ParameterSetName = "Interactive")]
     [GitCommittishCompleter]
     public string? Onto { get; set; }
 
@@ -80,6 +120,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// (<c>git rebase --autostash</c>).
     /// </summary>
     [Parameter(ParameterSetName = "Rebase")]
+    [Parameter(ParameterSetName = "Interactive")]
     public SwitchParameter AutoStash { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -166,6 +207,10 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
             Onto = Onto,
             Interactive = Interactive.IsPresent,
             AutoStash = AutoStash.IsPresent,
+            AutoSquash = AutoSquash.IsPresent,
+            Exec = Exec,
+            RebaseMerges = RebaseMerges.IsPresent,
+            UpdateRefs = UpdateRefs.IsPresent,
         };
     }
 

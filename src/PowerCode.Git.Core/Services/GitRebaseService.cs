@@ -75,6 +75,27 @@ public sealed class GitRebaseService : IGitRebaseService
     {
         var args = new List<string> { "rebase" };
 
+        if (options.AutoSquash)
+        {
+            args.Add("--autosquash");
+        }
+
+        if (options.Exec is not null)
+        {
+            args.Add("--exec");
+            args.Add(options.Exec);
+        }
+
+        if (options.RebaseMerges)
+        {
+            args.Add("--rebase-merges");
+        }
+
+        if (options.UpdateRefs)
+        {
+            args.Add("--update-refs");
+        }
+
         if (options.AutoStash)
         {
             args.Add("--autostash");
@@ -98,6 +119,27 @@ public sealed class GitRebaseService : IGitRebaseService
     private GitRebaseResult StartInteractive(GitRebaseOptions options)
     {
         var args = new List<string> { "rebase", "-i" };
+
+        if (options.AutoSquash)
+        {
+            args.Add("--autosquash");
+        }
+
+        if (options.Exec is not null)
+        {
+            args.Add("--exec");
+            args.Add(options.Exec);
+        }
+
+        if (options.RebaseMerges)
+        {
+            args.Add("--rebase-merges");
+        }
+
+        if (options.UpdateRefs)
+        {
+            args.Add("--update-refs");
+        }
 
         if (options.AutoStash)
         {

@@ -177,3 +177,88 @@ Describe 'Start-GitRebase error handling' {
         $GitErrors | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Start-GitRebase interactive with autosquash' {
+    BeforeEach {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Create feature branch with a base commit and a fixup! commit targeting it
+            git checkout -b feature 2>&1 | Out-Null
+
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'a.txt') -Value 'base'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Add a.txt' 2>&1 | Out-Null
+
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'a.txt') -Value 'base fixed'
+            git add . 2>&1 | Out-Null
+            git commit -m 'fixup! Add a.txt' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterEach {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Squashes fixup! commits when -AutoSquash is specified' {
+        # GIT_SEQUENCE_EDITOR=true accepts the todo list as-is; --autosquash pre-sorts
+        # fixup! commits so they are automatically folded on apply.
+        $env:GIT_SEQUENCE_EDITOR = 'true'
+        try {
+            $Result = Start-GitRebase -RepoPath $script:RepoPath -Upstream main -Interactive -AutoSquash
+            $Result | Should -Not -BeNullOrEmpty
+            $Result.Success | Should -BeTrue
+        }
+        finally {
+            Remove-Item -Path Env:\GIT_SEQUENCE_EDITOR -ErrorAction SilentlyContinue
+        }
+
+        # After autosquash the two feature commits are folded into one
+        Push-Location -Path $script:RepoPath
+        try {
+            $CommitCount = @(git log --oneline main..HEAD 2>&1).Count
+        }
+        finally {
+            Pop-Location
+        }
+        $CommitCount | Should -Be 1
+    }
+}
+
+Describe 'Start-GitRebase interactive with exec' {
+    BeforeEach {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature 2>&1 | Out-Null
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'b.txt') -Value 'hello'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Add b.txt' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterEach {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Completes successfully when -Exec specifies a passing command' {
+        $env:GIT_SEQUENCE_EDITOR = 'true'
+        try {
+            # 'git log --oneline -1' exits 0 and is harmless
+            $Result = Start-GitRebase -RepoPath $script:RepoPath -Upstream main -Interactive -Exec 'git log --oneline -1'
+            $Result | Should -Not -BeNullOrEmpty
+            $Result.Success | Should -BeTrue
+        }
+        finally {
+            Remove-Item -Path Env:\GIT_SEQUENCE_EDITOR -ErrorAction SilentlyContinue
+        }
+    }
+}

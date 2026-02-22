@@ -20,7 +20,15 @@ Starts a rebase operation, replaying commits from the current branch on top of t
 ### Rebase (Default)
 
 ```
-Start-GitRebase [-Upstream] <string> [-Interactive] [-Onto <string>] [-AutoStash]
+Start-GitRebase [-Upstream] <string> [-Onto <string>] [-AutoStash]
+ [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### Interactive
+
+```
+Start-GitRebase [-Upstream] <string> -Interactive [-AutoSquash] [-Exec <string>]
+ [-RebaseMerges] [-UpdateRefs] [-Onto <string>] [-AutoStash]
  [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -65,7 +73,44 @@ Automatically stashes uncommitted changes before rebasing and restores them afte
 Start-GitRebase -Upstream main -AutoStash
 ```
 
+### Example 4 - Interactive rebase with autosquash
+
+Automatically squashes `fixup!` and `squash!` commits into their target commits. Commit messages must follow the naming convention `fixup! <original message>`.
+
+```powershell
+Start-GitRebase -Upstream main -Interactive -AutoSquash
+```
+
+### Example 5 - Interactive rebase with exec
+
+Runs `dotnet test` after each replayed commit. The rebase aborts automatically if any exec step exits non-zero.
+
+```powershell
+Start-GitRebase -Upstream main -Interactive -Exec 'dotnet test'
+```
+
 ## PARAMETERS
+
+### -AutoSquash
+
+Automatically applies `fixup!` and `squash!` commit ordering when populating the interactive rebase todo list. Equivalent to `git rebase -i --autosquash`.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -AutoStash
 
@@ -78,6 +123,12 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Rebase
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Interactive
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -110,9 +161,30 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -Exec
+
+A shell command to execute after each rebased commit. An `exec` line is inserted after every `pick` line in the todo list. Equivalent to `git rebase -i --exec <cmd>`.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Interactive
 
-Opens an interactive rebase session. Equivalent to `git rebase -i`.
+Opens an interactive rebase session. Equivalent to `git rebase -i`. Activates the `Interactive` parameter set, which unlocks `-AutoSquash`, `-Exec`, `-RebaseMerges`, and `-UpdateRefs`.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -120,9 +192,9 @@ DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: Rebase
+- Name: Interactive
   Position: Named
-  IsRequired: false
+  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
@@ -142,6 +214,54 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Rebase
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -RebaseMerges
+
+Recreates merge commits during the rebase rather than linearising history. Equivalent to `git rebase --rebase-merges`.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -UpdateRefs
+
+Automatically updates any branch refs that point to commits being rebased. Useful when working with stacked branches. Equivalent to `git rebase --update-refs`.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -207,6 +327,12 @@ Aliases:
 - Name
 ParameterSets:
 - Name: Rebase
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+- Name: Interactive
   Position: 0
   IsRequired: true
   ValueFromPipeline: false
