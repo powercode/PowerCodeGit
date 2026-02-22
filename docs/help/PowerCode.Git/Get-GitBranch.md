@@ -1,10 +1,10 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Get-GitBranch.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Get-GitBranch
 ---
@@ -20,8 +20,9 @@ Lists branches in a git repository, equivalent to git branch.
 ### List (Default)
 
 ```
-Get-GitBranch [-Remote] [-All] [-Pattern <string>] [-Contains <string>] [-Merged <string>]
- [-NoMerged <string>] [-RepoPath <string>] [<CommonParameters>]
+Get-GitBranch [[-Include] <string[]>] [-Remote] [-All] [-Pattern <string>] [-Contains <string>]
+ [-Merged <string>] [-NoMerged <string>] [-Exclude <string[]>] [-RepoPath <string>]
+ [<CommonParameters>]
 ```
 
 ### Options
@@ -67,6 +68,30 @@ Lists both local and remote-tracking branches.
 Get-GitBranch -All
 ```
 
+### Example 4 - Include only feature and bugfix branches
+
+Returns only branches whose names match any of the specified wildcard patterns.
+
+```powershell
+Get-GitBranch -Include 'feature/*', 'bugfix/*'
+```
+
+### Example 5 - Exclude temporary branches
+
+Returns all branches except those matching the exclude pattern.
+
+```powershell
+Get-GitBranch -Exclude 'temp/*'
+```
+
+### Example 6 - Combine Include and Exclude
+
+Includes feature branches but excludes the temporary ones.
+
+```powershell
+Get-GitBranch -Include 'feature/*' -Exclude 'feature/temp'
+```
+
 ## PARAMETERS
 
 ### -All
@@ -103,6 +128,48 @@ Aliases: []
 ParameterSets:
 - Name: List
   Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Exclude
+
+Wildcard patterns used to exclude branches by name. Branches matching any pattern are removed from the result. Applied after `-Include`.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: List
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Include
+
+Wildcard patterns used to include branches by name. Only branches matching at least one pattern are returned. When not specified, all branches are included.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: List
+  Position: 0
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

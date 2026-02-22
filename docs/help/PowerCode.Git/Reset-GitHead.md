@@ -1,10 +1,10 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Reset-GitHead.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Reset-GitHead
 ---
@@ -284,7 +284,7 @@ The Path parameter accepts pipeline input.
 
 ### System.String[]
 
-The Path parameter accepts pipeline input.
+An array of file paths passed via `-Path` to unstage.
 
 ## OUTPUTS
 

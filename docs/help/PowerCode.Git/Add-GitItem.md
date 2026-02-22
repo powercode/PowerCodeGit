@@ -1,10 +1,10 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Add-GitItem.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Add-GitItem
 ---
@@ -286,13 +286,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 A file path passed via `-Path`.
 
-### System.String[]
+### System.String
 
 An array of file paths passed via `-Path`.
 
 ### PowerCode.Git.Abstractions.Models.GitStatusEntry
 
 A status entry whose `FilePath` property binds to `-Path` by property name.
+
+### System.String[]
+
+An array of file paths passed via `-Path`.
 
 ## OUTPUTS
 

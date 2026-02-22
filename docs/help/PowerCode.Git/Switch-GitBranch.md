@@ -1,10 +1,10 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Switch-GitBranch.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Switch-GitBranch
 ---
@@ -20,7 +20,7 @@ Switches the current branch of a git repository, equivalent to git switch.
 ### Switch (Default)
 
 ```
-Switch-GitBranch [-Name] <string> [-Force] [-RepoPath <string>] [-WhatIf] [-Confirm]
+Switch-GitBranch [[-Name] <string>] [-Force] [-RepoPath <string>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
@@ -211,9 +211,9 @@ Aliases: []
 ParameterSets:
 - Name: Switch
   Position: 0
-  IsRequired: true
+  IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
+  ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 - Name: Create
   Position: 0
@@ -321,7 +321,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-None. This cmdlet does not accept pipeline input.
+### System.String
+
+The branch name passed via `-BranchName`.
 
 ## OUTPUTS
 

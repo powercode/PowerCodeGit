@@ -1,10 +1,10 @@
----
+﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
 HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Save-GitCommit.md
 Locale: en-US
 Module Name: PowerCode.Git
-ms.date: 02-21-2026
+ms.date: 02-22-2026
 PlatyPS schema version: 2024-05-01
 title: Save-GitCommit
 ---
@@ -33,9 +33,7 @@ Save-GitCommit -Options <GitCommitOptions> [-RepoPath <string>] [-WhatIf] [-Conf
 
 ## ALIASES
 
-This cmdlet has the following aliases,
-  sgc
-
+None.
 ## DESCRIPTION
 
 The Save-GitCommit cmdlet creates a new commit from the currently staged changes. Use `-Message` to set the commit message, `-Amend` to modify the previous commit, `-All` to automatically stage tracked modified files before committing, and `-AllowEmpty` to create a commit with no changes.
