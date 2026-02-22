@@ -322,10 +322,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-A file path passed via `-Path`.
-
-### System.String
-
 An array of file paths passed via `-Path`.
 
 ### PowerCode.Git.Abstractions.Models.GitStatusEntry
