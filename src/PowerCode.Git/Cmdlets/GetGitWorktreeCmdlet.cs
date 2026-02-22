@@ -14,7 +14,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitWorktree -RepoPath C:\repos\myproject</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitWorktree")]
+[Cmdlet(VerbsCommon.Get, "GitWorktree", DefaultParameterSetName = "List")]
 [OutputType(typeof(GitWorktreeInfo))]
 public sealed class GetGitWorktreeCmdlet : GitCmdlet
 {
@@ -38,14 +38,42 @@ public sealed class GetGitWorktreeCmdlet : GitCmdlet
     private readonly IGitWorktreeService worktreeService;
 
     /// <summary>
+    /// Gets or sets a pre-built <see cref="GitWorktreeListOptions"/> instance.
+    /// When specified, all other parameters are ignored.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitWorktreeListOptions? Options { get; set; }
+
+    /// <summary>
+    /// Builds a <see cref="GitWorktreeListOptions"/> from the current cmdlet parameters.
+    /// </summary>
+    /// <param name="currentFileSystemPath">
+    /// The current file-system path, used to resolve <see cref="GitCmdlet.RepoPath"/> when not
+    /// explicitly provided.
+    /// </param>
+    /// <returns>The resolved options object.</returns>
+    internal GitWorktreeListOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (ParameterSetName == "Options")
+        {
+            return Options!;
+        }
+
+        return new GitWorktreeListOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
+        };
+    }
+
+    /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
         try
         {
-            var repositoryPath = ResolveRepositoryPath(SessionState.Path.CurrentFileSystemLocation.Path);
-            var worktrees = worktreeService.GetWorktrees(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+            var worktrees = worktreeService.GetWorktrees(options);
 
             foreach (var worktree in worktrees)
             {

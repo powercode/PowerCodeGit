@@ -61,6 +61,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// reference (git push -u).
     /// </summary>
     [Parameter(ParameterSetName = "Push")]
+    // git -u muscle-memory alias
     [Alias("u")]
     public SwitchParameter SetUpstream { get; set; }
 
@@ -126,7 +127,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
 
         return new GitPushOptions
         {
-            RepositoryPath = currentFileSystemPath,
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             RemoteName = Remote,
             BranchName = Name,
             SetUpstream = SetUpstream.IsPresent,
@@ -146,17 +147,15 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
-        var branchDescription = Name ?? "current branch";
-
-        if (!ShouldProcess(repositoryPath, $"Push '{branchDescription}' to '{Remote}'"))
-        {
-            return;
-        }
-
         try
         {
-            var options = BuildOptions(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+            var branchDescription = options.BranchName ?? "current branch";
+
+            if (!ShouldProcess(options.RepositoryPath, $"Push '{branchDescription}' to '{options.RemoteName}'"))
+            {
+                return;
+            }
 
             var result = remoteService.Push(options, (percent, message) =>
             {
@@ -175,7 +174,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
                 exception,
                 "SendGitBranchFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

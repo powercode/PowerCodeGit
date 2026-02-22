@@ -113,10 +113,9 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
-
         try
         {
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
             var entries = commitFileService.GetCommitFiles(options);
 
             if (Hunk.IsPresent)
@@ -145,7 +144,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
                 exception,
                 "GetGitCommitFileFailed",
                 ErrorCategory.InvalidOperation,
-                options.RepositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

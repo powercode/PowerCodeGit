@@ -1,5 +1,6 @@
 using System;
 using System.Management.Automation;
+using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
 namespace PowerCode.Git.Cmdlets;
@@ -11,7 +12,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Stop-GitRebase</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsLifecycle.Stop, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High)]
+[Cmdlet(VerbsLifecycle.Stop, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = "Abort")]
 public sealed class StopGitRebaseCmdlet : GitCmdlet
 {
     /// <summary>
@@ -33,23 +34,52 @@ public sealed class StopGitRebaseCmdlet : GitCmdlet
 
     private readonly IGitRebaseService rebaseService;
 
+    // ── Options parameter set ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets a pre-built options object, allowing full control over the abort operation.
+    /// </summary>
+    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    public GitStopRebaseOptions? Options { get; set; }
+
     // ────────────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Builds a <see cref="GitStopRebaseOptions"/> from the current cmdlet parameters.
+    /// </summary>
+    /// <param name="currentFileSystemPath">
+    /// The current file-system path, used to resolve <see cref="GitCmdlet.RepoPath"/> when not
+    /// explicitly provided.
+    /// </param>
+    /// <returns>The resolved options object.</returns>
+    internal GitStopRebaseOptions BuildOptions(string currentFileSystemPath)
+    {
+        if (ParameterSetName == "Options")
+        {
+            return Options!;
+        }
+
+        return new GitStopRebaseOptions
+        {
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
+        };
+    }
 
     /// <summary>
     /// Executes the cmdlet operation.
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath(SessionState.Path.CurrentFileSystemLocation.Path);
-
-        if (!ShouldProcess(repositoryPath, "Abort rebase (git rebase --abort)"))
-        {
-            return;
-        }
-
         try
         {
-            rebaseService.Abort(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+
+            if (!ShouldProcess(options.RepositoryPath, "Abort rebase (git rebase --abort)"))
+            {
+                return;
+            }
+
+            rebaseService.Abort(options);
         }
         catch (Exception exception)
         {

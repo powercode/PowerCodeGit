@@ -44,6 +44,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Equivalent to <c>git branch -a</c>.
     /// </summary>
     [Parameter(ParameterSetName = "List")]
+    // git -a muscle-memory alias
     [Alias("a")]
     public SwitchParameter All { get; set; }
 

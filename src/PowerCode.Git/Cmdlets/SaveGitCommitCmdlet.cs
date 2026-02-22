@@ -44,6 +44,7 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
     /// Gets or sets the commit message.
     /// </summary>
     [Parameter(Position = 0, ParameterSetName = "Commit")]
+    // git -m muscle-memory alias
     [Alias("m")]
     public string? Message { get; set; }
 
@@ -96,7 +97,7 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
 
         return new GitCommitOptions
         {
-            RepositoryPath = currentFileSystemPath,
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Message = Message,
             Amend = Amend.IsPresent,
             AllowEmpty = AllowEmpty.IsPresent,
@@ -111,17 +112,17 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
         var description = Amend.IsPresent ? "Amend previous commit" : "Create commit";
-
-        if (!ShouldProcess(repositoryPath, description))
-        {
-            return;
-        }
 
         try
         {
-            var options = BuildOptions(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+
+            if (!ShouldProcess(options.RepositoryPath, description))
+            {
+                return;
+            }
+
             var result = historyService.Commit(options);
             WriteObject(result);
         }
@@ -131,7 +132,7 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
                 exception,
                 "SaveGitCommitFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

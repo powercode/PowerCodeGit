@@ -111,6 +111,11 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// </summary>
     /// <param name="currentFileSystemPath">The current working directory to use when resolving the repository path.</param>
     /// <returns>A fully populated <see cref="GitStageOptions"/> instance.</returns>
+    /// <remarks>
+    /// Not applicable for the <c>Hunk</c> and <c>InputObject</c> parameter sets, which
+    /// require per-item interactive processing and are dispatched separately in
+    /// <see cref="ProcessRecord"/> and <see cref="EndProcessing"/>.
+    /// </remarks>
     internal GitStageOptions BuildOptions(string currentFileSystemPath)
     {
         if (Options is not null)
@@ -189,7 +194,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
             return;
         }
 
-        var resolvedPath = ResolveInputObjectPath(inputObject);
+        var resolvedPath = GitPSObjectHelper.ResolveInputObjectPath(inputObject);
 
         if (resolvedPath is not null)
         {
@@ -292,27 +297,5 @@ public sealed class AddGitItemCmdlet : GitCmdlet
         }
     }
 
-    /// <summary>
-    /// Attempts to extract a file path from a <see cref="PSObject"/> by inspecting
-    /// its properties in priority order: <c>FilePath</c>, <c>NewPath</c>, <c>Path</c>.
-    /// </summary>
-    /// <param name="obj">The object to inspect.</param>
-    /// <returns>
-    /// The resolved path string, or <see langword="null"/> when no compatible
-    /// property is found.
-    /// </returns>
-    private static string? ResolveInputObjectPath(PSObject obj)
-    {
-        foreach (var propertyName in (string[])["FilePath", "NewPath", "Path"])
-        {
-            var property = obj.Properties[propertyName];
-
-            if (property?.Value is string value && !string.IsNullOrWhiteSpace(value))
-            {
-                return value;
-            }
-        }
-
-        return null;
-    }
 }
+

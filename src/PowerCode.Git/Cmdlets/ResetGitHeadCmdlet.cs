@@ -87,9 +87,9 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// <returns>A fully populated <see cref="GitResetOptions"/> instance.</returns>
     internal GitResetOptions BuildOptions(string currentFileSystemPath)
     {
-        if (Options is not null)
+        if (ParameterSetName == "Options")
         {
-            return Options;
+            return Options!;
         }
 
         var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
@@ -116,67 +116,31 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
-
-        if (Options is not null)
-        {
-            if (!ShouldProcess(Options.RepositoryPath, "Reset HEAD"))
-            {
-                return;
-            }
-
-            try
-            {
-                workingTreeService.Reset(Options);
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "ResetGitHeadFailed", ErrorCategory.InvalidOperation, Options.RepositoryPath));
-            }
-
-            return;
-        }
-
-        if (ParameterSetName == "Paths")
-        {
-            if (!ShouldProcess(repositoryPath, $"Reset {Path?.Length ?? 0} file(s)"))
-            {
-                return;
-            }
-
-            try
-            {
-                workingTreeService.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Paths = Path });
-            }
-            catch (Exception exception)
-            {
-                WriteError(new ErrorRecord(exception, "ResetGitHeadFailed", ErrorCategory.InvalidOperation, repositoryPath));
-            }
-
-            return;
-        }
-
-        var mode = ResolveResetMode();
-        var description = $"Reset HEAD to '{Revision ?? "HEAD"}' ({mode})";
-
-        if (!ShouldProcess(repositoryPath, description))
-        {
-            return;
-        }
-
         try
         {
-            workingTreeService.Reset(new GitResetOptions { RepositoryPath = repositoryPath, Revision = Revision, Mode = mode });
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+
+            var description = ParameterSetName switch
+            {
+                "Options" => "Reset HEAD",
+                "Paths" => $"Reset {Path?.Length ?? 0} file(s)",
+                _ => $"Reset HEAD to '{Revision ?? "HEAD"}' ({options.Mode})",
+            };
+
+            if (!ShouldProcess(options.RepositoryPath, description))
+            {
+                return;
+            }
+
+            workingTreeService.Reset(options);
         }
         catch (Exception exception)
         {
-            var errorRecord = new ErrorRecord(
+            WriteError(new ErrorRecord(
                 exception,
                 "ResetGitHeadFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
-
-            WriteError(errorRecord);
+                RepoPath));
         }
     }
 

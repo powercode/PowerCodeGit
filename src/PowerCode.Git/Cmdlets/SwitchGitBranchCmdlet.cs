@@ -141,20 +141,20 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var options = BuildOptions(currentFileSystemPath: string.Empty);
-        var description = options.Detach
-            ? $"Detach HEAD at '{options.Committish}'"
-            : options.Create
-                ? $"Create and switch to branch '{options.BranchName}'"
-                : $"Switch to branch '{options.BranchName}'";
-
-        if (!ShouldProcess(options.RepositoryPath, description))
-        {
-            return;
-        }
-
         try
         {
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+            var description = options.Detach
+                ? $"Detach HEAD at '{options.Committish}'"
+                : options.Create
+                    ? $"Create and switch to branch '{options.BranchName}'"
+                    : $"Switch to branch '{options.BranchName}'";
+
+            if (!ShouldProcess(options.RepositoryPath, description))
+            {
+                return;
+            }
+
             var result = branchService.SwitchBranch(options);
             WriteObject(result);
         }
@@ -164,7 +164,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
                 exception,
                 "SwitchGitBranchFailed",
                 ErrorCategory.InvalidOperation,
-                options.RepositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

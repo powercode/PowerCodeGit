@@ -5,6 +5,13 @@ namespace PowerCode.Git;
 /// <summary>
 /// Creates service instances used by cmdlets.
 /// </summary>
+/// <remarks>
+/// Acts as the stable API surface between cmdlets and the <see cref="DependencyContext"/> ALC
+/// plumbing. Cmdlets call <see cref="ServiceFactory"/> methods; the implementation delegates to
+/// <see cref="DependencyContext.CreateService{T}"/>, which resolves types across the Assembly Load
+/// Context boundary. This indirection ensures cmdlets remain isolated from internal loading details
+/// and makes the construction points easy to locate when adding new services.
+/// </remarks>
 internal static class ServiceFactory
 {
     /// <summary>

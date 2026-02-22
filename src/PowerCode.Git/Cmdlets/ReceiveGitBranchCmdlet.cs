@@ -17,7 +17,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Receive-GitBranch -AutoStash</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommunications.Receive, "GitBranch", DefaultParameterSetName = "Pull")]
+[Cmdlet(VerbsCommunications.Receive, "GitBranch", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Pull")]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 {
@@ -91,10 +91,11 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 
         return new GitPullOptions
         {
-            RepositoryPath = currentFileSystemPath,
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             MergeStrategy = MergeStrategy,
             Prune = Prune.IsPresent,
             AutoStash = AutoStash.IsPresent,
+            // null = not specified, let the remote's default apply
             Tags = Tags.IsPresent ? true : null,
             CredentialUsername = Credential?.UserName,
             CredentialPassword = Credential?.GetNetworkCredential()?.Password,
@@ -106,11 +107,14 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
-
         try
         {
-            var options = BuildOptions(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
+
+            if (!ShouldProcess(options.RepositoryPath, "Pull from remote"))
+            {
+                return;
+            }
 
             var result = remoteService.Pull(options, (percent, message) =>
             {
@@ -129,7 +133,7 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
                 exception,
                 "ReceiveGitBranchFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

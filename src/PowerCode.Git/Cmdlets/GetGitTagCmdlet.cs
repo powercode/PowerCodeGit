@@ -73,7 +73,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
 
         return new GitTagListOptions
         {
-            RepositoryPath = currentFileSystemPath,
+            RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Pattern = Pattern,
             SortBy = SortBy,
             ContainsCommit = ContainsCommit,
@@ -85,11 +85,9 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        var repositoryPath = ResolveRepositoryPath();
-
         try
         {
-            var options = BuildOptions(repositoryPath);
+            var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
             var tags = tagService.GetTags(options);
 
             foreach (var tag in tags)
@@ -103,7 +101,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
                 exception,
                 "GetGitTagFailed",
                 ErrorCategory.InvalidOperation,
-                repositoryPath);
+                RepoPath);
 
             WriteError(errorRecord);
         }

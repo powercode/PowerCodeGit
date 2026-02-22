@@ -14,6 +14,12 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Copy-GitRepository -Url https://github.com/user/repo.git -LocalPath ./my-repo -Branch main</code>
 /// </example>
 /// </summary>
+/// <remarks>
+/// This cmdlet extends <see cref="PSCmdlet"/> directly rather than <see cref="GitCmdlet"/> because
+/// <c>git clone</c> always operates on a remote URL to create a new local repository. There is no
+/// pre-existing local repository to resolve, so <see cref="GitCmdlet.RepoPath"/> and the
+/// <c>ResolveRepositoryPath</c> helpers are not applicable here.
+/// </remarks>
 [Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true, DefaultParameterSetName = "Clone")]
 [OutputType(typeof(string))]
 public sealed class CopyGitRepositoryCmdlet : PSCmdlet

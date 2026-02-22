@@ -16,6 +16,10 @@ internal static class DependencyContext
 {
     private const string DependenciesFolderName = "dependencies";
     private const string CoreAssemblyFileName = "PowerCode.Git.Core.dll";
+    // These fully-qualified type name strings cross an Assembly Load Context (ALC) boundary:
+    // types are instantiated inside the isolated load context and cast to the shared interface
+    // from PowerCode.Git.Abstractions. Using typeof(TService).FullName here would resolve against
+    // the wrong ALC identity and produce a cast failure, so string constants are required.
     private const string CoreServiceTypeName = "PowerCode.Git.Core.Services.GitHistoryService";
     private const string WorkingTreeServiceTypeName = "PowerCode.Git.Core.Services.GitWorkingTreeService";
     private const string BranchServiceTypeName = "PowerCode.Git.Core.Services.GitBranchService";
