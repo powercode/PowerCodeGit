@@ -131,8 +131,7 @@ public sealed class GitConfigServiceTests
             var entries = service.GetConfigEntries(new GitConfigGetOptions
             {
                 RepositoryPath = repoPath,
-                Scope = GitConfigScope.Local,
-                ShowScope = true,
+                Scope = GitConfigScope.Local,                
             });
 
             var match = entries.FirstOrDefault(e => e.Name == "user.name");
@@ -157,7 +156,6 @@ public sealed class GitConfigServiceTests
             var entries = service.GetConfigEntries(new GitConfigGetOptions
             {
                 RepositoryPath = repoPath,
-                ShowScope = false,
             });
 
             Assert.IsTrue(entries.All(e => e.Scope is null));
@@ -231,8 +229,7 @@ public sealed class GitConfigServiceTests
             {
                 RepositoryPath = repoPath,
                 Name = "user.name",
-                Scope = GitConfigScope.Local,
-                ShowScope = true,
+                Scope = GitConfigScope.Local,                
             });
 
             Assert.IsNotNull(entry);
@@ -257,8 +254,7 @@ public sealed class GitConfigServiceTests
             var entry = service.GetConfigValue(new GitConfigGetOptions
             {
                 RepositoryPath = repoPath,
-                Name = "user.name",
-                ShowScope = false,
+                Name = "user.name",                
             });
 
             Assert.IsNotNull(entry);

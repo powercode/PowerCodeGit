@@ -22,19 +22,13 @@ public sealed class GitConfigGetOptions
     /// </summary>
     public GitConfigScope? Scope { get; init; }
 
-    /// <summary>
-    /// Gets a value indicating whether each entry should include its origin scope
-    /// (<c>--show-scope</c>).
-    /// </summary>
-    public bool ShowScope { get; init; }
 
     /// <inheritdoc/>
     public override string ToString()
     {
         var parts = new System.Collections.Generic.List<string>();
         if (Name is not null) parts.Add($"Name={Name}");
-        if (Scope.HasValue) parts.Add($"Scope={Scope.Value}");
-        if (ShowScope) parts.Add("ShowScope");
+        if (Scope.HasValue) parts.Add($"Scope={Scope.Value}");        
         return $"GitConfigGetOptions({string.Join(", ", parts)})";
     }
 }

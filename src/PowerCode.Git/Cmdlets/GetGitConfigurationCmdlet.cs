@@ -55,14 +55,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = "List")]
     public GitConfigScope? Scope { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether each entry should include its
-    /// origin scope in the output.
-    /// </summary>
-    [Parameter(ParameterSetName = "List")]
-    public SwitchParameter ShowScope { get; set; }
-
+    
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitConfigGetOptions"/> instance.
     /// When specified, all other parameters are ignored.
@@ -89,8 +82,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
         {
             RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Name = Name,
-            Scope = Scope,
-            ShowScope = ShowScope.IsPresent,
+            Scope = Scope,            
         };
     }
 

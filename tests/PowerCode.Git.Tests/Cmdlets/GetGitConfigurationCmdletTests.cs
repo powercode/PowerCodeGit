@@ -41,7 +41,6 @@ public sealed class GetGitConfigurationCmdletTests
         Assert.AreEqual("C:\\repo", options.RepositoryPath);
         Assert.IsNull(options.Name);
         Assert.IsNull(options.Scope);
-        Assert.IsFalse(options.ShowScope);
     }
 
     [TestMethod]
@@ -71,19 +70,6 @@ public sealed class GetGitConfigurationCmdletTests
     }
 
     [TestMethod]
-    public void BuildOptions_ShowScopeSet_ShowScopeIsTrue()
-    {
-        var cmdlet = new GetGitConfigurationCmdlet(new StubGitConfigService())
-        {
-            ShowScope = new SwitchParameter(true),
-        };
-
-        var options = cmdlet.BuildOptions("C:\\repo");
-
-        Assert.IsTrue(options.ShowScope);
-    }
-
-    [TestMethod]
     public void BuildOptions_AllParameters_AllMapped()
     {
         var cmdlet = new GetGitConfigurationCmdlet(new StubGitConfigService())
@@ -91,7 +77,6 @@ public sealed class GetGitConfigurationCmdletTests
             RepoPath = "C:\\repo",
             Name = "core.autocrlf",
             Scope = GitConfigScope.Local,
-            ShowScope = new SwitchParameter(true),
         };
 
         var options = cmdlet.BuildOptions("C:\\ignored");
@@ -99,7 +84,6 @@ public sealed class GetGitConfigurationCmdletTests
         Assert.AreEqual("C:\\repo", options.RepositoryPath);
         Assert.AreEqual("core.autocrlf", options.Name);
         Assert.AreEqual(GitConfigScope.Local, options.Scope);
-        Assert.IsTrue(options.ShowScope);
     }
 
     [TestMethod]

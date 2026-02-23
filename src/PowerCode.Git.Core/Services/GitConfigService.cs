@@ -28,7 +28,7 @@ public sealed class GitConfigService : IGitConfigService
 
         return repo.Config
             .Where(e => configLevel is null || e.Level == configLevel.Value)
-            .Select(e => MapEntry(e, options.ShowScope))
+            .Select(MapEntry)
             .ToList();
     }
 
@@ -52,7 +52,7 @@ public sealed class GitConfigService : IGitConfigService
             ? repo.Config.Get<string>(options.Name, MapScope(options.Scope.Value))
             : repo.Config.Get<string>(options.Name);
 
-        return entry is null ? null : MapEntry(entry, options.ShowScope);
+        return entry is null ? null : MapEntry(entry);
     }
 
     /// <inheritdoc/>
@@ -111,16 +111,12 @@ public sealed class GitConfigService : IGitConfigService
     /// <summary>
     /// Converts a LibGit2Sharp <see cref="ConfigurationEntry{T}"/> to a <see cref="GitConfigEntry"/>.
     /// </summary>
-    /// <param name="entry">The source entry.</param>
-    /// <param name="showScope">
-    /// When <see langword="true"/> the <see cref="GitConfigEntry.Scope"/> property is populated
-    /// from <see cref="ConfigurationEntry{T}.Level"/>; otherwise it is left <see langword="null"/>.
-    /// </param>
-    private static GitConfigEntry MapEntry(ConfigurationEntry<string> entry, bool showScope) =>
+    /// <param name="entry">The source entry.</param>        
+    private static GitConfigEntry MapEntry(ConfigurationEntry<string> entry) =>
         new()
         {
             Name = entry.Key,
             Value = entry.Value,
-            Scope = showScope ? MapLevel(entry.Level) : null,
+            Scope = MapLevel(entry.Level),
         };
 }
