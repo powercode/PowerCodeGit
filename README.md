@@ -6,7 +6,7 @@ A PowerShell binary module that brings native, idiomatic git commands to your te
 
 ## Features
 
-- **20 cmdlets** covering everyday git workflows — commits, branches, tags, diffs, status, worktrees, clone, push, pull, and more
+- **27 cmdlets** covering everyday git workflows — commits, branches, tags, diffs, status, worktrees, rebase, configuration, clone, push, pull, and more
 - **Tab completion** for branches, commits, tracked paths, remotes, and worktrees
 - **Rich formatted output** with ANSI colors matching native git (yellow SHAs, green branches, red remotes, cyan tracking info)
 - **Dual parameter sets** — friendly individual parameters *or* a single `-Options` object for full control
@@ -50,6 +50,7 @@ Import-Module ./artifacts/module/PowerCode.Git/<version>/PowerCode.Git.psd1
 | Cmdlet | Git equivalent | Description |
 |---|---|---|
 | `Get-GitLog` | `git log` | Retrieve commit history with filtering by path, branch, author, date range, or message pattern |
+| `Get-GitCommitFile` | `git diff-tree -r` | List files changed by a specific commit, optionally as diff hunks |
 | `Save-GitCommit` | `git commit` | Create a commit (supports `-Amend`, `-All`, `-AllowEmpty`) |
 
 ### Working Tree & Index
@@ -59,6 +60,7 @@ Import-Module ./artifacts/module/PowerCode.Git/<version>/PowerCode.Git.psd1
 | `Get-GitStatus` | `git status` | Retrieve working tree and index status |
 | `Get-GitDiff` | `git diff` | Retrieve diff entries for working tree, staged, or commit ranges |
 | `Add-GitItem` | `git add` | Stage files by path, `-All`, or `-Update` |
+| `Restore-GitItem` | `git restore` | Discard working-tree changes or unstage index changes |
 | `Reset-GitHead` | `git reset` | Reset HEAD with Mixed / Soft / Hard modes, or unstage by path |
 
 ### Branches
@@ -76,6 +78,21 @@ Import-Module ./artifacts/module/PowerCode.Git/<version>/PowerCode.Git.psd1
 |---|---|---|
 | `Get-GitTag` | `git tag -l` | List tags with pattern filtering and sorting |
 | `Set-GitTag` | `git tag` | Create lightweight or annotated tags |
+
+### Rebase
+
+| Cmdlet | Git equivalent | Description |
+|---|---|---|
+| `Start-GitRebase` | `git rebase` | Start a rebase, replaying commits on top of an upstream branch (supports `-Interactive`, `-AutoStash`, `-Onto`) |
+| `Resume-GitRebase` | `git rebase --continue / --skip` | Resume a paused rebase after resolving conflicts, or skip the conflicting commit |
+| `Stop-GitRebase` | `git rebase --abort` | Abort the current rebase and restore the branch to its original state |
+
+### Configuration
+
+| Cmdlet | Git equivalent | Description |
+|---|---|---|
+| `Get-GitConfiguration` | `git config` | Read configuration values from repository, user, or system scopes |
+| `Set-GitConfiguration` | `git config` | Write a configuration value to a specific scope |
 
 ### Remotes
 
@@ -148,6 +165,30 @@ Copy-GitRepository -Url https://github.com/owner/repo.git -Path ./repo
 Set-GitTag -Name v1.0.0 -Message "Release 1.0.0"
 ```
 
+### Show files changed in the latest commit
+
+```powershell
+Get-GitCommitFile
+```
+
+### Discard working-tree changes for a file
+
+```powershell
+Restore-GitItem -Path ./file.txt
+```
+
+### Rebase the current branch onto main
+
+```powershell
+Start-GitRebase -Upstream main -AutoStash
+```
+
+### Read git configuration
+
+```powershell
+Get-GitConfiguration -Name user.name
+```
+
 ### Work with worktrees
 
 ```powershell
@@ -162,9 +203,9 @@ PowerCode.Git provides intelligent tab completion for common git entities:
 
 | Completer | Completes | Used by |
 |---|---|---|
-| **Branch** | Local and remote branch names | `Switch-GitBranch`, `Get-GitLog`, `Send-GitBranch`, `Remove-GitBranch`, `New-GitWorktree` |
-| **Committish** | Commit SHAs and messages | `Get-GitDiff`, `Switch-GitBranch`, `Set-GitTag`, `Reset-GitHead`, `New-GitBranch` |
-| **Path** | Tracked file paths | `Get-GitLog`, `Get-GitDiff`, `Add-GitItem`, `Reset-GitHead` |
+| **Branch** | Local and remote branch names | `Switch-GitBranch`, `Get-GitLog`, `Send-GitBranch`, `Remove-GitBranch`, `New-GitWorktree`, `Start-GitRebase` |
+| **Committish** | Commit SHAs and messages | `Get-GitDiff`, `Get-GitCommitFile`, `Switch-GitBranch`, `Set-GitTag`, `Reset-GitHead`, `New-GitBranch` |
+| **Path** | Tracked file paths | `Get-GitLog`, `Get-GitDiff`, `Get-GitCommitFile`, `Add-GitItem`, `Restore-GitItem`, `Reset-GitHead` |
 | **Remote** | Remote names (with URL tooltips) | `Send-GitBranch` |
 | **Worktree** | Worktree names (with path tooltips) | `Remove-GitWorktree`, `Lock-GitWorktree`, `Unlock-GitWorktree` |
 
