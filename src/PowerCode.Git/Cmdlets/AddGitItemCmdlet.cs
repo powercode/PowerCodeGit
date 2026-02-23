@@ -244,7 +244,10 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// </summary>
     private void ExecuteStage(GitStageOptions options)
     {
-        if (!ShouldProcess(options.RepositoryPath, "Stage files"))
+        var target = options.Paths is { Count: > 0 }
+            ? string.Join(", ", options.Paths)
+            : options.RepositoryPath;
+        if (!ShouldProcess(target, "Stage"))
         {
             return;
         }
@@ -267,11 +270,12 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     {
         var repoPath = ResolveRepositoryPath();
 
+        var target = All.IsPresent || Update.IsPresent ? repoPath : string.Join(", ", Path ?? []);
         var description = All.IsPresent ? "Stage all changes"
             : Update.IsPresent ? "Stage tracked file changes"
-            : $"Stage {Path?.Length ?? 0} file(s)";
+            : "Stage";
 
-        if (!ShouldProcess(repoPath, description))
+        if (!ShouldProcess(target, description))
         {
             return;
         }

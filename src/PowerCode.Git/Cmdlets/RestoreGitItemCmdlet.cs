@@ -279,7 +279,11 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// </summary>
     private void ExecuteRestore(GitRestoreOptions options)
     {
-        if (!ShouldProcess(options.RepositoryPath, "Restore files"))
+        var target = options.Paths is { Count: > 0 }
+            ? string.Join(", ", options.Paths)
+            : options.RepositoryPath;
+        var action = options.Staged ? "Restore (unstage)" : "Restore working-tree";
+        if (!ShouldProcess(target, action))
         {
             return;
         }
@@ -295,8 +299,14 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     private void ExecutePathOrAllRestore()
     {
         var repoPath = ResolveRepositoryPath();
+        var target = All.IsPresent ? repoPath : string.Join(", ", Path ?? []);
+        var action = Staged.IsPresent ? "Restore (unstage)" : "Restore working-tree";
+        if (All.IsPresent)
+        {
+            action += " all files";
+        }
 
-        if (!ShouldProcess(repoPath, BuildRestoreDescription()))
+        if (!ShouldProcess(target, action))
         {
             return;
         }
@@ -322,17 +332,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
         }
     }
 
-    /// <summary>
-    /// Builds a human-readable description of the restore operation for
-    /// <c>ShouldProcess</c> prompts.
-    /// </summary>
-    private string BuildRestoreDescription()
-    {
-        var targetDescription = All.IsPresent ? "all files" : $"{Path?.Length ?? 0} file(s)";
-        return Staged.IsPresent
-            ? $"Restore (unstage) {targetDescription}"
-            : $"Restore working-tree {targetDescription}";
-    }
+
 
     /// <summary>
     /// Maps the current cmdlet parameters to a <see cref="GitRestoreOptions"/> instance.
