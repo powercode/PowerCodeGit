@@ -70,7 +70,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = "Paths", ValueFromPipeline = true)]
     [ValidateNotNullOrEmpty]
-    [GitPathCompleter]
+    [GitPathCompleter(IncludeStaged = true)]
     public string[]? Path { get; set; }
 
     /// <summary>
