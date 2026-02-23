@@ -114,7 +114,7 @@ if ($BranchName -in @('main', 'preview')) {
     Write-Host "  Branch '$BranchName' detected — replaced {{BranchName}} placeholder." -ForegroundColor Yellow
 }
 
-$res = Get-ChildItem -Recurse -LiteralPath:$TempHelpDir -Filter *.md | Import-MarkdownCommandHelp | Export-MamlCommandHelp -OutputFolder $OutputPath -Force
+$res = Get-ChildItem -Recurse -LiteralPath:$TempHelpDir -Filter *-*.md | Import-MarkdownCommandHelp | Export-MamlCommandHelp -OutputFolder $OutputPath -Force
 
 # Clean up temp directory
 Remove-Item -Path $TempHelpDir -Recurse -Force
