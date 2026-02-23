@@ -70,7 +70,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     [Parameter(ParameterSetName = CommitParameterSet)]
     [Parameter(ParameterSetName = RangeParameterSet)]
     [ValidateRange(0, int.MaxValue)]
-    public int? Context { get; set; }
+    public int Context { get; set; }
 
     // ── Staged parameter set ─────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
         }
 
         var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
-
+        int? contextLines = MyInvocation.BoundParameters.ContainsKey(nameof(Context)) ? Context : null;
         return new GitDiffOptions
         {
             RepositoryPath = repositoryPath,
@@ -148,7 +148,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
             FromCommit = FromCommit,
             ToCommit = ToCommit,
             IgnoreWhitespace = IgnoreWhitespace.IsPresent,
-            ContextLines = Context,
+            ContextLines = contextLines,
             Paths = Path,
         };
     }
