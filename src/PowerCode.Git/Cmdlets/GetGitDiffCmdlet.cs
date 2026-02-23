@@ -48,7 +48,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     [Parameter(ParameterSetName = StagedParameterSet)]
     [Parameter(ParameterSetName = CommitParameterSet)]
     [Parameter(ParameterSetName = RangeParameterSet)]
-    [GitPathCompleter]
+    [GitModifiedPathCompleter(StagedParameterName = nameof(Staged))]
     public string[]? Path { get; set; }
 
     /// <summary>
