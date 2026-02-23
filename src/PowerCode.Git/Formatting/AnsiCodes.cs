@@ -46,6 +46,9 @@ public static class AnsiCodes
     /// <summary>Bold + cyan foreground.</summary>
     public const string BoldCyan = "\x1b[1;36m";
 
+    /// <summary>Bold (increased intensity) text.</summary>
+    public const string Bold = "\x1b[1m";
+
     /// <summary>Dim (faint) foreground.</summary>
     public const string Dim = "\x1b[2m";
 

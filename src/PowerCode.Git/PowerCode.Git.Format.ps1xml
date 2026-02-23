@@ -285,18 +285,7 @@
               </ListItem>
               <ListItem>
                 <Label>Patch</Label>
-                <ScriptBlock>
-                  if ($_.Patch) {
-                    ($_.Patch -split '\n' | ForEach-Object {
-                      if     ($_ -match '^(\+\+\+|---)') { "`e[1m$_`e[0m" }
-                      elseif ($_ -match '^diff ')        { "`e[1m$_`e[0m" }
-                      elseif ($_ -match '^\+')           { "`e[32m$_`e[0m" }
-                      elseif ($_ -match '^-')            { "`e[31m$_`e[0m" }
-                      elseif ($_ -match '^@@')           { "`e[36m$_`e[0m" }
-                      else                               { $_ }
-                    }) -join "`n"
-                  }
-                </ScriptBlock>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitDiffFormatter]::FormatPatch($_.Patch)</ScriptBlock>
               </ListItem>
             </ListItems>
           </ListEntry>
