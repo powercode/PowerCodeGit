@@ -18,7 +18,13 @@ public sealed class GitWorktreeService : IGitWorktreeService
         RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
         using var repository = new Repository(options.RepositoryPath);
-        return repository.Worktrees.Select(MapWorktree).ToList();
+
+        // LibGit2Sharp's WorktreeCollection.Lookup returns null for stale or
+        // invalid worktree entries, so filter them out before mapping.
+        return repository.Worktrees
+            .Where(w => w is not null)
+            .Select(MapWorktree)
+            .ToList();
     }
 
     /// <inheritdoc/>
@@ -36,6 +42,14 @@ public sealed class GitWorktreeService : IGitWorktreeService
                 $"The worktree name '{options.Name}' cannot be the same as the target branch. " +
                 "Use a different worktree name when checking out an existing branch.",
                 nameof(options));
+        }
+
+        // Ensure the parent directory exists — LibGit2Sharp does not create
+        // intermediate directories and will fail with a path-not-found error.
+        var parentDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(options.Path));
+        if (parentDir is not null && !System.IO.Directory.Exists(parentDir))
+        {
+            System.IO.Directory.CreateDirectory(parentDir);
         }
 
         using var repository = new Repository(options.RepositoryPath);
