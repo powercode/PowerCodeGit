@@ -16,7 +16,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Resume-GitRebase -Skip</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsLifecycle.Resume, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Continue")]
+[Cmdlet(VerbsLifecycle.Resume, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = ContinueParameterSet)]
 [OutputType(typeof(GitRebaseResult))]
 public sealed class ResumeGitRebaseCmdlet : GitCmdlet
 {
@@ -39,6 +39,9 @@ public sealed class ResumeGitRebaseCmdlet : GitCmdlet
 
     private readonly IGitRebaseService rebaseService;
 
+    private const string ContinueParameterSet = "Continue";
+    private const string OptionsParameterSet = "Options";
+
     // ── Continue parameter set ───────────────────────────────────────────────
 
     /// <summary>
@@ -46,7 +49,7 @@ public sealed class ResumeGitRebaseCmdlet : GitCmdlet
     /// commit instead of resuming normally. Equivalent to <c>git rebase --skip</c>.
     /// When not specified, <c>git rebase --continue</c> is used.
     /// </summary>
-    [Parameter(ParameterSetName = "Continue")]
+    [Parameter(ParameterSetName = ContinueParameterSet)]
     public SwitchParameter Skip { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -55,7 +58,7 @@ public sealed class ResumeGitRebaseCmdlet : GitCmdlet
     /// Gets or sets a pre-built options object, allowing full control over the
     /// continue/skip decision.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitRebaseContinueOptions Options { get; set; } = null!;
 
     // ────────────────────────────────────────────────────────────────────────
@@ -98,7 +101,7 @@ public sealed class ResumeGitRebaseCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitRebaseContinueOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

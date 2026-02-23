@@ -18,7 +18,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitBranch -Include main | New-GitWorktree</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.New, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = "Create")]
+[Cmdlet(VerbsCommon.New, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = CreateParameterSet)]
 [OutputType(typeof(GitWorktreeInfo))]
 public sealed class NewGitWorktreeCmdlet : GitCmdlet
 {
@@ -41,18 +41,22 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
 
     private readonly IGitWorktreeService worktreeService;
 
+    private const string CreateParameterSet = "Create";
+    private const string PipelineParameterSet = "Pipeline";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name for the new worktree.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Create")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = CreateParameterSet)]
     [ValidateNotNullOrEmpty]
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the filesystem path where the worktree will be created.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 1, ParameterSetName = "Create")]
-    [Parameter(Position = 0, ParameterSetName = "Pipeline")]
+    [Parameter(Mandatory = true, Position = 1, ParameterSetName = CreateParameterSet)]
+    [Parameter(Position = 0, ParameterSetName = PipelineParameterSet)]
     [ValidateNotNullOrEmpty]
     public string? Path { get; set; }
 
@@ -60,7 +64,7 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     /// Gets or sets the branch or committish to check out in the new worktree.
     /// When not specified, the current HEAD is used.
     /// </summary>
-    [Parameter(ParameterSetName = "Create")]
+    [Parameter(ParameterSetName = CreateParameterSet)]
     [GitBranchCompleter]
     public string? Branch { get; set; }
 
@@ -69,20 +73,20 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     /// The worktree name is derived as <c>&lt;branchname&gt;.wt</c> and the branch
     /// is set to the branch name.
     /// </summary>
-    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "Pipeline")]
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = PipelineParameterSet)]
     public GitBranchInfo InputBranch { get; set; } = null!;
 
     /// <summary>
     /// Gets or sets a value indicating whether the worktree should be created in a locked state.
     /// </summary>
-    [Parameter(ParameterSetName = "Create")]
-    [Parameter(ParameterSetName = "Pipeline")]
+    [Parameter(ParameterSetName = CreateParameterSet)]
+    [Parameter(ParameterSetName = PipelineParameterSet)]
     public SwitchParameter Locked { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over worktree creation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitWorktreeAddOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -137,7 +141,7 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeAddOptions BuildOptions(string currentFileSystemPath, string parameterSetName)
     {
-        if (parameterSetName == "Options")
+        if (parameterSetName == OptionsParameterSet)
         {
             return Options;
         }
@@ -148,7 +152,7 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
             ? PathResolver?.ResolvePath(Path) ?? Path
             : null;
 
-        if (parameterSetName == "Pipeline")
+        if (parameterSetName == PipelineParameterSet)
         {
             var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
             var branchName = InputBranch.Name;

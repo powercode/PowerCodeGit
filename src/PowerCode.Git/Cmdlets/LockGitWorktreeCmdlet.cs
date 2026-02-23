@@ -15,7 +15,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Lock-GitWorktree -Name feature -Reason "Work in progress"</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Lock, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = "Lock")]
+[Cmdlet(VerbsCommon.Lock, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = LockParameterSet)]
 public sealed class LockGitWorktreeCmdlet : GitCmdlet
 {
     /// <summary>
@@ -37,10 +37,13 @@ public sealed class LockGitWorktreeCmdlet : GitCmdlet
 
     private readonly IGitWorktreeService worktreeService;
 
+    private const string LockParameterSet = "Lock";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name of the worktree to lock.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Lock")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = LockParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitWorktreeCompleter]
     public string Name { get; set; } = string.Empty;
@@ -48,13 +51,13 @@ public sealed class LockGitWorktreeCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the reason for locking the worktree.
     /// </summary>
-    [Parameter(Position = 1, ParameterSetName = "Lock")]
+    [Parameter(Position = 1, ParameterSetName = LockParameterSet)]
     public string? Reason { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over the lock operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitWorktreeLockOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -93,7 +96,7 @@ public sealed class LockGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeLockOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

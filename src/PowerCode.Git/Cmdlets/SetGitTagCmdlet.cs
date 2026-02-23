@@ -20,7 +20,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Set-GitTag -Name v1.0.0 -Target abc1234 -Force</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Set, "GitTag", SupportsShouldProcess = true, DefaultParameterSetName = "Tag")]
+[Cmdlet(VerbsCommon.Set, "GitTag", SupportsShouldProcess = true, DefaultParameterSetName = TagParameterSet)]
 [OutputType(typeof(GitTagInfo))]
 public sealed class SetGitTagCmdlet : GitCmdlet
 {
@@ -43,10 +43,13 @@ public sealed class SetGitTagCmdlet : GitCmdlet
 
     private readonly IGitTagService tagService;
 
+    private const string TagParameterSet = "Tag";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the tag name.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Tag")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = TagParameterSet)]
     [ValidateNotNullOrEmpty]
     public string Name { get; set; } = string.Empty;
 
@@ -54,7 +57,7 @@ public sealed class SetGitTagCmdlet : GitCmdlet
     /// Gets or sets the target committish (branch, tag, or SHA) to tag.
     /// Defaults to HEAD when not specified.
     /// </summary>
-    [Parameter(Position = 1, ParameterSetName = "Tag")]
+    [Parameter(Position = 1, ParameterSetName = TagParameterSet)]
     [GitCommittishCompleter]
     public string? Target { get; set; }
 
@@ -63,20 +66,20 @@ public sealed class SetGitTagCmdlet : GitCmdlet
     /// (equivalent to <c>git tag -a -m &lt;message&gt;</c>). When omitted, a lightweight
     /// tag is created.
     /// </summary>
-    [Parameter(ParameterSetName = "Tag")]
+    [Parameter(ParameterSetName = TagParameterSet)]
     public string? Message { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to overwrite an existing tag with the same name.
     /// Equivalent to <c>git tag -f</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Tag")]
+    [Parameter(ParameterSetName = TagParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over tag creation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitTagCreateOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -89,7 +92,7 @@ public sealed class SetGitTagCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitTagCreateOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

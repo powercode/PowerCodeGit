@@ -15,7 +15,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Remove-GitBranch -Name feature/old-feature -Force</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Remove, "GitBranch", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Delete")]
+[Cmdlet(VerbsCommon.Remove, "GitBranch", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = DeleteParameterSet)]
 public sealed class RemoveGitBranchCmdlet : GitCmdlet
 {
     /// <summary>
@@ -37,10 +37,13 @@ public sealed class RemoveGitBranchCmdlet : GitCmdlet
 
     private readonly IGitBranchService branchService;
 
+    private const string DeleteParameterSet = "Delete";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name of the branch to delete.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Delete")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = DeleteParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitBranchCompleter]
     public string Name { get; set; } = string.Empty;
@@ -49,13 +52,13 @@ public sealed class RemoveGitBranchCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to force-delete the branch
     /// even if it is not fully merged. Equivalent to <c>git branch -D</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Delete")]
+    [Parameter(ParameterSetName = DeleteParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over branch deletion.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitBranchDeleteOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -94,7 +97,7 @@ public sealed class RemoveGitBranchCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitBranchDeleteOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

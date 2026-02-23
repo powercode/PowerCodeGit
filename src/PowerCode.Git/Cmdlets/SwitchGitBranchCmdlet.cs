@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Switches the current branch of a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Switch, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = "Switch")]
+[Cmdlet(VerbsCommon.Switch, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = SwitchParameterSet)]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class SwitchGitBranchCmdlet : GitCmdlet
 {
@@ -32,13 +32,18 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
 
     private readonly IGitBranchService branchService;
 
+    private const string SwitchParameterSet = "Switch";
+    private const string CreateParameterSet = "Create";
+    private const string DetachParameterSet = "Detach";
+    private const string OptionsParameterSet = "Options";
+
     // ── Switch parameter set ─────────────────────────────────────────────────
 
     /// <summary>
     /// Gets or sets the name of the branch to switch to.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Switch", ValueFromPipelineByPropertyName = true)]
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Create")]
+    [Parameter(Position = 0, ParameterSetName = SwitchParameterSet, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = CreateParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitBranchCompleter(IncludeRemote = true)]
     public string Name { get; set; } = string.Empty;
@@ -48,13 +53,13 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to create the branch before switching.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Create")]
+    [Parameter(Mandatory = true, ParameterSetName = CreateParameterSet)]
     public SwitchParameter Create { get; set; }
 
     /// <summary>
     /// Gets or sets an optional starting committish for the new branch.
     /// </summary>
-    [Parameter(ParameterSetName = "Create")]
+    [Parameter(ParameterSetName = CreateParameterSet)]
     [GitCommittishCompleter]
     public string? StartPoint { get; set; }
 
@@ -63,13 +68,13 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to detach HEAD at the given committish.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Detach")]
+    [Parameter(Mandatory = true, ParameterSetName = DetachParameterSet)]
     public SwitchParameter Detach { get; set; }
 
     /// <summary>
     /// Gets or sets the committish to check out in detached HEAD mode.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Detach")]
+    [Parameter(Position = 0, ParameterSetName = DetachParameterSet)]
     [GitCommittishCompleter]
     public string? Committish { get; set; }
 
@@ -78,9 +83,9 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to force the checkout, discarding local changes.
     /// </summary>
-    [Parameter(ParameterSetName = "Switch")]
-    [Parameter(ParameterSetName = "Create")]
-    [Parameter(ParameterSetName = "Detach")]
+    [Parameter(ParameterSetName = SwitchParameterSet)]
+    [Parameter(ParameterSetName = CreateParameterSet)]
+    [Parameter(ParameterSetName = DetachParameterSet)]
     public SwitchParameter Force { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -88,7 +93,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitSwitchOptions Options { get; set; } = null!;
 
     // ────────────────────────────────────────────────────────────────────────
@@ -103,7 +108,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitSwitchOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }
@@ -112,7 +117,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
 
         return ParameterSetName switch
         {
-            "Create" => new GitSwitchOptions
+            CreateParameterSet => new GitSwitchOptions
             {
                 RepositoryPath = repositoryPath,
                 BranchName = Name,
@@ -120,7 +125,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
                 StartPoint = StartPoint,
                 Force = Force.IsPresent,
             },
-            "Detach" => new GitSwitchOptions
+            DetachParameterSet => new GitSwitchOptions
             {
                 RepositoryPath = repositoryPath,
                 Detach = true,

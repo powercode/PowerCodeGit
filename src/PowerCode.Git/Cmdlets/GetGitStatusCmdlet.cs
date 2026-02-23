@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Retrieves the working tree and index status of a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitStatus", DefaultParameterSetName = "Status")]
+[Cmdlet(VerbsCommon.Get, "GitStatus", DefaultParameterSetName = StatusParameterSet)]
 [OutputType(typeof(GitStatusResult))]
 public sealed class GetGitStatusCmdlet : GitCmdlet
 {
@@ -32,26 +32,29 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    private const string StatusParameterSet = "Status";
+    private const string OptionsParameterSet = "Options";
+
     // ── Status parameter set ─────────────────────────────────────────────────
 
     /// <summary>
     /// Gets or sets a value indicating whether files matched by <c>.gitignore</c>
     /// should be included in the status results.
     /// </summary>
-    [Parameter(ParameterSetName = "Status")]
+    [Parameter(ParameterSetName = StatusParameterSet)]
     public SwitchParameter IncludeIgnored { get; set; }
 
     /// <summary>
     /// Gets or sets an optional array of paths to restrict the status query to.
     /// </summary>
-    [Parameter(ParameterSetName = "Status")]
+    [Parameter(ParameterSetName = StatusParameterSet)]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 
     /// <summary>
     /// Gets or sets a value controlling how untracked files are shown.
     /// </summary>
-    [Parameter(ParameterSetName = "Status")]
+    [Parameter(ParameterSetName = StatusParameterSet)]
     public GitUntrackedFilesMode? UntrackedFiles { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -59,7 +62,7 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitStatusOptions Options { get; set; } = null!;
 
     // ────────────────────────────────────────────────────────────────────────
@@ -74,7 +77,7 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitStatusOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

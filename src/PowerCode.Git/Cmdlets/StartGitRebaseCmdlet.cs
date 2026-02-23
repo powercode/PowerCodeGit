@@ -19,7 +19,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitBranch -Name main | Start-GitRebase</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsLifecycle.Start, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Rebase")]
+[Cmdlet(VerbsLifecycle.Start, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = RebaseParameterSet)]
 [OutputType(typeof(GitRebaseResult))]
 public sealed class StartGitRebaseCmdlet : GitCmdlet
 {
@@ -42,6 +42,10 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
 
     private readonly IGitRebaseService rebaseService;
 
+    private const string RebaseParameterSet = "Rebase";
+    private const string InteractiveParameterSet = "Interactive";
+    private const string OptionsParameterSet = "Options";
+
     // Accumulates branch names received via the pipeline so we can validate
     // that exactly one branch was supplied before executing.
     private readonly List<string> pipelineNames = [];
@@ -53,8 +57,8 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// Binds from the <c>Name</c> property when pipeline input comes from
     /// <c>Get-GitBranch</c>.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Rebase")]
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Interactive")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = RebaseParameterSet)]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = InteractiveParameterSet)]
     [Alias("Name")]
     [ValidateNotNullOrEmpty]
     [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeRelativeRefs = true)]
@@ -68,7 +72,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// activated, unlocking <c>-AutoSquash</c>, <c>-Exec</c>, <c>-RebaseMerges</c>,
     /// and <c>-UpdateRefs</c>.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Interactive")]
+    [Parameter(Mandatory = true, ParameterSetName = InteractiveParameterSet)]
     public SwitchParameter Interactive { get; set; }
 
     /// <summary>
@@ -76,7 +80,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// and <c>squash!</c> commits when creating the interactive todo list
     /// (<c>git rebase -i --autosquash</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     public SwitchParameter AutoSquash { get; set; }
 
     /// <summary>
@@ -84,7 +88,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// (<c>git rebase -i --exec &lt;cmd&gt;</c>).
     /// An <c>exec</c> line is inserted after every <c>pick</c> line in the todo list.
     /// </summary>
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     [ValidateNotNullOrEmpty]
     public string? Exec { get; set; }
 
@@ -92,7 +96,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to recreate merge commits rather than
     /// linearising history (<c>git rebase --rebase-merges</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     public SwitchParameter RebaseMerges { get; set; }
 
     /// <summary>
@@ -100,7 +104,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// that point to commits being rebased — useful for stacked branches
     /// (<c>git rebase --update-refs</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     public SwitchParameter UpdateRefs { get; set; }
 
     // ── Shared optional (Rebase + Interactive) ───────────────────────────────
@@ -109,8 +113,8 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// Gets or sets an optional target ref for a three-way rebase
     /// (<c>git rebase --onto &lt;Onto&gt; &lt;Upstream&gt;</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Rebase")]
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = RebaseParameterSet)]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     [GitCommittishCompleter]
     public string? Onto { get; set; }
 
@@ -119,8 +123,8 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// changes before the rebase and restore them afterwards
     /// (<c>git rebase --autostash</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Rebase")]
-    [Parameter(ParameterSetName = "Interactive")]
+    [Parameter(ParameterSetName = RebaseParameterSet)]
+    [Parameter(ParameterSetName = InteractiveParameterSet)]
     public SwitchParameter AutoStash { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -128,7 +132,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the rebase.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitRebaseOptions Options { get; set; } = null!;
 
     // ────────────────────────────────────────────────────────────────────────
@@ -139,7 +143,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// </summary>
     protected override void ProcessRecord()
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             // Options parameter set — execute immediately, no pipeline ambiguity.
             ExecuteRebase(Options);
@@ -155,7 +159,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// </summary>
     protected override void EndProcessing()
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             // Already executed in ProcessRecord.
             return;
@@ -195,7 +199,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitRebaseOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

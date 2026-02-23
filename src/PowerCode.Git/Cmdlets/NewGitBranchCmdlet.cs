@@ -15,7 +15,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>New-GitBranch -Name hotfix/p1 -StartPoint v2.0.0</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.New, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = "Create")]
+[Cmdlet(VerbsCommon.New, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = CreateParameterSet)]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class NewGitBranchCmdlet : GitCmdlet
 {
@@ -38,10 +38,13 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
 
     private readonly IGitBranchService branchService;
 
+    private const string CreateParameterSet = "Create";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name of the new branch.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Create")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = CreateParameterSet)]
     [ValidateNotNullOrEmpty]
     public string Name { get; set; } = string.Empty;
 
@@ -50,7 +53,7 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     /// Defaults to HEAD when not specified.
     /// Equivalent to the <c>[&lt;start-point&gt;]</c> argument of <c>git branch</c>.
     /// </summary>
-    [Parameter(Position = 1, ParameterSetName = "Create")]
+    [Parameter(Position = 1, ParameterSetName = CreateParameterSet)]
     [GitCommittishCompleter]
     public string? StartPoint { get; set; }
 
@@ -58,20 +61,20 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to set up the new branch to track the
     /// remote upstream branch. Equivalent to <c>git branch --track</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Create")]
+    [Parameter(ParameterSetName = CreateParameterSet)]
     public SwitchParameter Track { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to overwrite an existing branch with the
     /// same name. Equivalent to <c>git branch -f</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Create")]
+    [Parameter(ParameterSetName = CreateParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over branch creation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitBranchCreateOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -111,7 +114,7 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitBranchCreateOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

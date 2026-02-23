@@ -23,7 +23,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitStatus | Select-Object -ExpandProperty Entries | Where-Object Status -EQ Modified | Add-GitItem</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Add, "GitItem", SupportsShouldProcess = true, DefaultParameterSetName = "Path")]
+[Cmdlet(VerbsCommon.Add, "GitItem", SupportsShouldProcess = true, DefaultParameterSetName = PathParameterSet)]
 public sealed class AddGitItemCmdlet : GitCmdlet
 {
     /// <summary>
@@ -45,13 +45,20 @@ public sealed class AddGitItemCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    private const string PathParameterSet = "Path";
+    private const string AllParameterSet = "All";
+    private const string UpdateParameterSet = "Update";
+    private const string HunkParameterSet = "Hunk";
+    private const string InputObjectParameterSet = "InputObject";
+    private const string OptionsParameterSet = "Options";
+
     // Paths accumulated from InputObject pipeline calls, dispatched in EndProcessing.
     private readonly List<string> inputObjectPaths = [];
 
     /// <summary>
     /// Gets or sets the paths to stage. Mutually exclusive with <see cref="All"/> and <see cref="Update"/>.
     /// </summary>
-    [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "Path")]
+    [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = PathParameterSet)]
     [ValidateNotNullOrEmpty]
     [Alias("FilePath")]
     [GitPathCompleter(IncludeModified = true, IncludeUntracked = true)]
@@ -61,30 +68,30 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to stage all changes.
     /// Mutually exclusive with <see cref="Path"/> and <see cref="Update"/>.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "All")]
+    [Parameter(Mandatory = true, ParameterSetName = AllParameterSet)]
     public SwitchParameter All { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to stage only already-tracked files (git add -u).
     /// Mutually exclusive with <see cref="Path"/> and <see cref="All"/>.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Update")]
+    [Parameter(Mandatory = true, ParameterSetName = UpdateParameterSet)]
     public SwitchParameter Update { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to allow staging ignored files (git add -f).
     /// Can be combined with <see cref="Path"/>, <see cref="All"/>, or <see cref="Update"/>.
     /// </summary>
-    [Parameter(ParameterSetName = "Path")]
-    [Parameter(ParameterSetName = "All")]
-    [Parameter(ParameterSetName = "Update")]
+    [Parameter(ParameterSetName = PathParameterSet)]
+    [Parameter(ParameterSetName = AllParameterSet)]
+    [Parameter(ParameterSetName = UpdateParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets one or more diff hunks to stage. Accepts pipeline input
     /// from <c>Get-GitDiff -Hunk</c>.
     /// </summary>
-    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "Hunk")]
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = HunkParameterSet)]
     public GitDiffHunk[]? Hunk { get; set; }
 
     /// <summary>
@@ -96,14 +103,14 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     /// <c>ValueFromPipelineByPropertyName</c> via the <c>FilePath</c> alias on
     /// the <c>Path</c> parameter.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "InputObject")]
+    [Parameter(Mandatory = true, ParameterSetName = InputObjectParameterSet)]
     public PSObject? InputObject { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitStageOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitStageOptions? Options { get; set; }
 
     /// <summary>
@@ -143,15 +150,15 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     {
         switch (ParameterSetName)
         {
-            case "InputObject" when InputObject is not null:
+            case InputObjectParameterSet when InputObject is not null:
                 AccumulateInputObject(InputObject);
                 break;
 
-            case "Hunk" when Hunk is { Length: > 0 }:
+            case HunkParameterSet when Hunk is { Length: > 0 }:
                 ProcessHunks(Hunk);
                 break;
 
-            case "Options" when Options is not null:
+            case OptionsParameterSet when Options is not null:
                 ExecuteStage(Options);
                 break;
 

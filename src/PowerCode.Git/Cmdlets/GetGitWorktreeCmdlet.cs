@@ -14,7 +14,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitWorktree -RepoPath C:\repos\myproject</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitWorktree", DefaultParameterSetName = "List")]
+[Cmdlet(VerbsCommon.Get, "GitWorktree", DefaultParameterSetName = ListParameterSet)]
 [OutputType(typeof(GitWorktreeInfo))]
 public sealed class GetGitWorktreeCmdlet : GitCmdlet
 {
@@ -37,11 +37,14 @@ public sealed class GetGitWorktreeCmdlet : GitCmdlet
 
     private readonly IGitWorktreeService worktreeService;
 
+    private const string ListParameterSet = "List";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitWorktreeListOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitWorktreeListOptions? Options { get; set; }
 
     /// <summary>
@@ -54,7 +57,7 @@ public sealed class GetGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeListOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options!;
         }

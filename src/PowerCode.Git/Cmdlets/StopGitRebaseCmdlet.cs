@@ -12,7 +12,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Stop-GitRebase</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsLifecycle.Stop, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = "Abort")]
+[Cmdlet(VerbsLifecycle.Stop, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = AbortParameterSet)]
 public sealed class StopGitRebaseCmdlet : GitCmdlet
 {
     /// <summary>
@@ -34,12 +34,15 @@ public sealed class StopGitRebaseCmdlet : GitCmdlet
 
     private readonly IGitRebaseService rebaseService;
 
+    private const string AbortParameterSet = "Abort";
+    private const string OptionsParameterSet = "Options";
+
     // ── Options parameter set ────────────────────────────────────────────────
 
     /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the abort operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitStopRebaseOptions? Options { get; set; }
 
     // ────────────────────────────────────────────────────────────────────────
@@ -54,7 +57,7 @@ public sealed class StopGitRebaseCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitStopRebaseOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options!;
         }

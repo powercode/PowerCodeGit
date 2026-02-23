@@ -27,7 +27,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitStatus | Select-Object -ExpandProperty Entries | Restore-GitItem</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsData.Restore, "GitItem", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Path")]
+[Cmdlet(VerbsData.Restore, "GitItem", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = PathParameterSet)]
 public sealed class RestoreGitItemCmdlet : GitCmdlet
 {
     /// <summary>
@@ -49,6 +49,12 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    private const string PathParameterSet = "Path";
+    private const string AllParameterSet = "All";
+    private const string HunkParameterSet = "Hunk";
+    private const string InputObjectParameterSet = "InputObject";
+    private const string OptionsParameterSet = "Options";
+
     // Paths accumulated from InputObject pipeline calls, dispatched in EndProcessing.
     private readonly List<string> inputObjectPaths = [];
 
@@ -58,7 +64,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// Gets or sets one or more repository-relative file paths to restore.
     /// Mutually exclusive with <see cref="All"/> and <see cref="Hunk"/>.
     /// </summary>
-    [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "Path")]
+    [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = PathParameterSet)]
     [ValidateNotNullOrEmpty]
     [Alias("FilePath")]
     [GitModifiedPathCompleter(StagedParameterName = nameof(Staged))]
@@ -70,7 +76,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to restore all files in the
     /// repository. Mutually exclusive with <see cref="Path"/> and <see cref="Hunk"/>.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "All")]
+    [Parameter(Mandatory = true, ParameterSetName = AllParameterSet)]
     public SwitchParameter All { get; set; }
 
     // -- Hunk parameter set --------------------------------------------------
@@ -81,7 +87,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// <c>git apply -R</c>. Mutually exclusive with <see cref="Path"/> and
     /// <see cref="All"/>.
     /// </summary>
-    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "Hunk")]
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = HunkParameterSet)]
     public GitDiffHunk[]? Hunk { get; set; }
 
     // -- InputObject parameter set -------------------------------------------
@@ -95,7 +101,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// <c>ValueFromPipelineByPropertyName</c> via the <c>FilePath</c> alias on
     /// the <c>Path</c> parameter.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "InputObject")]
+    [Parameter(Mandatory = true, ParameterSetName = InputObjectParameterSet)]
     public PSObject? InputObject { get; set; }
 
     // -- Options parameter set -----------------------------------------------
@@ -104,7 +110,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// Gets or sets a pre-built <see cref="GitRestoreOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitRestoreOptions? Options { get; set; }
 
     // -- Shared parameters ---------------------------------------------------
@@ -115,10 +121,10 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// <c>git restore --staged</c>. When not specified, the working-tree file
     /// is restored.
     /// </summary>
-    [Parameter(ParameterSetName = "Path")]
-    [Parameter(ParameterSetName = "All")]
-    [Parameter(ParameterSetName = "Hunk")]
-    [Parameter(ParameterSetName = "InputObject")]
+    [Parameter(ParameterSetName = PathParameterSet)]
+    [Parameter(ParameterSetName = AllParameterSet)]
+    [Parameter(ParameterSetName = HunkParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter Staged { get; set; }
 
     /// <summary>
@@ -126,9 +132,9 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     /// to HEAD (working-tree restore) or the index (<c>--staged</c> restore).
     /// Equivalent to <c>git restore --source=&lt;tree&gt;</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "Path")]
-    [Parameter(ParameterSetName = "All")]
-    [Parameter(ParameterSetName = "InputObject")]
+    [Parameter(ParameterSetName = PathParameterSet)]
+    [Parameter(ParameterSetName = AllParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     [GitCommittishCompleter]
     public string? Source { get; set; }
 
@@ -158,15 +164,15 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     {
         switch (ParameterSetName)
         {
-            case "Hunk" when Hunk is { Length: > 0 }:
+            case HunkParameterSet when Hunk is { Length: > 0 }:
                 ProcessHunks(Hunk);
                 break;
 
-            case "InputObject" when InputObject is not null:
+            case InputObjectParameterSet when InputObject is not null:
                 AccumulateInputObject(InputObject);
                 break;
 
-            case "Options" when Options is not null:
+            case OptionsParameterSet when Options is not null:
                 ExecuteRestore(Options);
                 break;
 

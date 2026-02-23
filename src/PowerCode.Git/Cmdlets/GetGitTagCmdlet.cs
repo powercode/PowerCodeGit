@@ -15,7 +15,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitTag -Pattern "v1.*"</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitTag", DefaultParameterSetName = "Tag")]
+[Cmdlet(VerbsCommon.Get, "GitTag", DefaultParameterSetName = TagParameterSet)]
 [OutputType(typeof(GitTagInfo))]
 public sealed class GetGitTagCmdlet : GitCmdlet
 {
@@ -38,30 +38,33 @@ public sealed class GetGitTagCmdlet : GitCmdlet
 
     private readonly IGitTagService tagService;
 
+    private const string TagParameterSet = "Tag";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets a glob pattern to filter tag names.
     /// </summary>
-    [Parameter(ParameterSetName = "Tag")]
+    [Parameter(ParameterSetName = TagParameterSet)]
     public string? Pattern { get; set; }
 
     /// <summary>
     /// Gets or sets the sort order. Accepts "name" or "version".
     /// </summary>
-    [Parameter(ParameterSetName = "Tag")]
+    [Parameter(ParameterSetName = TagParameterSet)]
     [ValidateSet("name", "version", IgnoreCase = false)]
     public string? SortBy { get; set; }
 
     /// <summary>
     /// Gets or sets a committish to filter only tags that contain the specified commit.
     /// </summary>
-    [Parameter(ParameterSetName = "Tag")]
+    [Parameter(ParameterSetName = TagParameterSet)]
     [GitCommittishCompleter]
     public string? ContainsCommit { get; set; }
 
     /// <summary>
     /// Gets or sets pre-built options.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitTagListOptions? Options { get; set; }
 
     /// <summary>

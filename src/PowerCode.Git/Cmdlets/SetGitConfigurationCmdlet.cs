@@ -18,7 +18,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Set-GitConfiguration -Name init.defaultBranch -Value main</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Set, "GitConfiguration", SupportsShouldProcess = true, DefaultParameterSetName = "Config")]
+[Cmdlet(VerbsCommon.Set, "GitConfiguration", SupportsShouldProcess = true, DefaultParameterSetName = ConfigParameterSet)]
 [OutputType(typeof(GitConfigEntry))]
 public sealed class SetGitConfigurationCmdlet : GitCmdlet
 {
@@ -41,10 +41,13 @@ public sealed class SetGitConfigurationCmdlet : GitCmdlet
 
     private readonly IGitConfigService configService;
 
+    private const string ConfigParameterSet = "Config";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the fully-qualified configuration key (e.g. <c>user.name</c>).
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Config")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = ConfigParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitConfigNameCompleter]
     public string Name { get; set; } = string.Empty;
@@ -52,7 +55,7 @@ public sealed class SetGitConfigurationCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets the value to assign to the configuration key.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 1, ParameterSetName = "Config")]
+    [Parameter(Mandatory = true, Position = 1, ParameterSetName = ConfigParameterSet)]
     [ValidateNotNull]
     [GitConfigValueCompleter]
     public string Value { get; set; } = string.Empty;
@@ -61,13 +64,13 @@ public sealed class SetGitConfigurationCmdlet : GitCmdlet
     /// Gets or sets the scope to write the setting into.
     /// When not specified, git's default (local) is used.
     /// </summary>
-    [Parameter(ParameterSetName = "Config")]
+    [Parameter(ParameterSetName = ConfigParameterSet)]
     public GitConfigScope? Scope { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over configuration.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitConfigSetOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -80,7 +83,7 @@ public sealed class SetGitConfigurationCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitConfigSetOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

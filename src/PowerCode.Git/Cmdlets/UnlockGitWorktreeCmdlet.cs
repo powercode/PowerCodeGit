@@ -12,7 +12,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Unlock-GitWorktree -Name feature</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Unlock, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = "Unlock")]
+[Cmdlet(VerbsCommon.Unlock, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = UnlockParameterSet)]
 public sealed class UnlockGitWorktreeCmdlet : GitCmdlet
 {
     /// <summary>
@@ -34,10 +34,13 @@ public sealed class UnlockGitWorktreeCmdlet : GitCmdlet
 
     private readonly IGitWorktreeService worktreeService;
 
+    private const string UnlockParameterSet = "Unlock";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name of the worktree to unlock.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Unlock")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = UnlockParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitWorktreeCompleter]
     public string Name { get; set; } = string.Empty;
@@ -45,7 +48,7 @@ public sealed class UnlockGitWorktreeCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a pre-built options object for full control over the unlock operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitWorktreeUnlockOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -84,7 +87,7 @@ public sealed class UnlockGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeUnlockOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

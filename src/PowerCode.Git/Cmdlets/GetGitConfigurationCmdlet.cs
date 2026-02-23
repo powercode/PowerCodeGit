@@ -18,7 +18,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitConfiguration -Scope Global</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitConfiguration", DefaultParameterSetName = "List")]
+[Cmdlet(VerbsCommon.Get, "GitConfiguration", DefaultParameterSetName = ListParameterSet)]
 [OutputType(typeof(GitConfigEntry))]
 public sealed class GetGitConfigurationCmdlet : GitCmdlet
 {
@@ -41,11 +41,14 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
 
     private readonly IGitConfigService configService;
 
+    private const string ListParameterSet = "List";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the configuration key to retrieve.
     /// When omitted, all configuration entries are returned.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "List")]
+    [Parameter(Position = 0, ParameterSetName = ListParameterSet)]
     [GitConfigNameCompleter]
     public string? Name { get; set; }
 
@@ -53,14 +56,14 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
     /// Gets or sets the scope to read from.
     /// When not specified, git searches all scopes in priority order.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     public GitConfigScope? Scope { get; set; }
     
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitConfigGetOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitConfigGetOptions? Options { get; set; }
 
     /// <summary>
@@ -73,7 +76,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitConfigGetOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options!;
         }

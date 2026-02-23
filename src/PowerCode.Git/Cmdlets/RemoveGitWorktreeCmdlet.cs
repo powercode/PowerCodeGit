@@ -15,7 +15,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Remove-GitWorktree -Name feature -Force</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Remove, "GitWorktree", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Remove")]
+[Cmdlet(VerbsCommon.Remove, "GitWorktree", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = RemoveParameterSet)]
 public sealed class RemoveGitWorktreeCmdlet : GitCmdlet
 {
     /// <summary>
@@ -37,10 +37,13 @@ public sealed class RemoveGitWorktreeCmdlet : GitCmdlet
 
     private readonly IGitWorktreeService worktreeService;
 
+    private const string RemoveParameterSet = "Remove";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the name of the worktree to remove.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Remove")]
+    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = RemoveParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitWorktreeCompleter]
     public string Name { get; set; } = string.Empty;
@@ -48,13 +51,13 @@ public sealed class RemoveGitWorktreeCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to force removal of a locked worktree.
     /// </summary>
-    [Parameter(ParameterSetName = "Remove")]
+    [Parameter(ParameterSetName = RemoveParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over worktree removal.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitWorktreeRemoveOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -93,7 +96,7 @@ public sealed class RemoveGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeRemoveOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

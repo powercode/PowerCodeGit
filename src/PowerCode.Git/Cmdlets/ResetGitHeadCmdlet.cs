@@ -18,7 +18,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Reset-GitHead -Path file.txt</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommon.Reset, "GitHead", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = "Mixed")]
+[Cmdlet(VerbsCommon.Reset, "GitHead", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = MixedParameterSet)]
 public sealed class ResetGitHeadCmdlet : GitCmdlet
 {
     /// <summary>
@@ -40,12 +40,18 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
 
     private readonly IGitWorkingTreeService workingTreeService;
 
+    private const string MixedParameterSet = "Mixed";
+    private const string SoftParameterSet = "Soft";
+    private const string HardParameterSet = "Hard";
+    private const string PathsParameterSet = "Paths";
+    private const string OptionsParameterSet = "Options";
+
     /// <summary>
     /// Gets or sets the revision to reset to. When omitted, resets to HEAD.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Mixed")]
-    [Parameter(Position = 0, ParameterSetName = "Soft")]
-    [Parameter(Position = 0, ParameterSetName = "Hard")]
+    [Parameter(Position = 0, ParameterSetName = MixedParameterSet)]
+    [Parameter(Position = 0, ParameterSetName = SoftParameterSet)]
+    [Parameter(Position = 0, ParameterSetName = HardParameterSet)]
     [GitCommittishCompleter]
     public string? Revision { get; set; }
 
@@ -53,14 +59,14 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to use hard reset mode.
     /// Resets index and working tree — all changes are discarded.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Hard")]
+    [Parameter(Mandatory = true, ParameterSetName = HardParameterSet)]
     public SwitchParameter Hard { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to use soft reset mode.
     /// Only moves HEAD — index and working tree are unchanged.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Soft")]
+    [Parameter(Mandatory = true, ParameterSetName = SoftParameterSet)]
     public SwitchParameter Soft { get; set; }
 
     /// <summary>
@@ -68,7 +74,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// given files are unstaged and the <see cref="Revision"/> and mode parameters
     /// are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Paths", ValueFromPipeline = true)]
+    [Parameter(Mandatory = true, ParameterSetName = PathsParameterSet, ValueFromPipeline = true)]
     [ValidateNotNullOrEmpty]
     [GitPathCompleter(IncludeStaged = true)]
     public string[]? Path { get; set; }
@@ -77,7 +83,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// Gets or sets a pre-built <see cref="GitResetOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitResetOptions? Options { get; set; }
 
     /// <summary>
@@ -87,14 +93,14 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     /// <returns>A fully populated <see cref="GitResetOptions"/> instance.</returns>
     internal GitResetOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options!;
         }
 
         var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
 
-        if (ParameterSetName == "Paths")
+        if (ParameterSetName == PathsParameterSet)
         {
             return new GitResetOptions
             {
@@ -122,8 +128,8 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
 
             var description = ParameterSetName switch
             {
-                "Options" => "Reset HEAD",
-                "Paths" => $"Reset {Path?.Length ?? 0} file(s)",
+                OptionsParameterSet => "Reset HEAD",
+                PathsParameterSet => $"Reset {Path?.Length ?? 0} file(s)",
                 _ => $"Reset HEAD to '{Revision ?? "HEAD"}' ({options.Mode})",
             };
 
