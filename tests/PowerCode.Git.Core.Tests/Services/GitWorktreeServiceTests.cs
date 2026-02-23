@@ -105,6 +105,39 @@ public sealed class GitWorktreeServiceTests
     }
 
     [TestMethod]
+    public void AddWorktree_WithBranch_DoesNotLeaveAutoCreatedBranch()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+        var worktreePath = GenerateTemporaryPath();
+
+        try
+        {
+            using (var repository = new Repository(repositoryPath))
+            {
+                repository.CreateBranch("feature");
+            }
+
+            var service = new GitWorktreeService();
+
+            service.AddWorktree(new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "feature-wt",
+                Path = worktreePath,
+                Branch = "feature",
+            });
+
+            using var repo = new Repository(repositoryPath);
+            Assert.IsNull(repo.Branches["feature-wt"], "The auto-created branch named after the worktree should be removed.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(worktreePath);
+        }
+    }
+
+    [TestMethod]
     public void AddWorktree_BranchEqualToName_ThrowsArgumentException()
     {
         var repositoryPath = CreateRepositoryWithCommit();

@@ -58,6 +58,15 @@ public sealed class GitWorktreeService : IGitWorktreeService
         if (options.Branch is not null)
         {
             worktree = repository.Worktrees.Add(options.Branch, options.Name, options.Path, options.Locked);
+
+            // LibGit2Sharp's git_worktree_add always creates a new branch named after the
+            // worktree, then checks out the requested branch. Remove the auto-created branch
+            // so that checking out an existing branch does not leave a stale branch behind.
+            var autoCreatedBranch = repository.Branches[options.Name];
+            if (autoCreatedBranch is not null)
+            {
+                repository.Branches.Remove(autoCreatedBranch);
+            }
         }
         else
         {
