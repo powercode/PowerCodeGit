@@ -14,7 +14,8 @@ title: PowerCode.Git Module
 
 ## Description
 
-PowerShell Git binary module implemented in C#.
+A PowerShell module for Git that provides discoverability through standard PowerShell noun-verb naming,
+rich pipeline support for composing commands, and tab completion for parameters such as branch names, tags, and remotes.
 
 ## PowerCode.Git
 
