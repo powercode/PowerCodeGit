@@ -153,7 +153,7 @@ public sealed class GitConfigValueCompleterAttribute : ArgumentCompleterFactoryA
                 }
 
                 return values
-                    .Where(v => v.Contains(wordToComplete, StringComparison.OrdinalIgnoreCase))
+                    .Where(v => v.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))
                     .Select(v => new CompletionResult(
                         v,
                         v,

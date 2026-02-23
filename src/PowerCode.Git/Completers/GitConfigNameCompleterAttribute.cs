@@ -192,7 +192,7 @@ public sealed class GitConfigNameCompleterAttribute : ArgumentCompleterFactoryAt
                 }
 
                 return completions
-                    .Where(kv => kv.Key.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))
+                    .Where(kv => kv.Key.Contains(wordToComplete, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
                     .Select(kv => new CompletionResult(
                         kv.Key,
