@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
 namespace PowerCode.Git.Completers;
@@ -41,7 +42,7 @@ public sealed class GitWorktreeCompleterAttribute : ArgumentCompleterFactoryAttr
             try
             {
                 var repositoryPath = CompletionHelper.ResolveRepositoryPath(fakeBoundParameters);
-                var worktrees = worktreeService.GetWorktrees(repositoryPath);
+                var worktrees = worktreeService.GetWorktrees(new GitWorktreeListOptions { RepositoryPath = repositoryPath });
 
                 return worktrees
                     .Where(w => w.Name.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))

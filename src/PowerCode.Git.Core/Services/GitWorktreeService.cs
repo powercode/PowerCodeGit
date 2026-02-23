@@ -13,11 +13,11 @@ namespace PowerCode.Git.Core.Services;
 public sealed class GitWorktreeService : IGitWorktreeService
 {
     /// <inheritdoc/>
-    public IReadOnlyList<GitWorktreeInfo> GetWorktrees(string repositoryPath)
+    public IReadOnlyList<GitWorktreeInfo> GetWorktrees(GitWorktreeListOptions options)
     {
-        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
-        using var repository = new Repository(repositoryPath);
+        using var repository = new Repository(options.RepositoryPath);
         return repository.Worktrees.Select(MapWorktree).ToList();
     }
 

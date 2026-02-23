@@ -29,6 +29,17 @@ Describe 'Get-GitWorktree basic usage' {
         $Worktrees = @(Get-GitWorktree -RepoPath $script:RepoPath)
         $Worktrees.Count | Should -Be 0
     }
+
+    It 'Works without parameters when inside a repository' {
+        Push-Location -Path $script:RepoPath
+        try {
+            $Worktrees = @(Get-GitWorktree)
+            $Worktrees.Count | Should -Be 0
+        }
+        finally {
+            Pop-Location
+        }
+    }
 }
 
 Describe 'Get-GitWorktree with worktrees' {

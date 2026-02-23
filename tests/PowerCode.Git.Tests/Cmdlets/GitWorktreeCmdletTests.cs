@@ -233,7 +233,7 @@ public sealed class UnlockGitWorktreeCmdletTests
 
 internal sealed class StubGitWorktreeService : IGitWorktreeService
 {
-    public IReadOnlyList<GitWorktreeInfo> GetWorktrees(string repositoryPath)
+    public IReadOnlyList<GitWorktreeInfo> GetWorktrees(GitWorktreeListOptions options)
     {
         return Array.Empty<GitWorktreeInfo>();
     }

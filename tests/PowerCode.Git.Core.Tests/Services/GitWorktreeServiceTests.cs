@@ -32,7 +32,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
 
             var worktrees = service.GetWorktrees(repositoryPath);
 
@@ -165,7 +165,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
             service.AddWorktree(new GitWorktreeAddOptions
             {
                 RepositoryPath = repositoryPath,
@@ -193,7 +193,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
             service.AddWorktree(new GitWorktreeAddOptions
             {
                 RepositoryPath = repositoryPath,
@@ -247,7 +247,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
             service.AddWorktree(new GitWorktreeAddOptions
             {
                 RepositoryPath = repositoryPath,
@@ -281,7 +281,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
             service.AddWorktree(new GitWorktreeAddOptions
             {
                 RepositoryPath = repositoryPath,
@@ -337,7 +337,7 @@ public sealed class GitWorktreeServiceTests
 
         try
         {
-            var service = new GitWorktreeService();
+            IGitWorktreeService service = new GitWorktreeService();
             service.AddWorktree(new GitWorktreeAddOptions
             {
                 RepositoryPath = repositoryPath,

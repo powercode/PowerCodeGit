@@ -9,19 +9,19 @@ namespace PowerCode.Git.Abstractions.Services;
 public interface IGitWorktreeService
 {
     /// <summary>
-    /// Gets all worktrees in the repository.
-    /// </summary>
-    /// <param name="repositoryPath">The path to the git repository.</param>
-    /// <returns>A list of worktree information objects.</returns>
-    IReadOnlyList<GitWorktreeInfo> GetWorktrees(string repositoryPath);
-
-    /// <summary>
     /// Gets all worktrees in the repository using the specified options.
     /// </summary>
     /// <param name="options">Options identifying the repository to list worktrees for.</param>
     /// <returns>A list of worktree information objects.</returns>
-    IReadOnlyList<GitWorktreeInfo> GetWorktrees(GitWorktreeListOptions options)
-        => GetWorktrees(options.RepositoryPath);
+    IReadOnlyList<GitWorktreeInfo> GetWorktrees(GitWorktreeListOptions options);
+
+    /// <summary>
+    /// Gets all worktrees in the repository.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <returns>A list of worktree information objects.</returns>
+    IReadOnlyList<GitWorktreeInfo> GetWorktrees(string repositoryPath)
+        => GetWorktrees(new GitWorktreeListOptions { RepositoryPath = repositoryPath });
 
     /// <summary>
     /// Adds a new worktree using the specified options.
