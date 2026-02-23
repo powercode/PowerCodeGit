@@ -57,7 +57,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = "Interactive")]
     [Alias("Name")]
     [ValidateNotNullOrEmpty]
-    [GitBranchCompleter(IncludeRemote = true)]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeRelativeRefs = true)]
     public string Upstream { get; set; } = string.Empty;
 
     // ── Interactive parameter set ────────────────────────────────────────────
