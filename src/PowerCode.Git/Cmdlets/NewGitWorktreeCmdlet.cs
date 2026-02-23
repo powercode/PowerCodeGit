@@ -14,6 +14,9 @@ namespace PowerCode.Git.Cmdlets;
 /// <example>
 /// <code>New-GitWorktree -Name hotfix-wt -Path ../hotfix-worktree -Branch hotfix/p1</code>
 /// </example>
+/// <example>
+/// <code>Get-GitBranch -Include main | New-GitWorktree</code>
+/// </example>
 /// </summary>
 [Cmdlet(VerbsCommon.New, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = "Create")]
 [OutputType(typeof(GitWorktreeInfo))]
@@ -49,8 +52,9 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     /// Gets or sets the filesystem path where the worktree will be created.
     /// </summary>
     [Parameter(Mandatory = true, Position = 1, ParameterSetName = "Create")]
+    [Parameter(Position = 0, ParameterSetName = "Pipeline")]
     [ValidateNotNullOrEmpty]
-    public string Path { get; set; } = string.Empty;
+    public string? Path { get; set; }
 
     /// <summary>
     /// Gets or sets the branch or committish to check out in the new worktree.
@@ -61,9 +65,18 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     public string? Branch { get; set; }
 
     /// <summary>
+    /// Gets or sets the branch info piped from <c>Get-GitBranch</c>.
+    /// The worktree name is derived as <c>&lt;branchname&gt;.wt</c> and the branch
+    /// is set to the branch name.
+    /// </summary>
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = "Pipeline")]
+    public GitBranchInfo InputBranch { get; set; } = null!;
+
+    /// <summary>
     /// Gets or sets a value indicating whether the worktree should be created in a locked state.
     /// </summary>
     [Parameter(ParameterSetName = "Create")]
+    [Parameter(ParameterSetName = "Pipeline")]
     public SwitchParameter Locked { get; set; }
 
     /// <summary>
@@ -109,20 +122,64 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitWorktreeAddOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        return BuildOptions(currentFileSystemPath, ParameterSetName);
+    }
+
+    /// <summary>
+    /// Builds a <see cref="GitWorktreeAddOptions"/> from the current cmdlet parameters
+    /// using an explicit parameter set name. This overload is intended for unit testing.
+    /// </summary>
+    /// <param name="currentFileSystemPath">
+    /// The current file-system path, used to resolve <see cref="GitCmdlet.RepoPath"/> when not
+    /// explicitly provided.
+    /// </param>
+    /// <param name="parameterSetName">The name of the active parameter set.</param>
+    /// <returns>The resolved options object.</returns>
+    internal GitWorktreeAddOptions BuildOptions(string currentFileSystemPath, string parameterSetName)
+    {
+        if (parameterSetName == "Options")
         {
             return Options;
         }
 
         // Resolve the worktree path to an absolute path so that LibGit2Sharp
         // does not resolve it relative to the repository root.
-        var resolvedPath = PathResolver?.ResolvePath(Path) ?? Path;
+        var resolvedPath = Path is not null
+            ? PathResolver?.ResolvePath(Path) ?? Path
+            : null;
+
+        if (parameterSetName == "Pipeline")
+        {
+            var repositoryPath = ResolveRepositoryPath(currentFileSystemPath);
+            var branchName = InputBranch.Name;
+            var safeBranchName = branchName.Replace('/', '-');
+            var worktreeName = safeBranchName + ".wt";
+
+            if (resolvedPath is null)
+            {
+                // Default to ../<reponame>-<branchname> next to the repository root.
+                var repoDir = System.IO.Path.GetFileName(repositoryPath.TrimEnd(
+                    System.IO.Path.DirectorySeparatorChar,
+                    System.IO.Path.AltDirectorySeparatorChar));
+                var parentDir = System.IO.Path.GetDirectoryName(repositoryPath) ?? repositoryPath;
+                resolvedPath = System.IO.Path.Combine(parentDir, $"{repoDir}-{safeBranchName}");
+            }
+
+            return new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = worktreeName,
+                Path = resolvedPath,
+                Branch = branchName,
+                Locked = Locked.IsPresent,
+            };
+        }
 
         return new GitWorktreeAddOptions
         {
             RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Name = Name,
-            Path = resolvedPath,
+            Path = resolvedPath!,
             Branch = Branch,
             Locked = Locked.IsPresent,
         };

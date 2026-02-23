@@ -151,3 +151,87 @@ Describe 'New-GitWorktree -WhatIf' {
         $Worktrees | Where-Object { $_.Name -eq 'whatif-wt' } | Should -BeNullOrEmpty
     }
 }
+
+Describe 'New-GitWorktree pipeline with explicit path' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:WorktreePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_pipewt_$([System.Guid]::NewGuid().ToString('N'))"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch feature 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:WorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:WorktreePath) {
+            Remove-Item -Path $script:WorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Help Example 3 - Pipe a branch to create a worktree with explicit path
+    It 'Creates a worktree from piped branch with explicit path' {
+        $Result = Get-GitBranch -RepoPath $script:RepoPath -Include 'feature' | New-GitWorktree -RepoPath $script:RepoPath -Path $script:WorktreePath
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'feature.wt'
+    }
+
+    It 'The piped worktree appears in Get-GitWorktree' {
+        $Worktrees = @(Get-GitWorktree -RepoPath $script:RepoPath)
+        $Found = $Worktrees | Where-Object { $_.Name -eq 'feature.wt' }
+        $Found | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'New-GitWorktree pipeline with default path' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:RepoName = Split-Path -Path $script:RepoPath -Leaf
+        $script:DefaultWorktreePath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$($script:RepoName)-main"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch develop 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $script:DefaultWorktreePath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$($script:RepoName)-develop"
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:DefaultWorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:DefaultWorktreePath) {
+            Remove-Item -Path $script:DefaultWorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Help Example 4 - Pipe a branch to create a worktree with default path
+    It 'Creates a worktree from piped branch with default path next to repo' {
+        $Result = Get-GitBranch -RepoPath $script:RepoPath -Include 'develop' | New-GitWorktree -RepoPath $script:RepoPath
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'develop.wt'
+        $Result.Path | Should -BeExactly $script:DefaultWorktreePath
+    }
+}

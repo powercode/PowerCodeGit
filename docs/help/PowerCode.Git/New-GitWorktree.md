@@ -24,6 +24,13 @@ New-GitWorktree [-Name] <string> [-Path] <string> [-Branch <string>] [-Locked] [
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
+### Pipeline
+
+```
+New-GitWorktree [-Path <string>] [-Locked] -InputBranch <GitBranchInfo> [-RepoPath <string>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
 ### Options
 
 ```
@@ -55,6 +62,22 @@ Checks out an existing branch into a new worktree. The `-Name` must differ from 
 
 ```powershell
 New-GitWorktree -Name hotfix-wt -Path ../hotfix-worktree -Branch hotfix/p1
+```
+
+### Example 3 - Pipe a branch to create a worktree with explicit path
+
+Pipes a branch from `Get-GitBranch` to create a worktree. The worktree name is automatically derived as `<branchname>.wt` and the branch is checked out.
+
+```powershell
+Get-GitBranch -Include feature | New-GitWorktree -Path ../feature-worktree
+```
+
+### Example 4 - Pipe a branch to create a worktree with default path
+
+Pipes a branch without specifying `-Path`. The worktree is created in a sibling directory named `<reponame>-<branchname>` next to the repository root.
+
+```powershell
+Get-GitBranch -Include develop | New-GitWorktree
 ```
 
 ## PARAMETERS
@@ -102,6 +125,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -InputBranch
+
+A GitBranchInfo object piped from Get-GitBranch. The worktree name is derived as `<branchname>.wt` and the branch is set to the branch name. Slashes in the branch name are replaced with dashes in the worktree name.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.GitBranchInfo
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Pipeline
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Locked
 
 Creates the worktree in a locked state to prevent pruning.
@@ -113,6 +157,12 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Create
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Pipeline
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -167,7 +217,7 @@ HelpMessage: ''
 
 ### -Path
 
-The filesystem path where the worktree will be created.
+The filesystem path where the worktree will be created. In the Pipeline parameter set this is optional; when omitted the path defaults to `../<reponame>-<branchname>` next to the repository root.
 
 ```yaml
 Type: System.String
@@ -178,6 +228,12 @@ ParameterSets:
 - Name: Create
   Position: 1
   IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Pipeline
+  Position: 0
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
@@ -238,6 +294,10 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
+
+### PowerCode.Git.Abstractions.Models.GitBranchInfo
+
+You can pipe a GitBranchInfo object from Get-GitBranch to create a worktree for that branch.
 
 ## OUTPUTS
 

@@ -105,6 +105,97 @@ public sealed class NewGitWorktreeCmdletTests
     {
         Assert.Throws<ArgumentNullException>(() => new NewGitWorktreeCmdlet(null!));
     }
+
+    [TestMethod]
+    public void BuildOptions_Pipeline_DerivesNameAndBranchFromInputBranch()
+    {
+        var branchInfo = new GitBranchInfo("main", false, false, "abc1234567", null, null, null);
+
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repo",
+            Path = "C:\\worktrees\\main",
+            InputBranch = branchInfo,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo", "Pipeline");
+
+        Assert.AreEqual("main.wt", options.Name);
+        Assert.AreEqual("main", options.Branch);
+        Assert.AreEqual("C:\\worktrees\\main", options.Path);
+    }
+
+    [TestMethod]
+    public void BuildOptions_Pipeline_SlashesInBranchReplacedWithDash()
+    {
+        var branchInfo = new GitBranchInfo("feature/my-feature", false, false, "abc1234567", null, null, null);
+
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repo",
+            Path = "C:\\worktrees\\feature",
+            InputBranch = branchInfo,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo", "Pipeline");
+
+        Assert.AreEqual("feature-my-feature.wt", options.Name);
+        Assert.AreEqual("feature/my-feature", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_Pipeline_LockedIsRespected()
+    {
+        var branchInfo = new GitBranchInfo("develop", false, false, "abc1234567", null, null, null);
+
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repo",
+            Path = "C:\\worktrees\\develop",
+            InputBranch = branchInfo,
+            Locked = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo", "Pipeline");
+
+        Assert.IsTrue(options.Locked);
+    }
+
+    [TestMethod]
+    public void BuildOptions_Pipeline_NoPath_DefaultsToRepoNameDashBranch()
+    {
+        var branchInfo = new GitBranchInfo("main", false, false, "abc1234567", null, null, null);
+
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            InputBranch = branchInfo,
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Pipeline");
+
+        Assert.AreEqual("C:\\repos\\MyProject-main", options.Path);
+        Assert.AreEqual("main.wt", options.Name);
+        Assert.AreEqual("main", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_Pipeline_NoPath_SlashBranch_DefaultsCorrectly()
+    {
+        var branchInfo = new GitBranchInfo("feature/login", false, false, "abc1234567", null, null, null);
+
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "D:\\dev\\PowerGit",
+            InputBranch = branchInfo,
+        };
+
+        var options = cmdlet.BuildOptions("D:\\dev\\PowerGit", "Pipeline");
+
+        Assert.AreEqual("D:\\dev\\PowerGit-feature-login", options.Path);
+        Assert.AreEqual("feature-login.wt", options.Name);
+        Assert.AreEqual("feature/login", options.Branch);
+    }
 }
 
 [TestClass]
