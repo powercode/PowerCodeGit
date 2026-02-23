@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  checks: write
 
 jobs:
   build-and-test:
@@ -38,6 +39,15 @@ jobs:
 
       - name: Unit Tests
         run: dotnet test --configuration Release --no-build --logger trx --results-directory ./test-results
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Test Results (${{ matrix.os }})
+          path: ./test-results/*.trx
+          reporter: dotnet-trx
+          fail-on-error: false
 
       - name: Build MAML Help
         shell: pwsh
