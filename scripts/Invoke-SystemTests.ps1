@@ -24,6 +24,10 @@
     .\scripts\Invoke-SystemTests.ps1 -CommandName Get-GitBranch
 .EXAMPLE
     .\scripts\Invoke-SystemTests.ps1 -CommandName Get-GitBranch, Save-GitCommit
+.PARAMETER TestResultsPath
+    Optional path for the NUnit XML test results file (e.g. './test-results/system-tests.xml').
+    When provided, Pester writes an NUnit-compatible XML report that can be consumed by
+    CI test-reporting tools.
 #>
 [CmdletBinding()]
 param(
@@ -33,6 +37,9 @@ param(
 
     [Parameter()]
     [switch]$NoBuild,
+
+    [Parameter()]
+    [string]$TestResultsPath,
 
     [ArgumentCompleter({param($command, $parameter, $wordToComplete, $commandAst, $fakeBoundParameters)
         $TestDir = Join-Path -Path (Resolve-Path -Path "$PSScriptRoot/..").Path -ChildPath 'tests/PowerCode.Git.SystemTests'
@@ -116,6 +123,12 @@ Import-Module -Name Pester -MinimumVersion 5.0.0 -Force
 `$Config.Run.Path = $TestRunPathArg
 `$Config.Run.Exit = `$true
 `$Config.Output.Verbosity = 'Detailed'
+$(if ($TestResultsPath) {
+    $EscapedResultsPath = $TestResultsPath -replace "'", "''"
+    "`$null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent '$EscapedResultsPath')
+`$Config.TestResult.Enabled = `$true
+`$Config.TestResult.OutputPath = '$EscapedResultsPath'"
+})
 
 Invoke-Pester -Configuration `$Config
 "@

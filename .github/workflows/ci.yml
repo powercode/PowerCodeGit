@@ -65,7 +65,16 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          ./scripts/Invoke-SystemTests.ps1 -Configuration Release -NoBuild
+          ./scripts/Invoke-SystemTests.ps1 -Configuration Release -NoBuild -TestResultsPath ./test-results/system-tests.xml
+
+      - name: Publish System Test Results
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: System Test Results (${{ matrix.os }})
+          path: ./test-results/system-tests.xml
+          reporter: java-junit
+          fail-on-error: false
 
       - name: Upload Test Results
         if: always()
