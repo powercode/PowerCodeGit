@@ -143,7 +143,7 @@ HelpMessage: ''
 The number of context lines surrounding each change in the diff output. Equivalent to `git diff -U<n>` / `--unified=<n>`. When omitted, the library default of 3 context lines is used. Use `-Context 0` to suppress context entirely.
 
 ```yaml
-Type: System.Nullable`1[System.Int32]
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
