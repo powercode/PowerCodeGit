@@ -48,6 +48,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     /// Gets or sets the sort order. Accepts "name" or "version".
     /// </summary>
     [Parameter(ParameterSetName = "Tag")]
+    [ValidateSet("name", "version", IgnoreCase = false)]
     public string? SortBy { get; set; }
 
     /// <summary>

@@ -2,6 +2,7 @@ using System;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
 namespace PowerCode.Git.Cmdlets;
 
@@ -44,6 +45,7 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     /// Gets or sets an optional array of paths to restrict the status query to.
     /// </summary>
     [Parameter(ParameterSetName = "Status")]
+    [GitPathCompleter]
     public string[]? Path { get; set; }
 
     /// <summary>
