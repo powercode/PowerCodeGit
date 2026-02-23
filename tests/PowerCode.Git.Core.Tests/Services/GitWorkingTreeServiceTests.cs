@@ -691,7 +691,7 @@ public sealed class GitWorkingTreeServiceTests
             Assert.AreEqual(repoPath, invocation.WorkingDirectory);
             CollectionAssert.AreEqual(new[] { "apply", "--cached" }, (System.Collections.ICollection)invocation.Args);
             Assert.IsNotNull(invocation.StandardInput);
-            StringAssert.Contains(invocation.StandardInput, "@@ -1,1 +1,1 @@");
+            Assert.Contains("@@ -1,1 +1,1 @@", invocation.StandardInput);
         }
         finally
         {
@@ -812,6 +812,315 @@ public sealed class GitWorkingTreeServiceTests
             CollectionAssert.AreEqual(
                 new[] { "apply", "-R", "--cached" },
                 (System.Collections.ICollection)stub.Invocations[0].Args);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    // ── BuildPatch coverage via StageHunks/RestoreHunks ───────────────────
+
+    [TestMethod]
+    public void StageHunks_ModifiedHunk_PatchContainsDiffHeaders()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("src/app.cs", "src/app.cs", GitFileStatus.Modified,
+                10, 3, 10, 4, "@@ -10,3 +10,4 @@",
+                "@@ -10,3 +10,4 @@\n context\n-old line\n+new line\n+added", 2, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            StringAssert.StartsWith(patch, "diff --git a/src/app.cs b/src/app.cs\n");
+            Assert.Contains("--- a/src/app.cs\n", patch);
+            Assert.Contains("+++ b/src/app.cs\n", patch);
+            Assert.Contains("@@ -10,3 +10,4 @@", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_AddedFile_PatchUsesDevNullForOldPath()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("newfile.txt", "newfile.txt", GitFileStatus.Added,
+                0, 0, 1, 2, "@@ -0,0 +1,2 @@",
+                "@@ -0,0 +1,2 @@\n+line 1\n+line 2", 2, 0);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("--- /dev/null\n", patch);
+            Assert.Contains("+++ b/newfile.txt\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_DeletedFile_PatchUsesDevNullForNewPath()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("removed.txt", "removed.txt", GitFileStatus.Deleted,
+                1, 3, 0, 0, "@@ -1,3 +0,0 @@",
+                "@@ -1,3 +0,0 @@\n-line 1\n-line 2\n-line 3", 0, 3);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("--- a/removed.txt\n", patch);
+            Assert.Contains("+++ /dev/null\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_RenamedFile_PatchUsesOldAndNewPaths()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("new-name.txt", "old-name.txt", GitFileStatus.Renamed,
+                1, 2, 1, 2, "@@ -1,2 +1,2 @@",
+                "@@ -1,2 +1,2 @@\n-old content\n+new content", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("diff --git a/old-name.txt b/new-name.txt\n", patch);
+            Assert.Contains("--- a/old-name.txt\n", patch);
+            Assert.Contains("+++ b/new-name.txt\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_HunksFromDifferentFiles_ProducesSeparateDiffHeaders()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk1 = new GitDiffHunk("a.txt", "a.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old a\n+new a", 1, 1);
+            var hunk2 = new GitDiffHunk("b.txt", "b.txt", GitFileStatus.Modified,
+                5, 1, 5, 1, "@@ -5,1 +5,1 @@",
+                "@@ -5,1 +5,1 @@\n-old b\n+new b", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk1, hunk2],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("diff --git a/a.txt b/a.txt\n", patch);
+            Assert.Contains("diff --git a/b.txt b/b.txt\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_MultipleHunksSameFile_ProducesSingleDiffHeader()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk1 = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old top\n+new top", 1, 1);
+            var hunk2 = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                20, 1, 20, 1, "@@ -20,1 +20,1 @@",
+                "@@ -20,1 +20,1 @@\n-old bottom\n+new bottom", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk1, hunk2],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+
+            // Only one diff header for the file
+            var diffHeaderCount = patch.Split("diff --git").Length - 1;
+            Assert.AreEqual(1, diffHeaderCount);
+
+            // Both hunks present
+            Assert.Contains("@@ -1,1 +1,1 @@", patch);
+            Assert.Contains("@@ -20,1 +20,1 @@", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void RestoreHunks_AddedFile_PatchUsesDevNullForOldPath()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("newfile.txt", "newfile.txt", GitFileStatus.Added,
+                0, 0, 1, 2, "@@ -0,0 +1,2 @@",
+                "@@ -0,0 +1,2 @@\n+line 1\n+line 2", 2, 0);
+
+            service.RestoreHunks(new GitRestoreHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("--- /dev/null\n", patch);
+            Assert.Contains("+++ b/newfile.txt\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void RestoreHunks_DeletedFile_PatchUsesDevNullForNewPath()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("removed.txt", "removed.txt", GitFileStatus.Deleted,
+                1, 3, 0, 0, "@@ -1,3 +0,0 @@",
+                "@@ -1,3 +0,0 @@\n-line 1\n-line 2\n-line 3", 0, 3);
+
+            service.RestoreHunks(new GitRestoreHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.Contains("--- a/removed.txt\n", patch);
+            Assert.Contains("+++ /dev/null\n", patch);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_PatchEndsWithNewline()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+            Assert.EndsWith("\n", patch, "Patch should end with a newline for git apply compatibility.");
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void StageHunks_PatchDoesNotContainCarriageReturn()
+    {
+        var stub = new StubGitExecutable();
+        var service = new GitWorkingTreeService(stub);
+        var repoPath = CreateRepositoryWithCommit();
+
+        try
+        {
+            var hunk = new GitDiffHunk("f.txt", "f.txt", GitFileStatus.Modified,
+                1, 1, 1, 1, "@@ -1,1 +1,1 @@",
+                "@@ -1,1 +1,1 @@\n-old\n+new", 1, 1);
+
+            service.StageHunks(new GitStageHunkOptions
+            {
+                RepositoryPath = repoPath,
+                Hunks = [hunk],
+            });
+
+            var patch = stub.Invocations[0].StandardInput!;
+
+            // The diff headers inserted by BuildPatch must never contain \r\n
+            var headerEnd = patch.IndexOf("@@", StringComparison.Ordinal);
+            var headers = patch[..headerEnd];
+            Assert.DoesNotContain('\r', headers, "Patch headers must use LF-only line endings.");
         }
         finally
         {

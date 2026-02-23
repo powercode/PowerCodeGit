@@ -54,13 +54,13 @@ public sealed class GitLogFormatterTests
         var result = GitLogFormatter.FormatDecorations(decorations);
 
         // Should contain HEAD -> main pattern
-        StringAssert.Contains(result, "HEAD");
-        StringAssert.Contains(result, " -> ");
-        StringAssert.Contains(result, "main");
+        Assert.Contains("HEAD", result);
+        Assert.Contains(" -> ", result);
+        Assert.Contains("main", result);
         // Verify HEAD is bold cyan
-        StringAssert.Contains(result, $"{Esc}[1;36mHEAD{Esc}[0m");
+        Assert.Contains($"{Esc}[1;36mHEAD{Esc}[0m", result);
         // Verify branch is bold green
-        StringAssert.Contains(result, $"{Esc}[1;32mmain{Esc}[0m");
+        Assert.Contains($"{Esc}[1;32mmain{Esc}[0m", result);
     }
 
     [TestMethod]
@@ -73,7 +73,7 @@ public sealed class GitLogFormatterTests
 
         var result = GitLogFormatter.FormatDecorations(decorations);
 
-        StringAssert.Contains(result, $"{Esc}[1;36mHEAD{Esc}[0m");
+        Assert.Contains($"{Esc}[1;36mHEAD{Esc}[0m", result);
         // Should not contain arrow
         Assert.DoesNotContain(result, "->", "Detached HEAD should not contain arrow");
     }
@@ -88,7 +88,7 @@ public sealed class GitLogFormatterTests
 
         var result = GitLogFormatter.FormatDecorations(decorations);
 
-        StringAssert.Contains(result, $"{Esc}[1;33mtag: v1.0{Esc}[0m");
+        Assert.Contains($"{Esc}[1;33mtag: v1.0{Esc}[0m", result);
     }
 
     [TestMethod]
@@ -101,7 +101,7 @@ public sealed class GitLogFormatterTests
 
         var result = GitLogFormatter.FormatDecorations(decorations);
 
-        StringAssert.Contains(result, $"{Esc}[1;31morigin/main{Esc}[0m");
+        Assert.Contains($"{Esc}[1;31morigin/main{Esc}[0m", result);
     }
 
     [TestMethod]
@@ -121,10 +121,10 @@ public sealed class GitLogFormatterTests
         StringAssert.StartsWith(result, $"{Esc}[33m({Esc}[0m");
         StringAssert.EndsWith(result, $"{Esc}[33m){Esc}[0m");
         // Should contain all decorations
-        StringAssert.Contains(result, "HEAD");
-        StringAssert.Contains(result, "main");
-        StringAssert.Contains(result, "origin/main");
-        StringAssert.Contains(result, "tag: v1.0");
+        Assert.Contains("HEAD", result);
+        Assert.Contains("main", result);
+        Assert.Contains("origin/main", result);
+        Assert.Contains("tag: v1.0", result);
     }
 
     [TestMethod]
@@ -146,11 +146,11 @@ public sealed class GitLogFormatterTests
         var result = GitLogFormatter.FormatOneline(commit);
 
         // Should contain yellow SHA
-        StringAssert.Contains(result, $"{Esc}[33mabc1234{Esc}[0m");
+        Assert.Contains($"{Esc}[33mabc1234{Esc}[0m", result);
         // Should contain decoration parens with branch
-        StringAssert.Contains(result, "main");
+        Assert.Contains("main", result);
         // Should contain the message
-        StringAssert.Contains(result, "Initial commit");
+        Assert.Contains("Initial commit", result);
     }
 
     [TestMethod]
@@ -173,7 +173,7 @@ public sealed class GitLogFormatterTests
         // Should not contain parens
         Assert.DoesNotContain(result, "(", "No decorations should mean no parentheses");
         // Should start with yellow SHA and end with message
-        StringAssert.Contains(result, $"{Esc}[33mabc1234{Esc}[0m");
-        StringAssert.Contains(result, "Fix bug");
+        Assert.Contains($"{Esc}[33mabc1234{Esc}[0m", result);
+        Assert.Contains("Fix bug", result);
     }
 }

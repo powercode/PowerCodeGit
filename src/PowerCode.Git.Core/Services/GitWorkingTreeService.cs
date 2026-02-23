@@ -358,11 +358,16 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         foreach (var group in grouped)
         {
             var (oldPath, newPath) = group.Key;
+            var status = group.First().Status;
+
+            // For new files the old side is /dev/null; for deletions the new side is.
+            var oldPrefix = status == GitFileStatus.Added ? "/dev/null" : $"a/{oldPath}";
+            var newPrefix = status == GitFileStatus.Deleted ? "/dev/null" : $"b/{newPath}";
 
             // Use \n explicitly — git apply rejects \r\n in patch headers.
             sb.Append("diff --git a/").Append(oldPath).Append(" b/").Append(newPath).Append('\n');
-            sb.Append("--- a/").Append(oldPath).Append('\n');
-            sb.Append("+++ b/").Append(newPath).Append('\n');
+            sb.Append("--- ").Append(oldPrefix).Append('\n');
+            sb.Append("+++ ").Append(newPrefix).Append('\n');
 
             foreach (var hunk in group)
             {

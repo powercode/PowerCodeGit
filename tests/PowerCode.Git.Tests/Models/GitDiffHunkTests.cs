@@ -212,4 +212,108 @@ public sealed class GitDiffHunkTests
 
         Assert.AreSame(first, second);
     }
+
+    // ------------------------------------------------------------------ //
+    // Patch property
+    // ------------------------------------------------------------------ //
+
+    private static GitDiffHunk MakeHunkWithStatus(
+        string content,
+        GitFileStatus status,
+        string filePath = "file.txt",
+        string oldPath = "file.txt") =>
+        new(
+            filePath: filePath,
+            oldPath: oldPath,
+            status: status,
+            oldStart: 1,
+            oldLineCount: 1,
+            newStart: 1,
+            newLineCount: 1,
+            header: content.Split('\n')[0],
+            content: content,
+            linesAdded: 0,
+            linesDeleted: 0);
+
+    [TestMethod]
+    public void Patch_ModifiedFile_ContainsDiffHeaders()
+    {
+        var hunk = MakeHunkWithStatus(
+            "@@ -1,1 +1,1 @@\n-old\n+new",
+            GitFileStatus.Modified,
+            filePath: "src/app.cs",
+            oldPath: "src/app.cs");
+
+        var patch = hunk.Patch;
+
+        StringAssert.StartsWith(patch, "diff --git a/src/app.cs b/src/app.cs\n");
+        Assert.Contains("--- a/src/app.cs\n", patch);
+        Assert.Contains("+++ b/src/app.cs\n", patch);
+        Assert.Contains("@@ -1,1 +1,1 @@\n-old\n+new", patch);
+    }
+
+    [TestMethod]
+    public void Patch_AddedFile_UsesDevNullForOldPath()
+    {
+        var hunk = MakeHunkWithStatus(
+            "@@ -0,0 +1,2 @@\n+line 1\n+line 2",
+            GitFileStatus.Added,
+            filePath: "newfile.txt",
+            oldPath: "newfile.txt");
+
+        var patch = hunk.Patch;
+
+        Assert.Contains("--- /dev/null\n", patch);
+        Assert.Contains("+++ b/newfile.txt\n", patch);
+    }
+
+    [TestMethod]
+    public void Patch_DeletedFile_UsesDevNullForNewPath()
+    {
+        var hunk = MakeHunkWithStatus(
+            "@@ -1,3 +0,0 @@\n-line 1\n-line 2\n-line 3",
+            GitFileStatus.Deleted,
+            filePath: "removed.txt",
+            oldPath: "removed.txt");
+
+        var patch = hunk.Patch;
+
+        Assert.Contains("--- a/removed.txt\n", patch);
+        Assert.Contains("+++ /dev/null\n", patch);
+    }
+
+    [TestMethod]
+    public void Patch_RenamedFile_UsesOldAndNewPaths()
+    {
+        var hunk = MakeHunkWithStatus(
+            "@@ -1,2 +1,2 @@\n-old\n+new",
+            GitFileStatus.Renamed,
+            filePath: "new-name.txt",
+            oldPath: "old-name.txt");
+
+        var patch = hunk.Patch;
+
+        Assert.Contains("diff --git a/old-name.txt b/new-name.txt\n", patch);
+        Assert.Contains("--- a/old-name.txt\n", patch);
+        Assert.Contains("+++ b/new-name.txt\n", patch);
+    }
+
+    [TestMethod]
+    public void Patch_EndsWithNewline()
+    {
+        var hunk = MakeHunk("@@ -1,1 +1,1 @@\n-old\n+new");
+
+        Assert.EndsWith("\n", hunk.Patch);
+    }
+
+    [TestMethod]
+    public void Patch_HeadersUseLFOnly()
+    {
+        var hunk = MakeHunk("@@ -1,1 +1,1 @@\n-old\n+new");
+
+        var headerEnd = hunk.Patch.IndexOf("@@", StringComparison.Ordinal);
+        var headers = hunk.Patch[..headerEnd];
+
+        Assert.DoesNotContain('\r', headers, "Patch headers must use LF-only line endings.");
+    }
 }

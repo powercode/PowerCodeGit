@@ -65,7 +65,7 @@ public sealed class GitStatusFormatterTests
 
         // Should be green and start with 'A'
         StringAssert.StartsWith(result, $"{Esc}[32mA");
-        StringAssert.Contains(result, "file.cs");
+        Assert.Contains("file.cs", result);
         StringAssert.EndsWith(result, $"{Esc}[0m");
     }
 
@@ -78,8 +78,8 @@ public sealed class GitStatusFormatterTests
 
         // Should be red
         StringAssert.StartsWith(result, $"{Esc}[31m");
-        StringAssert.Contains(result, "M");
-        StringAssert.Contains(result, "src/app.cs");
+        Assert.Contains("M", result);
+        Assert.Contains("src/app.cs", result);
     }
 
     [TestMethod]
@@ -87,7 +87,7 @@ public sealed class GitStatusFormatterTests
     {
         var result = GitStatusFormatter.FormatEntries([]);
 
-        StringAssert.Contains(result, "nothing to commit");
+        Assert.Contains("nothing to commit", result);
     }
 
     [TestMethod]
@@ -103,13 +103,13 @@ public sealed class GitStatusFormatterTests
         var result = GitStatusFormatter.FormatEntries(entries);
 
         // Should have section headers
-        StringAssert.Contains(result, "Changes to be committed:");
-        StringAssert.Contains(result, "Changes not staged for commit:");
-        StringAssert.Contains(result, "Untracked files:");
+        Assert.Contains("Changes to be committed:", result);
+        Assert.Contains("Changes not staged for commit:", result);
+        Assert.Contains("Untracked files:", result);
         // Should list file paths
-        StringAssert.Contains(result, "staged.cs");
-        StringAssert.Contains(result, "modified.cs");
-        StringAssert.Contains(result, "new-file.txt");
+        Assert.Contains("staged.cs", result);
+        Assert.Contains("modified.cs", result);
+        Assert.Contains("new-file.txt", result);
     }
 
     [TestMethod]
@@ -122,7 +122,7 @@ public sealed class GitStatusFormatterTests
 
         var result = GitStatusFormatter.FormatEntries(entries);
 
-        StringAssert.Contains(result, "Changes to be committed:");
+        Assert.Contains("Changes to be committed:", result);
         Assert.DoesNotContain(result, "Changes not staged", "Should not have unstaged section");
         Assert.DoesNotContain(result, "Untracked", "Should not have untracked section");
     }

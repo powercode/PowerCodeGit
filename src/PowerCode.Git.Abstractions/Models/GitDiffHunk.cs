@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 
 namespace PowerCode.Git.Abstractions.Models;
 
@@ -104,6 +105,35 @@ public sealed class GitDiffHunk
     /// Gets the number of deleted lines in this hunk.
     /// </summary>
     public int LinesDeleted { get; }
+
+    /// <summary>
+    /// Gets the full unified diff patch text for this hunk, including the
+    /// <c>diff --git</c>, <c>---</c>, and <c>+++</c> headers.
+    /// This property is calculated from the hunk metadata and content.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// diff --git a/file.txt b/file.txt
+    /// --- a/file.txt
+    /// +++ b/file.txt
+    /// @@ -1,3 +1,4 @@
+    ///  context
+    /// +added line
+    ///  context
+    /// </code>
+    /// </example>
+    public string Patch
+    {
+        get
+        {
+            var sb = new StringBuilder();
+            sb.Append("diff --git a/").Append(OldPath).Append(" b/").Append(FilePath).Append('\n');
+            sb.Append("--- ").Append(Status == GitFileStatus.Added ? "/dev/null" : $"a/{OldPath}").Append('\n');
+            sb.Append("+++ ").Append(Status == GitFileStatus.Deleted ? "/dev/null" : $"b/{FilePath}").Append('\n');
+            sb.Append(Content).Append('\n');
+            return sb.ToString();
+        }
+    }
 
     /// <summary>
     /// Gets the parsed changed lines in this hunk, with old/new line numbers and

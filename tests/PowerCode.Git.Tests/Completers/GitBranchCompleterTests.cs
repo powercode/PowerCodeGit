@@ -103,7 +103,7 @@ public sealed class GitBranchCompleterTests
         var results = completer.CompleteArgument("Get-GitBranch", "Name", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "HEAD");
+        Assert.Contains("HEAD", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -118,7 +118,7 @@ public sealed class GitBranchCompleterTests
         var results = completer.CompleteArgument("Get-GitBranch", "Name", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "Remote");
+        Assert.Contains("Remote", results[0].ToolTip);
     }
 
     [TestMethod]

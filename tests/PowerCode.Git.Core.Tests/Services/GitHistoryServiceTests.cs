@@ -86,7 +86,7 @@ public sealed class GitHistoryServiceTests
             var commits = service.GetLog(options);
 
             Assert.HasCount(1, commits);
-            StringAssert.Contains(commits[0].Message, "feature");
+            Assert.Contains("feature", commits[0].Message);
         }
         finally
         {

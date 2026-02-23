@@ -115,8 +115,8 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "Test Author");
-        StringAssert.Contains(results[0].ToolTip, "2025-06-15");
+        Assert.Contains("Test Author", results[0].ToolTip);
+        Assert.Contains("2025-06-15", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -131,8 +131,8 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ListItemText, "abc1234");
-        StringAssert.Contains(results[0].ListItemText, "Initial commit");
+        Assert.Contains("abc1234", results[0].ListItemText);
+        Assert.Contains("Initial commit", results[0].ListItemText);
     }
 
     [TestMethod]
@@ -257,7 +257,7 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "HEAD^", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "parent of HEAD");
+        Assert.Contains("parent of HEAD", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -361,7 +361,7 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "* main (HEAD)");
+        Assert.Contains("* main (HEAD)", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -378,7 +378,7 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "Remote branch:");
+        Assert.Contains("Remote branch:", results[0].ToolTip);
     }
 
     // ── IncludeTags ───────────────────────────────────────────────────────
@@ -436,7 +436,7 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "First release");
+        Assert.Contains("First release", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -453,7 +453,7 @@ public sealed class GitCommittishCompleterTests
         var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        StringAssert.Contains(results[0].ToolTip, "Tag: v1.0.0");
+        Assert.Contains("Tag: v1.0.0", results[0].ToolTip);
     }
 
     // ── Combined completions ──────────────────────────────────────────────

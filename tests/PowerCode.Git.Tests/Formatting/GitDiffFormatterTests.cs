@@ -225,10 +225,10 @@ public sealed class GitDiffFormatterTests
         var lines = result.Split('\n');
 
         // Removed line: trailing two spaces become visible dots.
-        StringAssert.Contains(lines[0],
-            $"{GitDiffFormatter.VisibleSpace}{GitDiffFormatter.VisibleSpace}{Reset}");
+        Assert.Contains($"{GitDiffFormatter.VisibleSpace}{GitDiffFormatter.VisibleSpace}{Reset}",
+lines[0]);
 
         // Added line: trailing tab becomes visible arrow.
-        StringAssert.Contains(lines[1], $"{GitDiffFormatter.VisibleTab}{Reset}");
+        Assert.Contains($"{GitDiffFormatter.VisibleTab}{Reset}", lines[1]);
     }
 }
