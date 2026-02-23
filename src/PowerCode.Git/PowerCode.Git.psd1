@@ -42,10 +42,10 @@
     AliasesToExport      = @()
 
     PrivateData          = @{
-        PSData = @{
-            ProjectUri = 'https://github.com/powercode/PowerCodeGit'
-            LicenseUri = 'https://github.com/powercode/PowerCodeGit/blob/main/LICENSE'
-            Tags       = @('Git', 'VersionControl', 'SourceControl')
+            PSData = @{
+                ProjectUri = 'https://github.com/powercode/PowerCodeGit'
+                LicenseUri = 'https://github.com/powercode/PowerCodeGit/blob/main/LICENSE'
+                Tags       = @('Git', 'VersionControl', 'SourceControl')
         }
     }
 }

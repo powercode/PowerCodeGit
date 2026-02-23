@@ -59,35 +59,15 @@ if ($PSCmdlet.ShouldProcess($ManifestPath, 'Update module manifest version'))
     Write-Verbose "  Prerelease:    $Prerelease"
 }
 
-# Directly patch the psd1 content instead of using Update-ModuleManifest,
-# which enforces that the folder name matches the version and fails when
-# the directory has not been renamed yet.
+# Directly patch the ModuleVersion in the psd1 content because
+# Update-ModuleManifest enforces that the folder name matches the version
+# and fails when the directory has not been renamed yet.
 $Content = Get-Content -Path $ManifestPath -Raw
 
 # Replace the ModuleVersion value
 $Content = $Content -replace "(?<=ModuleVersion\s*=\s*')[^']*", $ModuleVersion
-
-if ($Prerelease) {
-    # Inject a PrivateData / PSData / Prerelease block if one does not exist
-    if ($Content -match 'Prerelease\s*=') {
-        $Content = $Content -replace "(?<=Prerelease\s*=\s*')[^']*", $Prerelease
-    }
-    else {
-        # Insert a PrivateData block before the closing brace of the root hashtable
-        $PsdataBlock = @"
-
-    PrivateData = @{
-        PSData = @{
-            Prerelease = '$Prerelease'
-        }
-    }
-"@
-        $LastBrace = $Content.LastIndexOf('}')
-        $Content = $Content.Substring(0, $LastBrace) + $PsdataBlock + [System.Environment]::NewLine + '}'
-    }
-}
-
 Set-Content -Path $ManifestPath -Value $Content -NoNewline
+
 Write-Host 'Manifest updated successfully.'
 
 # Rename directory to match the final module version
@@ -95,6 +75,12 @@ if ($VersionedDir.Name -ne $ModuleVersion) {
     $null = Rename-Item -Path $VersionedDir.FullName -NewName $ModuleVersion
     Write-Host "Renamed module directory from '$($VersionedDir.Name)' to '$ModuleVersion'."
     $ManifestPath = Join-Path -Path $ModulePath -ChildPath "$ModuleVersion/PowerCode.Git.psd1"
+}
+
+# Update-ModuleManifest requires the folder name to match the version,
+# so set the Prerelease tag after the directory has been renamed.
+if ($Prerelease) {
+    Update-ModuleManifest -Path $ManifestPath -Prerelease $Prerelease
 }
 
 # Validate the manifest after renaming so folder name matches version
