@@ -72,6 +72,14 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     public SwitchParameter Force { get; set; }
 
     /// <summary>
+    /// Gets or sets an optional description for the branch. The value is stored in
+    /// the local repository configuration as <c>branch.&lt;name&gt;.description</c>.
+    /// </summary>
+    [Parameter(ParameterSetName = CreateParameterSet)]
+    [ValidateNotNullOrEmpty]
+    public string? Description { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built options object for full control over branch creation.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
@@ -126,6 +134,7 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
             StartPoint = StartPoint,
             Track = Track.IsPresent,
             Force = Force.IsPresent,
+            Description = Description,
         };
     }
 }

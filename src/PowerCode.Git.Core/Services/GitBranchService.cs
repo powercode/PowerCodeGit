@@ -248,6 +248,12 @@ public sealed class GitBranchService : IGitBranchService
             }
         }
 
+        // Set branch description if provided
+        if (!string.IsNullOrWhiteSpace(options.Description))
+        {
+            repository.Config.Set($"branch.{options.Name}.description", options.Description);
+        }
+
         Commands.Checkout(repository, repository.Branches[options.Name]!);
 
         var updatedBranch = repository.Branches[options.Name]!;

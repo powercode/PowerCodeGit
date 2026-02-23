@@ -158,3 +158,41 @@ Describe 'New-GitBranch -Options catch-all' {
         $Result.Name | Should -BeExactly 'via-options'
     }
 }
+
+Describe 'New-GitBranch -Description' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Sets the branch description in local config' {
+        New-GitBranch -RepoPath $script:RepoPath -Name 'described-branch' -Description 'My feature description'
+
+        Push-Location -Path $script:RepoPath
+        try {
+            $Desc = git config --local branch.described-branch.description 2>&1
+        }
+        finally {
+            Pop-Location
+        }
+
+        $Desc | Should -BeExactly 'My feature description'
+    }
+
+    It 'Does not set a description when -Description is omitted' {
+        New-GitBranch -RepoPath $script:RepoPath -Name 'no-desc-branch'
+
+        Push-Location -Path $script:RepoPath
+        try {
+            $Desc = git config --local branch.no-desc-branch.description 2>&1
+        }
+        finally {
+            Pop-Location
+        }
+
+        $Desc | Should -BeNullOrEmpty
+    }
+}

@@ -110,6 +110,35 @@ public sealed class NewGitBranchCmdletTests
     }
 
     [TestMethod]
+    public void BuildOptions_DescriptionSet_Mapped()
+    {
+        var cmdlet = new NewGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            Name = "feature",
+            Description = "Work on feature X",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("Work on feature X", options.Description);
+    }
+
+    [TestMethod]
+    public void BuildOptions_DescriptionNotSet_IsNull()
+    {
+        var cmdlet = new NewGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            Name = "feature",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsNull(options.Description);
+    }
+
+    [TestMethod]
     public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
     {
         var predefinedOptions = new GitBranchCreateOptions

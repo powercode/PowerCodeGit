@@ -20,8 +20,8 @@ Creates a new branch in a git repository, equivalent to git branch.
 ### Create (Default)
 
 ```
-New-GitBranch [-Name] <string> [[-StartPoint] <string>] [-Track] [-Force] [-RepoPath <string>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-GitBranch [-Name] <string> [[-StartPoint] <string>] [-Track] [-Force] [-Description <string>]
+ [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Options
@@ -57,6 +57,14 @@ Creates a new branch starting from a specific tag.
 New-GitBranch -Name hotfix/p1 -StartPoint v2.0.0
 ```
 
+### Example 3 - Create a branch with a description
+
+Creates a new branch and sets a branch description stored in local config.
+
+```powershell
+New-GitBranch -Name feature/login -Description 'Implement user login flow'
+```
+
 ## PARAMETERS
 
 ### -Confirm
@@ -71,6 +79,27 @@ Aliases:
 - cf
 ParameterSets:
 - Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Description
+
+An optional description for the branch. The value is stored in the local repository configuration as `branch.<name>.description`.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Create
   Position: Named
   IsRequired: false
   ValueFromPipeline: false

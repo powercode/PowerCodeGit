@@ -34,6 +34,12 @@ public sealed class GitBranchCreateOptions
     /// </summary>
     public bool Force { get; init; }
 
+    /// <summary>
+    /// Gets the optional branch description. When set, the value is stored as the
+    /// <c>branch.&lt;name&gt;.description</c> configuration entry in the local repository.
+    /// </summary>
+    public string? Description { get; init; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -44,6 +50,7 @@ public sealed class GitBranchCreateOptions
         if (StartPoint is not null) parts.Add($"StartPoint={StartPoint}");
         if (Track) parts.Add("track");
         if (Force) parts.Add("force");
+        if (Description is not null) parts.Add($"Description={Description}");
         return $"GitBranchCreateOptions({string.Join(", ", parts)})";
     }
 }
