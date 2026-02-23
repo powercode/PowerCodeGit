@@ -94,7 +94,7 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
             var result = branchService.CreateBranch(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

@@ -77,7 +77,7 @@ public sealed class RemoveGitBranchCmdlet : GitCmdlet
         {
             branchService.DeleteBranch(options);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

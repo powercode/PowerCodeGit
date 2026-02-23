@@ -106,7 +106,7 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
             var result = worktreeService.AddWorktree(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

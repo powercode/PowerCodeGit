@@ -123,7 +123,7 @@ public sealed class SetGitConfigurationCmdlet : GitCmdlet
 
             WriteObject(entry);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

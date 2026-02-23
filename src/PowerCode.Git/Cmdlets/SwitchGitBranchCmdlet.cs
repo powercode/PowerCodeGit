@@ -163,7 +163,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
             var result = branchService.SwitchBranch(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             var errorRecord = new ErrorRecord(
                 exception,

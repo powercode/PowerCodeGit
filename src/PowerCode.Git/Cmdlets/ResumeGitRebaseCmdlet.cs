@@ -81,7 +81,7 @@ public sealed class ResumeGitRebaseCmdlet : GitCmdlet
             var result = rebaseService.Continue(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

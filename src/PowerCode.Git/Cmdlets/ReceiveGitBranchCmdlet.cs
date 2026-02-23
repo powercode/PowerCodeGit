@@ -129,7 +129,7 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             var errorRecord = new ErrorRecord(
                 exception,

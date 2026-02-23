@@ -103,7 +103,7 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
             var result = workingTreeService.GetStatus(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             var errorRecord = new ErrorRecord(
                 exception,

@@ -232,7 +232,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
             var result = rebaseService.Start(options);
             WriteObject(result);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

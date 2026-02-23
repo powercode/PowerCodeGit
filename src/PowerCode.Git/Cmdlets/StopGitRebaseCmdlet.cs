@@ -84,7 +84,7 @@ public sealed class StopGitRebaseCmdlet : GitCmdlet
 
             rebaseService.Abort(options);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             WriteError(new ErrorRecord(
                 exception,

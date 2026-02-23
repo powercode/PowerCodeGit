@@ -123,7 +123,7 @@ public sealed class GetGitLogCmdlet : GitCmdlet
                 WriteObject(commit);
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (exception is not PipelineStoppedException)
         {
             var errorRecord = new ErrorRecord(
                 exception,
