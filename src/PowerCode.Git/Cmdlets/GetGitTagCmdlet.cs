@@ -2,6 +2,7 @@ using System;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
+using PowerCode.Git.Completers;
 
 namespace PowerCode.Git.Cmdlets;
 
@@ -53,6 +54,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     /// Gets or sets a committish to filter only tags that contain the specified commit.
     /// </summary>
     [Parameter(ParameterSetName = "Tag")]
+    [GitCommittishCompleter]
     public string? ContainsCommit { get; set; }
 
     /// <summary>
