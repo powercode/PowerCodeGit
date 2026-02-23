@@ -28,9 +28,19 @@ public sealed class GitWorktreeService : IGitWorktreeService
         RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Worktree name is required.");
         RepositoryGuard.ValidateRequiredString(options.Path, nameof(options), "Worktree path is required.");
 
+        // LibGit2Sharp returns null when the branch spec equals the worktree name
+        // because it internally creates a branch with the worktree name first.
+        if (options.Branch is not null && string.Equals(options.Branch, options.Name, StringComparison.Ordinal))
+        {
+            throw new ArgumentException(
+                $"The worktree name '{options.Name}' cannot be the same as the target branch. " +
+                "Use a different worktree name when checking out an existing branch.",
+                nameof(options));
+        }
+
         using var repository = new Repository(options.RepositoryPath);
 
-        Worktree worktree;
+        Worktree? worktree;
         if (options.Branch is not null)
         {
             worktree = repository.Worktrees.Add(options.Branch, options.Name, options.Path, options.Locked);
@@ -38,6 +48,12 @@ public sealed class GitWorktreeService : IGitWorktreeService
         else
         {
             worktree = repository.Worktrees.Add(options.Name, options.Path, options.Locked);
+        }
+
+        if (worktree is null)
+        {
+            throw new InvalidOperationException(
+                $"Failed to create worktree '{options.Name}'. The underlying git operation returned no result.");
         }
 
         return MapWorktree(worktree);

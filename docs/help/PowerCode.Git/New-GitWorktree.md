@@ -43,10 +43,18 @@ The New-GitWorktree cmdlet creates a new linked worktree for a git repository, a
 
 ### Example 1 - Create a worktree
 
-Creates a new worktree at the specified path.
+Creates a new worktree at the specified path. A new branch named `feature` is created automatically and checked out in the worktree.
 
 ```powershell
 New-GitWorktree -Name feature -Path ../feature-worktree
+```
+
+### Example 2 - Create a worktree for an existing branch
+
+Checks out an existing branch into a new worktree. The `-Name` must differ from `-Branch` because the worktree internally creates a tracking reference with the given name.
+
+```powershell
+New-GitWorktree -Name hotfix-wt -Path ../hotfix-worktree -Branch hotfix/p1
 ```
 
 ## PARAMETERS

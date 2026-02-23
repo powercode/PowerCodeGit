@@ -12,7 +12,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>New-GitWorktree -Name feature -Path ../feature-worktree</code>
 /// </example>
 /// <example>
-/// <code>New-GitWorktree -Name hotfix -Path ../hotfix-wt -Branch hotfix/p1</code>
+/// <code>New-GitWorktree -Name hotfix-wt -Path ../hotfix-worktree -Branch hotfix/p1</code>
 /// </example>
 /// </summary>
 [Cmdlet(VerbsCommon.New, "GitWorktree", SupportsShouldProcess = true, DefaultParameterSetName = "Create")]

@@ -78,11 +78,31 @@ Describe 'New-GitWorktree with branch' {
         }
     }
 
-    It 'Creates a worktree for a specific branch' {
+    # Help Example 2 - Create a worktree for an existing branch
+    It 'Creates a worktree for a specific branch with a different name' {
         $Result = New-GitWorktree -RepoPath $script:RepoPath -Name 'feature-wt' -Path $script:WorktreePath -Branch 'feature'
 
         $Result | Should -Not -BeNullOrEmpty
         $Result.Name | Should -BeExactly 'feature-wt'
+    }
+}
+
+Describe 'New-GitWorktree rejects -Branch equal to -Name' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:WorktreePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_samebranchwt_$([System.Guid]::NewGuid().ToString('N'))"
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:WorktreePath) {
+            Remove-Item -Path $script:WorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'Throws when -Name and -Branch are identical' {
+        { New-GitWorktree -RepoPath $script:RepoPath -Name 'main' -Path $script:WorktreePath -Branch 'main' } |
+            Should -Throw
     }
 }
 

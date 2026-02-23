@@ -105,6 +105,31 @@ public sealed class GitWorktreeServiceTests
     }
 
     [TestMethod]
+    public void AddWorktree_BranchEqualToName_ThrowsArgumentException()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+        var worktreePath = GenerateTemporaryPath();
+
+        try
+        {
+            var service = new GitWorktreeService();
+
+            Assert.Throws<ArgumentException>(() => service.AddWorktree(new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "main",
+                Path = worktreePath,
+                Branch = "main",
+            }));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(worktreePath);
+        }
+    }
+
+    [TestMethod]
     public void AddWorktree_Locked_CreatesLockedWorktree()
     {
         var repositoryPath = CreateRepositoryWithCommit();
