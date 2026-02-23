@@ -114,11 +114,15 @@ public sealed class NewGitWorktreeCmdlet : GitCmdlet
             return Options;
         }
 
+        // Resolve the worktree path to an absolute path so that LibGit2Sharp
+        // does not resolve it relative to the repository root.
+        var resolvedPath = PathResolver?.ResolvePath(Path) ?? Path;
+
         return new GitWorktreeAddOptions
         {
             RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Name = Name,
-            Path = Path,
+            Path = resolvedPath,
             Branch = Branch,
             Locked = Locked.IsPresent,
         };
