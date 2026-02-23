@@ -20,16 +20,16 @@ Starts a rebase operation, replaying commits from the current branch on top of t
 ### Rebase (Default)
 
 ```
-Start-GitRebase [-Upstream] <string> [-Onto <string>] [-AutoStash]
- [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Start-GitRebase [-Upstream] <string> [-Onto <string>] [-AutoStash] [-RepoPath <string>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ### Interactive
 
 ```
-Start-GitRebase [-Upstream] <string> -Interactive [-AutoSquash] [-Exec <string>]
- [-RebaseMerges] [-UpdateRefs] [-Onto <string>] [-AutoStash]
- [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Start-GitRebase [-Upstream] <string> -Interactive [-AutoSquash] [-Exec <string>] [-RebaseMerges]
+ [-UpdateRefs] [-Onto <string>] [-AutoStash] [-RepoPath <string>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ### Options
@@ -230,48 +230,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -RebaseMerges
-
-Recreates merge commits during the rebase rather than linearising history. Equivalent to `git rebase --rebase-merges`.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: Interactive
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -UpdateRefs
-
-Automatically updates any branch refs that point to commits being rebased. Useful when working with stacked branches. Equivalent to `git rebase --update-refs`.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: Interactive
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Options
 
 A pre-built GitRebaseOptions object for full programmatic control over the rebase.
@@ -293,6 +251,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -RebaseMerges
+
+Recreates merge commits during the rebase rather than linearising history. Equivalent to `git rebase --rebase-merges`.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -RepoPath
 
 Path to the git repository. Defaults to the current PowerShell location.
@@ -305,6 +284,27 @@ Aliases:
 - RepositoryPath
 ParameterSets:
 - Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -UpdateRefs
+
+Automatically updates any branch refs that point to commits being rebased. Useful when working with stacked branches. Equivalent to `git rebase --update-refs`.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Interactive
   Position: Named
   IsRequired: false
   ValueFromPipeline: false

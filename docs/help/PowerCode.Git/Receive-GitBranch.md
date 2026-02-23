@@ -21,13 +21,14 @@ Pulls remote changes into the current branch, equivalent to git pull.
 
 ```
 Receive-GitBranch [-MergeStrategy <GitMergeStrategy>] [-Prune] [-AutoStash] [-Tags]
- [-Credential <pscredential>] [-RepoPath <string>] [<CommonParameters>]
+ [-Credential <pscredential>] [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Options
 
 ```
-Receive-GitBranch -Options <GitPullOptions> [-RepoPath <string>] [<CommonParameters>]
+Receive-GitBranch -Options <GitPullOptions> [-RepoPath <string>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -69,6 +70,28 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Pull
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Confirm
+
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- cf
+ParameterSets:
+- Name: (All)
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -196,6 +219,28 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Pull
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -WhatIf
+
+Runs the command in a mode that only reports what would happen without performing the actions.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- wi
+ParameterSets:
+- Name: (All)
   Position: Named
   IsRequired: false
   ValueFromPipeline: false

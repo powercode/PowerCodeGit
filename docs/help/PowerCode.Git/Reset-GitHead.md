@@ -278,10 +278,6 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
-
-An array of file paths passed via `-Path` to unstage.
-
 ### System.String[]
 
 An array of repository-relative file paths bound via the `-Path` parameter.

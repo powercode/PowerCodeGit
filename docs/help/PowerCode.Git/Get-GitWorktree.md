@@ -17,10 +17,16 @@ Lists worktrees in a git repository, equivalent to git worktree list.
 
 ## SYNTAX
 
-### __AllParameterSets
+### List (Default)
 
 ```
 Get-GitWorktree [-RepoPath <string>] [<CommonParameters>]
+```
+
+### Options
+
+```
+Get-GitWorktree -Options <GitWorktreeListOptions> [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -42,6 +48,27 @@ Get-GitWorktree
 ```
 
 ## PARAMETERS
+
+### -Options
+
+A pre-built GitWorktreeListOptions object that specifies all retrieval parameters, including the repository path.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.GitWorktreeListOptions
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Options
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -RepoPath
 

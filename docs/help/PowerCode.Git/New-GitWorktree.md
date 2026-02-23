@@ -27,7 +27,7 @@ New-GitWorktree [-Name] <string> [-Path] <string> [-Branch <string>] [-Locked] [
 ### Pipeline
 
 ```
-New-GitWorktree [-Path <string>] [-Locked] -InputBranch <GitBranchInfo> [-RepoPath <string>]
+New-GitWorktree [[-Path] <string>] -InputBranch <GitBranchInfo> [-Locked] [-RepoPath <string>]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 

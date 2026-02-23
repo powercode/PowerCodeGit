@@ -23,6 +23,19 @@ Aborts the current rebase operation and restores the branch to its original stat
 Stop-GitRebase [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
+### Abort (Default)
+
+```
+Stop-GitRebase [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### Options
+
+```
+Stop-GitRebase -Options <GitStopRebaseOptions> [-RepoPath <string>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
+```
+
 ## ALIASES
 
 None.
@@ -57,6 +70,27 @@ ParameterSets:
 - Name: (All)
   Position: Named
   IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Options
+
+A pre-built GitStopRebaseOptions object that specifies all parameters for the abort operation, including the repository path.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.GitStopRebaseOptions
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Options
+  Position: Named
+  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false

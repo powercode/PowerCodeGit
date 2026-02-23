@@ -20,21 +20,22 @@ Shows changes between the working tree, index, or commits, equivalent to git dif
 ### WorkingTree (Default)
 
 ```
-Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>]
+ [<CommonParameters>]
 ```
 
 ### Staged
 
 ```
-Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>]
- [<CommonParameters>]
+Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk]
+ [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Commit
 
 ```
-Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>]
- [<CommonParameters>]
+Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk]
+ [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Range
@@ -116,12 +117,33 @@ Get-GitDiff -Context 0
 
 ## PARAMETERS
 
+### -Commit
+
+A committish to diff the working tree against.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Commit
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Context
 
 The number of context lines surrounding each change in the diff output. Equivalent to `git diff -U<n>` / `--unified=<n>`. When omitted, the library default of 3 context lines is used. Use `-Context 0` to suppress context entirely.
 
 ```yaml
-Type: System.Int32
+Type: System.Nullable`1[System.Int32]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -147,27 +169,6 @@ ParameterSets:
 - Name: Range
   Position: Named
   IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Commit
-
-A committish to diff the working tree against.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: Commit
-  Position: 0
-  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
