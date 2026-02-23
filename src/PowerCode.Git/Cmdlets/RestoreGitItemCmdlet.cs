@@ -61,7 +61,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     [Parameter(Position = 0, ValueFromPipeline = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "Path")]
     [ValidateNotNullOrEmpty]
     [Alias("FilePath")]
-    [GitPathCompleter]
+    [GitPathCompleter(IncludeStaged = true)]
     public string[]? Path { get; set; }
 
     // -- All parameter set ---------------------------------------------------

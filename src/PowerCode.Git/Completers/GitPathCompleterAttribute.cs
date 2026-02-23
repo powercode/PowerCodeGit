@@ -40,9 +40,20 @@ public sealed class GitPathCompleterAttribute : ArgumentCompleterFactoryAttribut
     /// </summary>
     public bool IncludeUntracked { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether staged (index) files are included in completions.
+    /// When set, only files with <see cref="GitStagingState.Staged"/> are returned.
+    /// </summary>
+    public bool IncludeStaged { get; set; }
+
     /// <inheritdoc/>
     public override IArgumentCompleter Create()
     {
+        if (IncludeStaged)
+        {
+            return new StagedPathCompleter(ServiceFactory.CreateGitWorkingTreeService());
+        }
+
         if (IncludeModified || IncludeUntracked)
         {
             return new StatusPathCompleter(
@@ -72,6 +83,44 @@ public sealed class GitPathCompleterAttribute : ArgumentCompleterFactoryAttribut
                 var paths = pathService.GetTrackedPaths(repositoryPath);
 
                 return paths
+                    .Where(p => p.Contains(wordToComplete, StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                    .Select(p => new CompletionResult(
+                        p,
+                        p,
+                        CompletionResultType.ParameterValue,
+                        p));
+            }
+            catch
+            {
+                return [];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Completes against staged (index) file paths in the repository.
+    /// </summary>
+    internal sealed class StagedPathCompleter(IGitWorkingTreeService workingTreeService) : IArgumentCompleter
+    {
+        public IEnumerable<CompletionResult> CompleteArgument(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            try
+            {
+                var repositoryPath = CompletionHelper.ResolveRepositoryPath(fakeBoundParameters);
+                var statusResult = workingTreeService.GetStatus(new GitStatusOptions
+                {
+                    RepositoryPath = repositoryPath,
+                });
+
+                return statusResult.Entries
+                    .Where(e => e.StagingState == GitStagingState.Staged)
+                    .Select(e => e.FilePath)
                     .Where(p => p.Contains(wordToComplete, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                     .Select(p => new CompletionResult(

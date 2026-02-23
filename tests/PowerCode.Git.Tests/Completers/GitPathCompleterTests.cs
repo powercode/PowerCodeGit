@@ -182,6 +182,52 @@ public sealed class GitPathCompleterTests
         Assert.AreEqual("src/Zebra.cs", results[1].CompletionText);
     }
 
+    [TestMethod]
+    public void StagedCompleter_ReturnsOnlyStagedFiles()
+    {
+        var service = new StubGitWorkingTreeService([
+            new GitStatusEntry("staged-added.cs", GitFileStatus.Added, GitStagingState.Staged),
+            new GitStatusEntry("staged-modified.cs", GitFileStatus.Modified, GitStagingState.Staged),
+            new GitStatusEntry("unstaged-modified.cs", GitFileStatus.Modified, GitStagingState.Unstaged),
+            new GitStatusEntry("untracked.cs", GitFileStatus.Untracked, GitStagingState.Unstaged),
+        ]);
+        var completer = new GitPathCompleterAttribute.StagedPathCompleter(service);
+
+        var results = completer.CompleteArgument("Restore-GitItem", "Path", "", null!, BoundParameters).ToList();
+
+        Assert.HasCount(2, results);
+        Assert.AreEqual("staged-added.cs", results[0].CompletionText);
+        Assert.AreEqual("staged-modified.cs", results[1].CompletionText);
+    }
+
+    [TestMethod]
+    public void StagedCompleter_FiltersAndSortsByWordToComplete()
+    {
+        var service = new StubGitWorkingTreeService([
+            new GitStatusEntry("src/Zebra.cs", GitFileStatus.Modified, GitStagingState.Staged),
+            new GitStatusEntry("src/Alpha.cs", GitFileStatus.Added, GitStagingState.Staged),
+            new GitStatusEntry("README.md", GitFileStatus.Modified, GitStagingState.Staged),
+        ]);
+        var completer = new GitPathCompleterAttribute.StagedPathCompleter(service);
+
+        var results = completer.CompleteArgument("Restore-GitItem", "Path", "src/", null!, BoundParameters).ToList();
+
+        Assert.HasCount(2, results);
+        Assert.AreEqual("src/Alpha.cs", results[0].CompletionText);
+        Assert.AreEqual("src/Zebra.cs", results[1].CompletionText);
+    }
+
+    [TestMethod]
+    public void StagedCompleter_ServiceThrows_ReturnsEmpty()
+    {
+        var service = new ThrowingGitWorkingTreeService();
+        var completer = new GitPathCompleterAttribute.StagedPathCompleter(service);
+
+        var results = completer.CompleteArgument("Restore-GitItem", "Path", "", null!, BoundParameters).ToList();
+
+        Assert.IsEmpty(results);
+    }
+
     private sealed class StubGitPathService(IReadOnlyList<string> paths) : IGitPathService
     {
         public IReadOnlyList<string> GetTrackedPaths(string repositoryPath) => paths;
