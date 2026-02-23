@@ -103,26 +103,26 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
                 ?? throw new ArgumentException($"Commit '{options.FromCommit}' was not found.", nameof(options));
             var toCommit = repository.Lookup<Commit>(options.ToCommit)
                 ?? throw new ArgumentException($"Commit '{options.ToCommit}' was not found.", nameof(options));
-            changes = repository.Diff.Compare<Patch>(fromCommit.Tree, toCommit.Tree, compareOptions: compareOptions);
+            changes = repository.Diff.Compare<Patch>(fromCommit.Tree, toCommit.Tree, compareOptions);
         }
         else if (options.Commit is not null)
         {
             // Diff working tree against a commit: git diff <commit>
             var commit = repository.Lookup<Commit>(options.Commit)
                 ?? throw new ArgumentException($"Commit '{options.Commit}' was not found.", nameof(options));
-            changes = repository.Diff.Compare<Patch>(commit.Tree, DiffTargets.WorkingDirectory, compareOptions: compareOptions);
+            changes = repository.Diff.Compare<Patch>(commit.Tree, DiffTargets.WorkingDirectory, null, null, compareOptions);
         }
         else if (options.Staged)
         {
             // Staged diff: git diff --staged
-            changes = repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index, compareOptions: compareOptions);
+            changes = repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index, null, null, compareOptions);
         }
         else
         {
             // Default: working directory diff
             changes = compareOptions is null
                 ? repository.Diff.Compare<Patch>()
-                : repository.Diff.Compare<Patch>(compareOptions: compareOptions);
+                : repository.Diff.Compare<Patch>(null, false, null, compareOptions);
         }
 
         var entries = changes.AsEnumerable();
