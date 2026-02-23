@@ -18,7 +18,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Send-GitBranch -Force</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommunications.Send, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = "Push")]
+[Cmdlet(VerbsCommunications.Send, "GitBranch", SupportsShouldProcess = true, DefaultParameterSetName = PushParameterSet)]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class SendGitBranchCmdlet : GitCmdlet
 {
@@ -39,12 +39,14 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
         this.remoteService = remoteService ?? throw new ArgumentNullException(nameof(remoteService));
     }
 
+    private const string PushParameterSet = "Push";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitRemoteService remoteService;
 
     /// <summary>
     /// Gets or sets the name of the remote to push to. Defaults to "origin".
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Push")]
+    [Parameter(Position = 0, ParameterSetName = PushParameterSet)]
     [GitRemoteCompleter]
     public string Remote { get; set; } = "origin";
 
@@ -52,7 +54,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// Gets or sets the branch name to push. When omitted, pushes the current
     /// HEAD branch.
     /// </summary>
-    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true, ParameterSetName = "Push")]
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true, ParameterSetName = PushParameterSet)]
     [GitBranchCompleter]
     public string? Name { get; set; }
 
@@ -60,7 +62,7 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// Gets or sets a value indicating whether to set the upstream tracking
     /// reference (git push -u).
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     // git -u muscle-memory alias
     [Alias("u")]
     public SwitchParameter SetUpstream { get; set; }
@@ -68,51 +70,51 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to force-push the branch.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter Force { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to force-push only if the remote tip matches
     /// the local expectation (--force-with-lease).
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter ForceWithLease { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to delete the branch on the remote.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter Delete { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to push all tags.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter Tags { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to push all branches.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter All { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to perform a dry run without actually pushing.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     public SwitchParameter DryRun { get; set; }
 
     /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter(ParameterSetName = "Push")]
+    [Parameter(ParameterSetName = PushParameterSet)]
     [Credential]
     public PSCredential? Credential { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitPushOptions"/> instance.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitPushOptions? Options { get; set; }
 
     /// <summary>

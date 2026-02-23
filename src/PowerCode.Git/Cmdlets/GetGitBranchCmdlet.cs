@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Lists branches in a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitBranch", DefaultParameterSetName = "List")]
+[Cmdlet(VerbsCommon.Get, "GitBranch", DefaultParameterSetName = ListParameterSet)]
 [OutputType(typeof(GitBranchInfo))]
 public sealed class GetGitBranchCmdlet : GitCmdlet
 {
@@ -30,20 +30,22 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
         this.branchService = branchService ?? throw new ArgumentNullException(nameof(branchService));
     }
 
+    private const string ListParameterSet = "List";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitBranchService branchService;
 
     /// <summary>
     /// Gets or sets a value indicating whether to list only remote-tracking branches.
     /// Equivalent to <c>git branch -r</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     public SwitchParameter Remote { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to list both local and remote-tracking branches.
     /// Equivalent to <c>git branch -a</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     // git -a muscle-memory alias
     [Alias("a")]
     public SwitchParameter All { get; set; }
@@ -52,14 +54,14 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Gets or sets a glob pattern to filter branch names.
     /// Equivalent to <c>git branch -l &lt;pattern&gt;</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     public string? Pattern { get; set; }
 
     /// <summary>
     /// Gets or sets a committish; only branches containing this commit are shown.
     /// Equivalent to <c>git branch --contains &lt;commit&gt;</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     [GitCommittishCompleter]
     public string? Contains { get; set; }
 
@@ -67,7 +69,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Gets or sets a committish; only branches merged into this commit are shown.
     /// Equivalent to <c>git branch --merged [&lt;commit&gt;]</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     [GitCommittishCompleter]
     public string? Merged { get; set; }
 
@@ -75,7 +77,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Gets or sets a committish; only branches NOT merged into this commit are shown.
     /// Equivalent to <c>git branch --no-merged [&lt;commit&gt;]</c>.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     [GitCommittishCompleter]
     public string? NoMerged { get; set; }
 
@@ -83,7 +85,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Gets or sets wildcard patterns used to include branches by name.
     /// Only branches matching at least one pattern are returned.
     /// </summary>
-    [Parameter(ParameterSetName = "List", Position = 0)]
+    [Parameter(ParameterSetName = ListParameterSet, Position = 0)]
     [SupportsWildcards]
     public string[]? Include { get; set; }
 
@@ -91,14 +93,14 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Gets or sets wildcard patterns used to exclude branches by name.
     /// Branches matching any pattern are removed from the result.
     /// </summary>
-    [Parameter(ParameterSetName = "List")]
+    [Parameter(ParameterSetName = ListParameterSet)]
     [SupportsWildcards]
     public string[]? Exclude { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built options object for full control over branch listing.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitBranchListOptions Options { get; set; } = null!;
 
     /// <summary>
@@ -136,7 +138,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// <returns>The resolved options object.</returns>
     internal GitBranchListOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

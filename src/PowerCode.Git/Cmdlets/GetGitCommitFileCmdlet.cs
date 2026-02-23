@@ -10,7 +10,7 @@ namespace PowerCode.Git.Cmdlets;
 /// Retrieves the files changed by a specific commit, comparing
 /// the commit's tree against its first parent.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitCommitFile", DefaultParameterSetName = "Commit")]
+[Cmdlet(VerbsCommon.Get, "GitCommitFile", DefaultParameterSetName = CommitParameterSet)]
 [OutputType(typeof(GitDiffEntry))]
 [OutputType(typeof(GitDiffHunk))]
 public sealed class GetGitCommitFileCmdlet : GitCmdlet
@@ -32,6 +32,8 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
         this.commitFileService = commitFileService ?? throw new ArgumentNullException(nameof(commitFileService));
     }
 
+    private const string CommitParameterSet = "Commit";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitCommitFileService commitFileService;
 
     // ── Commit parameter set ─────────────────────────────────────────────────
@@ -40,7 +42,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// Gets or sets the commit SHA or ref to inspect. Defaults to HEAD when
     /// neither this parameter nor <see cref="InputObject"/> is specified.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Commit")]
+    [Parameter(Position = 0, ParameterSetName = CommitParameterSet)]
     [GitCommittishCompleter]
     public string? Commit { get; set; }
 
@@ -48,20 +50,20 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// Gets or sets a <see cref="GitCommitInfo"/> object, typically received
     /// from <c>Get-GitLog</c> via pipeline input.
     /// </summary>
-    [Parameter(ValueFromPipeline = true, ParameterSetName = "Commit")]
+    [Parameter(ValueFromPipeline = true, ParameterSetName = CommitParameterSet)]
     public GitCommitInfo? InputObject { get; set; }
 
     /// <summary>
     /// Gets or sets one or more repository-relative file paths to restrict the output.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to ignore whitespace changes.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public SwitchParameter IgnoreWhitespace { get; set; }
 
     /// <summary>
@@ -69,7 +71,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// <see cref="GitDiffHunk"/> objects instead of file-level
     /// <see cref="GitDiffEntry"/> objects.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public SwitchParameter Hunk { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -77,7 +79,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a pre-built options object, allowing full control over the operation.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitCommitFileOptions Options { get; set; } = null!;
 
     // ────────────────────────────────────────────────────────────────────────
@@ -89,7 +91,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// <returns>A populated commit file options object.</returns>
     internal GitCommitFileOptions BuildOptions(string currentFileSystemPath)
     {
-        if (ParameterSetName == "Options")
+        if (ParameterSetName == OptionsParameterSet)
         {
             return Options;
         }

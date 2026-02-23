@@ -20,7 +20,7 @@ namespace PowerCode.Git.Cmdlets;
 /// pre-existing local repository to resolve, so <see cref="GitCmdlet.RepoPath"/> and the
 /// <c>ResolveRepositoryPath</c> helpers are not applicable here.
 /// </remarks>
-[Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true, DefaultParameterSetName = "Clone")]
+[Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true, DefaultParameterSetName = CloneParameterSet)]
 [OutputType(typeof(string))]
 public sealed class CopyGitRepositoryCmdlet : PSCmdlet
 {
@@ -41,12 +41,14 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
         this.remoteService = remoteService ?? throw new ArgumentNullException(nameof(remoteService));
     }
 
+    private const string CloneParameterSet = "Clone";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitRemoteService remoteService;
 
     /// <summary>
     /// Gets or sets the remote URL to clone from.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = "Clone")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = CloneParameterSet)]
     [ValidateNotNullOrEmpty]
     public string Url { get; set; } = string.Empty;
 
@@ -54,13 +56,13 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
     /// Gets or sets the local directory to clone into.
     /// When omitted, the directory name is derived from the URL.
     /// </summary>
-    [Parameter(Position = 1, ParameterSetName = "Clone")]
+    [Parameter(Position = 1, ParameterSetName = CloneParameterSet)]
     public string? LocalPath { get; set; }
 
     /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter(ParameterSetName = "Clone")]
+    [Parameter(ParameterSetName = CloneParameterSet)]
     [Credential]
     public PSCredential? Credential { get; set; }
 
@@ -68,32 +70,32 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
     /// Gets or sets a value indicating whether to clone only the default
     /// branch (--single-branch).
     /// </summary>
-    [Parameter(ParameterSetName = "Clone")]
+    [Parameter(ParameterSetName = CloneParameterSet)]
     public SwitchParameter SingleBranch { get; set; }
 
     /// <summary>
     /// Gets or sets the branch name to check out after cloning.
     /// </summary>
-    [Parameter(ParameterSetName = "Clone")]
+    [Parameter(ParameterSetName = CloneParameterSet)]
     [Alias("Branch")]
     public string? BranchName { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to create a bare repository.
     /// </summary>
-    [Parameter(ParameterSetName = "Clone")]
+    [Parameter(ParameterSetName = CloneParameterSet)]
     public SwitchParameter Bare { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to recursively clone submodules.
     /// </summary>
-    [Parameter(ParameterSetName = "Clone")]
+    [Parameter(ParameterSetName = CloneParameterSet)]
     public SwitchParameter RecurseSubmodules { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitCloneOptions"/> instance.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitCloneOptions? Options { get; set; }
 
     /// <summary>

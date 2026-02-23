@@ -17,7 +17,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Receive-GitBranch -AutoStash</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsCommunications.Receive, "GitBranch", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Pull")]
+[Cmdlet(VerbsCommunications.Receive, "GitBranch", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = PullParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 {
@@ -38,45 +38,47 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
         this.remoteService = remoteService ?? throw new ArgumentNullException(nameof(remoteService));
     }
 
+    private const string OptionsParameterSet = "Options";
+    private const string PullParameterSet = "Pull";
     private readonly IGitRemoteService remoteService;
 
     /// <summary>
     /// Gets or sets the merge strategy. Defaults to <see cref="GitMergeStrategy.Merge"/>.
     /// </summary>
-    [Parameter(ParameterSetName = "Pull")]
+    [Parameter(ParameterSetName = PullParameterSet)]
     public GitMergeStrategy MergeStrategy { get; set; } = GitMergeStrategy.Merge;
 
     /// <summary>
     /// Gets or sets a value indicating whether to prune remote-tracking
     /// branches that no longer exist on the remote.
     /// </summary>
-    [Parameter(ParameterSetName = "Pull")]
+    [Parameter(ParameterSetName = PullParameterSet)]
     public SwitchParameter Prune { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to automatically stash local changes
     /// before pulling and reapply them afterward (git pull --autostash).
     /// </summary>
-    [Parameter(ParameterSetName = "Pull")]
+    [Parameter(ParameterSetName = PullParameterSet)]
     public SwitchParameter AutoStash { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to fetch all tags from the remote.
     /// </summary>
-    [Parameter(ParameterSetName = "Pull")]
+    [Parameter(ParameterSetName = PullParameterSet)]
     public SwitchParameter Tags { get; set; }
 
     /// <summary>
     /// Gets or sets the credential for HTTP authentication.
     /// </summary>
-    [Parameter(ParameterSetName = "Pull")]
+    [Parameter(ParameterSetName = PullParameterSet)]
     [Credential]
     public PSCredential? Credential { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitPullOptions"/> instance.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitPullOptions? Options { get; set; }
 
     /// <summary>

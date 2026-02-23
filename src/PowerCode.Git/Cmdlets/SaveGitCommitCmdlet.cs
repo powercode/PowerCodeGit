@@ -17,7 +17,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Save-GitCommit -All -Message "Track all changes"</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsData.Save, "GitCommit", SupportsShouldProcess = true, DefaultParameterSetName = "Commit")]
+[Cmdlet(VerbsData.Save, "GitCommit", SupportsShouldProcess = true, DefaultParameterSetName = CommitParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class SaveGitCommitCmdlet : GitCmdlet
 {
@@ -38,12 +38,14 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
         this.historyService = historyService ?? throw new ArgumentNullException(nameof(historyService));
     }
 
+    private const string CommitParameterSet = "Commit";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitHistoryService historyService;
 
     /// <summary>
     /// Gets or sets the commit message.
     /// </summary>
-    [Parameter(Position = 0, ParameterSetName = "Commit")]
+    [Parameter(Position = 0, ParameterSetName = CommitParameterSet)]
     // git -m muscle-memory alias
     [Alias("m")]
     public string? Message { get; set; }
@@ -51,37 +53,37 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
     /// <summary>
     /// Gets or sets a value indicating whether to amend the previous commit.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public SwitchParameter Amend { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to allow creating an empty commit.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public SwitchParameter AllowEmpty { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to automatically stage all tracked modified files before committing (git commit -a).
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public SwitchParameter All { get; set; }
 
     /// <summary>
     /// Gets or sets the author in "Name &lt;email&gt;" format. Null uses the git config identity.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public string? Author { get; set; }
 
     /// <summary>
     /// Gets or sets the author/committer date override. Null uses the current time.
     /// </summary>
-    [Parameter(ParameterSetName = "Commit")]
+    [Parameter(ParameterSetName = CommitParameterSet)]
     public DateTimeOffset? Date { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitCommitOptions"/> instance.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitCommitOptions? Options { get; set; }
 
     /// <summary>

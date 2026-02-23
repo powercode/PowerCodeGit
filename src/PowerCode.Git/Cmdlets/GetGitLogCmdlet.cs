@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Retrieves commit history from a git repository.
 /// </summary>
-[Cmdlet(VerbsCommon.Get, "GitLog", DefaultParameterSetName = "Log")]
+[Cmdlet(VerbsCommon.Get, "GitLog", DefaultParameterSetName = LogParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class GetGitLogCmdlet : GitCmdlet
 {
@@ -30,79 +30,81 @@ public sealed class GetGitLogCmdlet : GitCmdlet
         this.gitHistoryService = gitHistoryService ?? throw new ArgumentNullException(nameof(gitHistoryService));
     }
 
+    private const string LogParameterSet = "Log";
+    private const string OptionsParameterSet = "Options";
     private readonly IGitHistoryService gitHistoryService;
 
     /// <summary>
     /// Gets or sets one or more repository-relative file paths to filter
     /// the log to commits that touched those files.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 
     /// <summary>
     /// Gets or sets the branch name used for log traversal.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     [GitBranchCompleter]
     public string? Branch { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to include commits from all local branches.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public SwitchParameter AllBranches { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum number of commits to return.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     [ValidateRange(1, int.MaxValue)]
     public int? MaxCount { get; set; }
 
     /// <summary>
     /// Gets or sets the author filter.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public string? Author { get; set; }
 
     /// <summary>
     /// Gets or sets the minimum author date.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public DateTime? Since { get; set; }
 
     /// <summary>
     /// Gets or sets the maximum author date.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public DateTime? Until { get; set; }
 
     /// <summary>
     /// Gets or sets a commit message pattern filter.
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public string? MessagePattern { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to follow only the first parent
     /// commit (equivalent to <c>git log --first-parent</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public SwitchParameter FirstParent { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to exclude merge commits
     /// (equivalent to <c>git log --no-merges</c>).
     /// </summary>
-    [Parameter(ParameterSetName = "Log")]
+    [Parameter(ParameterSetName = LogParameterSet)]
     public SwitchParameter NoMerges { get; set; }
 
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitLogOptions"/> instance.
     /// When specified, all other parameters are ignored.
     /// </summary>
-    [Parameter(Mandatory = true, ParameterSetName = "Options")]
+    [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
     public GitLogOptions? Options { get; set; }
 
     /// <summary>
