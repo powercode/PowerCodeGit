@@ -110,8 +110,8 @@ public sealed class GitConfigServiceTests
 
             var match = entries.FirstOrDefault(e => e.Name == "user.name");
             Assert.IsNotNull(match);
-            // All returned entries originated from the local config file.
-            Assert.IsTrue(entries.All(e => e.Scope is null)); // ShowScope=false by default
+            // Service always populates Scope from the ConfigurationLevel of each entry.
+            Assert.IsTrue(entries.All(e => e.Scope == GitConfigScope.Local));
         }
         finally
         {
@@ -145,7 +145,7 @@ public sealed class GitConfigServiceTests
     }
 
     [TestMethod]
-    public void GetConfigEntries_ShowScopeFalse_ScopeIsNull()
+    public void GetConfigEntries_AlwaysPopulatesScope()
     {
         var repoPath = CreateRepositoryWithLocalConfig("user.name", "Jane");
 
@@ -158,7 +158,10 @@ public sealed class GitConfigServiceTests
                 RepositoryPath = repoPath,
             });
 
-            Assert.IsTrue(entries.All(e => e.Scope is null));
+            // Scope is always derived from the ConfigurationLevel of each entry.
+            var match = entries.FirstOrDefault(e => e.Name == "user.name");
+            Assert.IsNotNull(match);
+            Assert.IsNotNull(match.Scope);
         }
         finally
         {
@@ -243,7 +246,7 @@ public sealed class GitConfigServiceTests
     }
 
     [TestMethod]
-    public void GetConfigValue_ShowScopeFalse_ScopeIsNull()
+    public void GetConfigValue_AlwaysPopulatesScope()
     {
         var repoPath = CreateRepositoryWithLocalConfig("user.name", "Jane");
 
@@ -254,11 +257,12 @@ public sealed class GitConfigServiceTests
             var entry = service.GetConfigValue(new GitConfigGetOptions
             {
                 RepositoryPath = repoPath,
-                Name = "user.name",                
+                Name = "user.name",
             });
 
             Assert.IsNotNull(entry);
-            Assert.IsNull(entry.Scope);
+            // Scope is always derived from the ConfigurationLevel of the returned entry.
+            Assert.AreEqual(GitConfigScope.Local, entry.Scope);
         }
         finally
         {

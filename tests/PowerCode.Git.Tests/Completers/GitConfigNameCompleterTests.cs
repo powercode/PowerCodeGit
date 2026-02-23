@@ -71,7 +71,7 @@ public sealed class GitConfigNameCompleterTests
         var results = completer.CompleteArgument("Set-GitConfiguration", "Name", "user.name", null!, BoundParameters).ToList();
 
         Assert.HasCount(1, results);
-        Assert.AreEqual("Your full name for commit authorship", results[0].ToolTip);
+        Assert.AreEqual("Your full name attached to every commit and tag", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -102,7 +102,7 @@ public sealed class GitConfigNameCompleterTests
 
         Assert.HasCount(1, results);
         // Static description takes precedence, not "user.name=Jane"
-        Assert.AreEqual("Your full name for commit authorship", results[0].ToolTip);
+        Assert.AreEqual("Your full name attached to every commit and tag", results[0].ToolTip);
     }
 
     [TestMethod]
