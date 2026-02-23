@@ -27,7 +27,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitStatus | Select-Object -ExpandProperty Entries | Restore-GitItem</code>
 /// </example>
 /// </summary>
-[Cmdlet(VerbsData.Restore, "GitItem", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.High, DefaultParameterSetName = "Path")]
+[Cmdlet(VerbsData.Restore, "GitItem", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = "Path")]
 public sealed class RestoreGitItemCmdlet : GitCmdlet
 {
     /// <summary>
