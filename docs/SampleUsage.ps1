@@ -57,7 +57,7 @@ Switch-GitBranch -Name feature/my-feature
 Switch-GitBranch -Name feature/quick -Create
 
 # You can also create a branch from a specific start point:
-New-GitBranch -Name hotfix/p1 -StartPoint v2.0.0
+New-GitBranch -Name hotfix/p1 -StartPoint v2.0.0 -Description 'Hotfix for production issue #1'
 
 # ============================================================================
 # 5. STAGE CHANGES
