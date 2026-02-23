@@ -53,6 +53,10 @@ jobs:
         shell: pwsh
         run: ./scripts/Build-MamlHelp.ps1 -Configuration Release
 
+      - name: Build About Help
+        shell: pwsh
+        run: ./scripts/Build-AboutHelp.ps1 -Configuration Release
+
       - name: Install Pester
         shell: pwsh
         run: |
