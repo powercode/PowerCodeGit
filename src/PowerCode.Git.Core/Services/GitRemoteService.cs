@@ -110,7 +110,8 @@ public sealed class GitRemoteService : IGitRemoteService
                 branch.Tip?.Sha ?? string.Empty,
                 branch.TrackedBranch?.FriendlyName,
                 branch.TrackingDetails?.AheadBy,
-                branch.TrackingDetails?.BehindBy);
+                branch.TrackingDetails?.BehindBy,
+                worktreePath: null);
         }
 
         if (options.Delete)
@@ -125,7 +126,8 @@ public sealed class GitRemoteService : IGitRemoteService
                 tipSha: branch.Tip?.Sha ?? string.Empty,
                 trackedBranchName: null,
                 aheadBy: null,
-                behindBy: null);
+                behindBy: null,
+                worktreePath: null);
         }
 
         if (options.All)
@@ -169,7 +171,8 @@ public sealed class GitRemoteService : IGitRemoteService
             updatedBranch.Tip?.Sha ?? string.Empty,
             updatedBranch.TrackedBranch?.FriendlyName,
             updatedBranch.TrackingDetails?.AheadBy,
-            updatedBranch.TrackingDetails?.BehindBy);
+            updatedBranch.TrackingDetails?.BehindBy,
+            worktreePath: null);
     }
 
     /// <inheritdoc/>

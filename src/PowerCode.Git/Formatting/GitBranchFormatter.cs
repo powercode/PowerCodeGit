@@ -75,4 +75,22 @@ public static class GitBranchFormatter
         var tracking = string.Join(", ", parts);
         return AnsiCodes.Colorize($"[{branch.TrackedBranchName}: {tracking}]", AnsiCodes.Cyan);
     }
+
+    /// <summary>
+    /// Formats the worktree path for a branch.
+    /// </summary>
+    /// <param name="branch">The branch info to format.</param>
+    /// <returns>
+    /// A dim-colored worktree path string, or an empty string when the branch
+    /// is not checked out in any worktree.
+    /// </returns>
+    public static string FormatWorktree(GitBranchInfo branch)
+    {
+        if (branch.WorktreePath is null)
+        {
+            return string.Empty;
+        }
+
+        return AnsiCodes.Colorize(branch.WorktreePath, AnsiCodes.Dim);
+    }
 }

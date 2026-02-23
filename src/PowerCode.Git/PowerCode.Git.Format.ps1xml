@@ -478,6 +478,9 @@
           <TableColumnHeader>
             <Label>Tracking</Label>
           </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Worktree</Label>
+          </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
@@ -490,6 +493,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -526,6 +532,10 @@
               <ListItem>
                 <Label>Tracking</Label>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Worktree</Label>
+                <PropertyName>WorktreePath</PropertyName>
               </ListItem>
             </ListItems>
           </ListEntry>

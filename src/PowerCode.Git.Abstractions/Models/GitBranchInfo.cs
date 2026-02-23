@@ -15,6 +15,7 @@ public sealed class GitBranchInfo
     /// <param name="trackedBranchName">The name of the tracked remote branch, or <see langword="null"/>.</param>
     /// <param name="aheadBy">The number of commits ahead of the tracked branch, or <see langword="null"/>.</param>
     /// <param name="behindBy">The number of commits behind the tracked branch, or <see langword="null"/>.</param>
+    /// <param name="worktreePath">The filesystem path of the worktree where this branch is checked out, or <see langword="null"/>.</param>
     public GitBranchInfo(
         string name,
         bool isHead,
@@ -22,7 +23,8 @@ public sealed class GitBranchInfo
         string tipSha,
         string? trackedBranchName,
         int? aheadBy,
-        int? behindBy)
+        int? behindBy,
+        string? worktreePath = null)
     {
         Name = name;
         IsHead = isHead;
@@ -32,6 +34,7 @@ public sealed class GitBranchInfo
         TrackedBranchName = trackedBranchName;
         AheadBy = aheadBy;
         BehindBy = behindBy;
+        WorktreePath = worktreePath;
     }
 
     /// <summary>
@@ -74,6 +77,12 @@ public sealed class GitBranchInfo
     /// </summary>
     public int? BehindBy { get; }
 
+    /// <summary>
+    /// Gets the filesystem path of the worktree where this branch is checked out,
+    /// or <see langword="null"/> if the branch is not checked out in any worktree.
+    /// </summary>
+    public string? WorktreePath { get; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -81,7 +90,8 @@ public sealed class GitBranchInfo
         var tracking = TrackedBranchName is not null
             ? $" [{TrackedBranchName}: ahead {AheadBy ?? 0}, behind {BehindBy ?? 0}]"
             : string.Empty;
+        var worktree = WorktreePath is not null ? $" ({WorktreePath})" : string.Empty;
 
-        return $"{head}{Name} {TipShortSha}{tracking}";
+        return $"{head}{Name} {TipShortSha}{tracking}{worktree}";
     }
 }

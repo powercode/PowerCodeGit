@@ -20,6 +20,10 @@ public sealed class GitBranchService : IGitBranchService
 
         using var repository = new Repository(options.RepositoryPath);
 
+        // Build a lookup of branch name → worktree path so each branch
+        // can report which worktree (if any) it is currently checked out in.
+        var worktreePaths = BuildWorktreeLookup(repository);
+
         IEnumerable<Branch> branches = repository.Branches;
 
         // Filter by local/remote/all
@@ -33,7 +37,7 @@ public sealed class GitBranchService : IGitBranchService
         }
         // else: ListAll — include both local and remote
 
-        var result = branches.Select(MapBranch).ToList();
+        var result = branches.Select(b => MapBranch(b, worktreePaths)).ToList();
 
         // Pattern filter (glob-like: supports * and ?)
         if (options.Pattern is not null)
@@ -286,8 +290,11 @@ public sealed class GitBranchService : IGitBranchService
         return mergeBase?.Sha == branch.Tip.Sha;
     }
 
-    private static GitBranchInfo MapBranch(Branch branch)
+    private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null)
     {
+        string? worktreePath = null;
+        worktreePaths?.TryGetValue(branch.FriendlyName, out worktreePath);
+
         return new GitBranchInfo(
             branch.FriendlyName,
             branch.IsCurrentRepositoryHead,
@@ -295,6 +302,51 @@ public sealed class GitBranchService : IGitBranchService
             branch.Tip?.Sha ?? string.Empty,
             branch.TrackedBranch?.FriendlyName,
             branch.TrackingDetails?.AheadBy,
-            branch.TrackingDetails?.BehindBy);
+            branch.TrackingDetails?.BehindBy,
+            worktreePath);
+    }
+
+    /// <summary>
+    /// Builds a dictionary mapping branch friendly names to their worktree paths.
+    /// Includes both the main working tree and any linked worktrees.
+    /// </summary>
+    private static Dictionary<string, string> BuildWorktreeLookup(Repository repository)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        // Main worktree: the branch currently checked out in the main working tree.
+        if (!repository.Info.IsBare && repository.Head is { FriendlyName: { } headName })
+        {
+            var mainPath = repository.Info.WorkingDirectory?.TrimEnd(
+                System.IO.Path.DirectorySeparatorChar,
+                System.IO.Path.AltDirectorySeparatorChar) ?? string.Empty;
+            if (mainPath.Length > 0)
+            {
+                lookup[headName] = mainPath;
+            }
+        }
+
+        // Linked worktrees: iterate and get the HEAD branch of each.
+        foreach (var worktree in repository.Worktrees.Where(w => w is not null))
+        {
+            try
+            {
+                using var worktreeRepo = worktree.WorktreeRepository;
+                var branchName = worktreeRepo.Head.FriendlyName;
+                var path = worktreeRepo.Info.WorkingDirectory?.TrimEnd(
+                    System.IO.Path.DirectorySeparatorChar,
+                    System.IO.Path.AltDirectorySeparatorChar) ?? string.Empty;
+                if (path.Length > 0)
+                {
+                    lookup[branchName] = path;
+                }
+            }
+            catch
+            {
+                // Stale or invalid worktree — skip it.
+            }
+        }
+
+        return lookup;
     }
 }
