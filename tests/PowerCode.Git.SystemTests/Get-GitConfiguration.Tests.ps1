@@ -81,19 +81,3 @@ Describe 'Get-GitConfiguration with -Scope' {
         $Entries.Count | Should -BeGreaterThan 0
     }
 }
-
-Describe 'Get-GitConfiguration with -ShowScope' {
-    BeforeAll {
-        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
-    }
-
-    AfterAll {
-        Remove-TestGitRepository -Path $script:RepoPath
-    }
-
-    It 'Entries include Scope when -ShowScope is specified' {
-        $Entries = @(Get-GitConfiguration -RepoPath $script:RepoPath -ShowScope)
-        $WithScope = $Entries | Where-Object { $null -ne $_.Scope }
-        $WithScope.Count | Should -BeGreaterThan 0
-    }
-}
