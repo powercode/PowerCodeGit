@@ -127,7 +127,8 @@ $(if ($TestResultsPath) {
     $EscapedResultsPath = $TestResultsPath -replace "'", "''"
     "`$null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent '$EscapedResultsPath')
 `$Config.TestResult.Enabled = `$true
-`$Config.TestResult.OutputPath = '$EscapedResultsPath'"
+`$Config.TestResult.OutputPath = '$EscapedResultsPath'
+`$Config.TestResult.OutputFormat = 'JUnitXml'"
 })
 
 Invoke-Pester -Configuration `$Config
