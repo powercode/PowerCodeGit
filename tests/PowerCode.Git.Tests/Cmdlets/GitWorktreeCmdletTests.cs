@@ -186,13 +186,13 @@ public sealed class NewGitWorktreeCmdletTests
 
         var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
         {
-            RepoPath = "D:\\dev\\PowerGit",
+            RepoPath = "D:\\dev\\PowerCodeGit",
             InputBranch = branchInfo,
         };
 
-        var options = cmdlet.BuildOptions("D:\\dev\\PowerGit", "Pipeline");
+        var options = cmdlet.BuildOptions("D:\\dev\\PowerCodeGit", "Pipeline");
 
-        Assert.AreEqual("D:\\dev\\PowerGit-feature-login", options.Path);
+        Assert.AreEqual("D:\\dev\\PowerCodeGit-feature-login", options.Path);
         Assert.AreEqual("feature-login.wt", options.Name);
         Assert.AreEqual("feature/login", options.Branch);
     }

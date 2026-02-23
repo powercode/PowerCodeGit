@@ -1,6 +1,6 @@
 # PowerCode.Git
 
-[![CI](https://github.com/powercode/PowerGit/actions/workflows/ci.yml/badge.svg)](https://github.com/powercode/PowerGit/actions/workflows/ci.yml)
+[![CI](https://github.com/powercode/PowerCodeGit/actions/workflows/ci.yml/badge.svg)](https://github.com/powercode/PowerCodeGit/actions/workflows/ci.yml)
 
 A PowerShell binary module that brings native, idiomatic git commands to your terminal. Built in C# on top of [LibGit2Sharp](https://github.com/libgit2/libgit2sharp), **PowerCode.Git** provides `ShouldProcess` support, intelligent tab completion, and ANSI-colored output that mirrors familiar git styles.
 
@@ -32,8 +32,8 @@ Install-PSResource -Name PowerCode.Git -Repository PSGallery
 ### From source
 
 ```powershell
-git clone https://github.com/powercode/PowerGit.git
-cd PowerGit
+git clone https://github.com/powercode/PowerCodeGit.git
+cd PowerCodeGit
 dotnet build --configuration Release
 ```
 

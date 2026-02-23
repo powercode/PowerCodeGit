@@ -13,7 +13,7 @@
 .PARAMETER ApiKey
     The PSGallery API key used for authentication.
 .EXAMPLE
-    .\scripts\Publish-PowerGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
+    .\scripts\Publish-PowerCodeGitModule.ps1 -ModulePath ./module -ApiKey $ApiKey
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(

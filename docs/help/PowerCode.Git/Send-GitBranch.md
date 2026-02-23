@@ -1,7 +1,7 @@
 ---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
-HelpUri: https://github.com/powercode/PowerGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Send-GitBranch.md
+HelpUri: https://github.com/powercode/PowerCodeGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Send-GitBranch.md
 Locale: en-US
 Module Name: PowerCode.Git
 ms.date: 02-21-2026

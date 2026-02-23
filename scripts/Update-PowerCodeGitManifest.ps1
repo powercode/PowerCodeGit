@@ -18,9 +18,9 @@
     Optional prerelease label (e.g. 'beta1'). Must already be sanitised
     for PSGallery (no dots or hyphens).
 .EXAMPLE
-    .\scripts\Update-PowerGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3'
+    .\scripts\Update-PowerCodeGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3'
 .EXAMPLE
-    .\scripts\Update-PowerGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3' -Prerelease 'beta1'
+    .\scripts\Update-PowerCodeGitManifest.ps1 -ModulePath ./module -ModuleVersion '1.2.3' -Prerelease 'beta1'
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(

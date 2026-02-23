@@ -154,7 +154,7 @@ foreach ($Cmd in $Commands) {
 
 # SEE ALSO
 $null = $Sb.AppendLine('SEE ALSO')
-$null = $Sb.AppendLine('    https://github.com/PowerCode/PowerGit')
+$null = $Sb.AppendLine('    https://github.com/PowerCode/PowerCodeGit')
 
 # Write with UTF-8 BOM encoding
 $AboutFilePath = Join-Path -Path $OutputPath -ChildPath 'about_PowerCode.Git.help.txt'
