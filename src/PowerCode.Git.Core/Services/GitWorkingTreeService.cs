@@ -90,6 +90,10 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
         // The IgnoreWhitespace option is accepted in GitDiffOptions for future support
         // and for use by callers that process the result set further.
 
+        var compareOptions = options.ContextLines is { } contextLines
+            ? new CompareOptions { ContextLines = contextLines }
+            : null;
+
         Patch changes;
 
         if (options.FromCommit is not null && options.ToCommit is not null)
@@ -99,24 +103,26 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
                 ?? throw new ArgumentException($"Commit '{options.FromCommit}' was not found.", nameof(options));
             var toCommit = repository.Lookup<Commit>(options.ToCommit)
                 ?? throw new ArgumentException($"Commit '{options.ToCommit}' was not found.", nameof(options));
-            changes = repository.Diff.Compare<Patch>(fromCommit.Tree, toCommit.Tree);
+            changes = repository.Diff.Compare<Patch>(fromCommit.Tree, toCommit.Tree, compareOptions: compareOptions);
         }
         else if (options.Commit is not null)
         {
             // Diff working tree against a commit: git diff <commit>
             var commit = repository.Lookup<Commit>(options.Commit)
                 ?? throw new ArgumentException($"Commit '{options.Commit}' was not found.", nameof(options));
-            changes = repository.Diff.Compare<Patch>(commit.Tree, DiffTargets.WorkingDirectory);
+            changes = repository.Diff.Compare<Patch>(commit.Tree, DiffTargets.WorkingDirectory, compareOptions: compareOptions);
         }
         else if (options.Staged)
         {
             // Staged diff: git diff --staged
-            changes = repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index);
+            changes = repository.Diff.Compare<Patch>(repository.Head.Tip?.Tree, DiffTargets.Index, compareOptions: compareOptions);
         }
         else
         {
             // Default: working directory diff
-            changes = repository.Diff.Compare<Patch>();
+            changes = compareOptions is null
+                ? repository.Diff.Compare<Patch>()
+                : repository.Diff.Compare<Patch>(compareOptions: compareOptions);
         }
 
         var entries = changes.AsEnumerable();

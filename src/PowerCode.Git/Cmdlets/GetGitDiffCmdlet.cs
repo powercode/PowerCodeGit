@@ -60,6 +60,18 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     [Parameter(ParameterSetName = RangeParameterSet)]
     public SwitchParameter IgnoreWhitespace { get; set; }
 
+    /// <summary>
+    /// Gets or sets the number of context lines surrounding each change.
+    /// Equivalent to <c>git diff -U&lt;n&gt;</c> / <c>--unified=&lt;n&gt;</c>.
+    /// When omitted the library default (3 lines) is used.
+    /// </summary>
+    [Parameter(ParameterSetName = WorkingTreeParameterSet)]
+    [Parameter(ParameterSetName = StagedParameterSet)]
+    [Parameter(ParameterSetName = CommitParameterSet)]
+    [Parameter(ParameterSetName = RangeParameterSet)]
+    [ValidateRange(0, int.MaxValue)]
+    public int? Context { get; set; }
+
     // ── Staged parameter set ─────────────────────────────────────────────────
 
     /// <summary>
@@ -136,6 +148,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
             FromCommit = FromCommit,
             ToCommit = ToCommit,
             IgnoreWhitespace = IgnoreWhitespace.IsPresent,
+            ContextLines = Context,
             Paths = Path,
         };
     }

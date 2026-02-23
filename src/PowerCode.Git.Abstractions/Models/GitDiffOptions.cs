@@ -49,6 +49,13 @@ public sealed class GitDiffOptions
     /// </summary>
     public string[]? Paths { get; set; }
 
+    /// <summary>
+    /// Gets or sets the number of context lines surrounding each change.
+    /// When <see langword="null"/> the library default (3) is used.
+    /// Equivalent to <c>git diff -U&lt;n&gt;</c> / <c>--unified=&lt;n&gt;</c>.
+    /// </summary>
+    public int? ContextLines { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -58,6 +65,7 @@ public sealed class GitDiffOptions
         if (FromCommit is not null) parts.Add($"from={FromCommit}");
         if (ToCommit is not null) parts.Add($"to={ToCommit}");
         if (IgnoreWhitespace) parts.Add("ignoreWhitespace");
+        if (ContextLines is not null) parts.Add($"contextLines={ContextLines}");
         if (Paths is { Length: > 0 }) parts.Add($"paths=[{string.Join(", ", Paths)}]");
         return parts.Count > 0
             ? $"GitDiffOptions({string.Join(", ", parts)})"

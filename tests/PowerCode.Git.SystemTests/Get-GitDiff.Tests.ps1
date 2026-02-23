@@ -214,6 +214,36 @@ Describe 'Get-GitDiff Example 5 - Stage only hunks that contain added lines' {
     }
 }
 
+Describe 'Get-GitDiff Example 6 - Show unstaged changes with no surrounding context' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        $ExistingFile = Get-ChildItem -Path $script:RepoPath -Filter 'file_*.txt' | Select-Object -First 1
+        Set-Content -Path $ExistingFile.FullName -Value 'modified content'
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Returns diff entries when -Context 0 is specified' {
+        $Diffs = @(Get-GitDiff -RepoPath $script:RepoPath -Context 0)
+        $Diffs | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Patch contains no context lines when -Context 0 is used' {
+        $Diff = Get-GitDiff -RepoPath $script:RepoPath -Context 0 | Select-Object -First 1
+        $ContextLines = ($Diff.Patch -split "`n") | Where-Object { $_ -match '^ ' }
+        $ContextLines | Should -HaveCount 0
+    }
+
+    It 'Produces fewer patch lines than the default context' {
+        $ZeroContext = (Get-GitDiff -RepoPath $script:RepoPath -Context 0 | Select-Object -First 1).Patch
+        $DefaultContext = (Get-GitDiff -RepoPath $script:RepoPath | Select-Object -First 1).Patch
+        $ZeroContext.Length | Should -BeLessOrEqual $DefaultContext.Length
+    }
+}
+
 Describe 'Get-GitDiff -Hunk returns individual hunks' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')

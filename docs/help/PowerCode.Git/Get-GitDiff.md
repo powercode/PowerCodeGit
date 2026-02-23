@@ -20,20 +20,20 @@ Shows changes between the working tree, index, or commits, equivalent to git dif
 ### WorkingTree (Default)
 
 ```
-Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
+Get-GitDiff [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Staged
 
 ```
-Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>]
+Get-GitDiff -Staged [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>]
  [<CommonParameters>]
 ```
 
 ### Commit
 
 ```
-Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-RepoPath <string>]
+Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Context <int>] [-Hunk] [-RepoPath <string>]
  [<CommonParameters>]
 ```
 
@@ -41,7 +41,7 @@ Get-GitDiff [-Commit] <string> [-Path <string[]>] [-IgnoreWhitespace] [-Hunk] [-
 
 ```
 Get-GitDiff [-FromCommit] <string> [-ToCommit] <string> [-Path <string[]>] [-IgnoreWhitespace]
- [-Hunk] [-RepoPath <string>] [<CommonParameters>]
+ [-Context <int>] [-Hunk] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Options
@@ -106,7 +106,54 @@ Get-GitDiff -Hunk |
     Add-GitItem
 ```
 
+### Example 6 - Show unstaged changes with no surrounding context
+
+Returns the diff with zero context lines around each change, equivalent to `git diff -U0`. Useful when you only want to see the exact lines that changed without surrounding context.
+
+```powershell
+Get-GitDiff -Context 0
+```
+
 ## PARAMETERS
+
+### -Context
+
+The number of context lines surrounding each change in the diff output. Equivalent to `git diff -U<n>` / `--unified=<n>`. When omitted, the library default of 3 context lines is used. Use `-Context 0` to suppress context entirely.
+
+```yaml
+Type: System.Int32
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: WorkingTree
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Staged
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Commit
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: Range
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Commit
 
