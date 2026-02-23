@@ -113,6 +113,34 @@ public sealed class GitConfigValueCompleterTests
     }
 
     [TestMethod]
+    public void CompleteArgument_MergeTool_ReturnsAllTools()
+    {
+        var completer = new GitConfigValueCompleterAttribute.ConfigValueCompleter();
+        var parameters = new Hashtable(BoundParameters) { ["Name"] = "merge.tool" };
+
+        var results = completer.CompleteArgument("Set-GitConfiguration", "Value", "", null!, parameters).ToList();
+
+        Assert.HasCount(10, results);
+        Assert.IsTrue(results.Any(r => r.CompletionText == "bc"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "vscode"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "vsdiffmerge"));
+    }
+
+    [TestMethod]
+    public void CompleteArgument_DiffTool_ReturnsAllTools()
+    {
+        var completer = new GitConfigValueCompleterAttribute.ConfigValueCompleter();
+        var parameters = new Hashtable(BoundParameters) { ["Name"] = "diff.tool" };
+
+        var results = completer.CompleteArgument("Set-GitConfiguration", "Value", "", null!, parameters).ToList();
+
+        Assert.HasCount(10, results);
+        Assert.IsTrue(results.Any(r => r.CompletionText == "bc"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "vscode"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "difftastic"));
+    }
+
+    [TestMethod]
     public void CompleteArgument_AllResults_HaveParameterValueType()
     {
         var completer = new GitConfigValueCompleterAttribute.ConfigValueCompleter();

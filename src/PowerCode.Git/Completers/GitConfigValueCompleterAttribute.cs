@@ -64,6 +64,7 @@ public sealed class GitConfigValueCompleterAttribute : ArgumentCompleterFactoryA
         // ── merge ──
         ["merge.ff"] = ["true", "false", "only"],
         ["merge.conflictstyle"] = ["merge", "diff3", "zdiff3"],
+        ["merge.tool"] = ["bc", "kdiff3", "meld", "p4merge", "smerge", "tortoisemerge", "vsdiffmerge", "vimdiff", "vscode", "winmerge"],
 
         // ── rebase ──
         ["rebase.autosquash"] = ["true", "false"],
@@ -72,6 +73,7 @@ public sealed class GitConfigValueCompleterAttribute : ArgumentCompleterFactoryA
 
         // ── diff ──
         ["diff.algorithm"] = ["patience", "minimal", "histogram", "myers"],
+        ["diff.tool"] = ["bc", "difftastic", "kdiff3", "meld", "p4merge", "smerge", "vsdiffmerge", "vimdiff", "vscode", "winmerge"],
         ["diff.colorMoved"] = ["no", "default", "plain", "blocks", "zebra", "dimmed-zebra"],
         ["diff.renames"] = ["true", "false", "copies"],
 
