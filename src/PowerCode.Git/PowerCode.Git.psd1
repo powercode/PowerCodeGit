@@ -35,6 +35,8 @@
         'Resume-GitRebase'
         'Stop-GitRebase'
         'Get-GitCommitFile'
+        'Set-GitConfiguration'
+        'Get-GitConfiguration'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

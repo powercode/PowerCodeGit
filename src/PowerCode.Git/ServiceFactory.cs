@@ -96,4 +96,13 @@ internal static class ServiceFactory
     {
         return DependencyContext.CreateGitCommitFileService();
     }
+
+    /// <summary>
+    /// Creates a git configuration service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitConfigService"/> instance.</returns>
+    public static IGitConfigService CreateGitConfigService()
+    {
+        return DependencyContext.CreateGitConfigService();
+    }
 }
