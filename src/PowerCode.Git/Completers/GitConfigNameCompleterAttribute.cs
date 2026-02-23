@@ -32,51 +32,54 @@ public sealed class GitConfigNameCompleterAttribute : ArgumentCompleterFactoryAt
     internal static readonly Dictionary<string, string> KnownKeys = new(StringComparer.OrdinalIgnoreCase)
     {
         // ── user ──
-        ["user.name"] = "Your full name for commit authorship",
-        ["user.email"] = "Your email address for commit authorship",
-        ["user.signingkey"] = "GPG key ID used for signing commits and tags",
+        ["user.name"] = "Your full name attached to every commit and tag",
+        ["user.email"] = "Your email address attached to every commit and tag",
+        ["user.signingkey"] = "GPG key ID for signing commits and tags (used with commit.gpgsign / git tag -s)",
 
         // ── core ──
-        ["core.autocrlf"] = "Convert CRLF line endings on checkout/commit (true, false, input)",
-        ["core.eol"] = "Line ending style for text files (lf, crlf, native)",
-        ["core.editor"] = "Text editor used by git for commit messages and interactive rebase",
-        ["core.pager"] = "Pager program used for terminal output (e.g. less, delta)",
-        ["core.excludesfile"] = "Path to a global .gitignore file",
-        ["core.attributesfile"] = "Path to a global .gitattributes file",
-        ["core.whitespace"] = "Comma-separated list of whitespace error types to detect",
-        ["core.filemode"] = "Track file permission changes (true, false)",
-        ["core.ignorecase"] = "Ignore case differences in file names (true, false)",
-        ["core.bare"] = "Whether this repository is bare (true, false)",
-        ["core.logallrefupdates"] = "Log all ref updates in the reflog (true, false, always)",
-        ["core.symlinks"] = "Support symbolic links (true, false)",
+        ["core.autocrlf"] = "Cross-platform line-ending conversion: true = LF→CRLF on checkout (Windows); input = CRLF→LF on commit only; false = no conversion",
+        ["core.eol"] = "Line ending style written to the working tree for text files (lf, crlf, native)",
+        ["core.editor"] = "Editor launched for commit/tag messages and interactive rebase; falls back to $VISUAL, $EDITOR, or vi",
+        ["core.pager"] = "Pager for long output such as log and diff; defaults to less; set to empty string to disable paging",
+        ["core.excludesfile"] = "Path to a global gitignore file whose patterns are excluded across all repositories on this machine",
+        ["core.attributesfile"] = "Path to a global gitattributes file applied to all repositories on this machine",
+        ["core.whitespace"] = "Comma-separated whitespace checks to detect/fix: blank-at-eol, blank-at-eof, space-before-tab (on by default); indent-with-non-tab, tab-in-indent, cr-at-eol (opt-in); prefix with - to disable",
+        ["core.filemode"] = "Track executable permission changes on files (true, false)",
+        ["core.ignorecase"] = "Ignore case differences in file names; set automatically when the repo is created (true, false)",
+        ["core.bare"] = "Whether this repository is bare with no working tree (true, false)",
+        ["core.logallrefupdates"] = "Record updates to all refs in the reflog (true, false, always)",
+        ["core.symlinks"] = "Create symbolic links on checkout when the platform supports them (true, false)",
         ["core.longpaths"] = "Allow paths longer than 260 characters on Windows (true, false)",
-        ["core.fsmonitor"] = "Enable file-system monitor for performance (true, false, hook path)",
-        ["core.untrackedcache"] = "Cache untracked files for faster status (true, false)",
-        ["core.compression"] = "Compression level for objects (0-9, -1 for default)",
-        ["core.quotepath"] = "Quote special characters in file paths (true, false)",
-        ["core.safecrlf"] = "Warn or error on irreversible CRLF conversions (true, false, warn)",
-        ["core.hooksPath"] = "Custom directory for git hooks",
+        ["core.fsmonitor"] = "Enable a file-system monitor daemon to speed up commands like status (true, false, or hook path)",
+        ["core.untrackedcache"] = "Persist the untracked-file cache between status calls for improved performance (true, false)",
+        ["core.compression"] = "Zlib compression level for loose objects and pack files (0-9; -1 to use system default)",
+        ["core.quotepath"] = "Quote non-ASCII and special characters in file paths displayed by status/diff (true, false)",
+        ["core.safecrlf"] = "Guard against irreversible CRLF conversion: true = error, warn = warning, false = silent (true, false, warn)",
+        ["core.hooksPath"] = "Directory containing client-side hook scripts instead of the default .git/hooks",
+
+        // ── help ──
+        ["help.autocorrect"] = "Tenths of a second Git waits before running an autocorrected command; 0 disables autocorrect, 1 runs immediately",
 
         // ── init ──
-        ["init.defaultBranch"] = "Default branch name for new repositories",
+        ["init.defaultBranch"] = "Name of the initial branch created in new repositories (e.g. main, master)",
 
         // ── push ──
-        ["push.default"] = "Default push behaviour (nothing, current, upstream, simple, matching)",
-        ["push.autoSetupRemote"] = "Automatically set up remote tracking on first push (true, false)",
-        ["push.followTags"] = "Push annotated tags alongside commits (true, false)",
+        ["push.default"] = "Which refs to push when no refspec is given (nothing, current, upstream, simple, matching)",
+        ["push.autoSetupRemote"] = "Automatically create a remote-tracking branch on first push (true, false)",
+        ["push.followTags"] = "Also push annotated tags that are ancestors of pushed commits (true, false)",
 
         // ── pull ──
-        ["pull.rebase"] = "Rebase instead of merge on pull (true, false, interactive, merges)",
-        ["pull.ff"] = "Fast-forward behaviour for pull (true, false, only)",
+        ["pull.rebase"] = "Rebase local commits on top of the fetched branch instead of merging (true, false, interactive, merges)",
+        ["pull.ff"] = "Fast-forward behaviour when pulling (true = only FF, false = always merge, only = no merge commit)",
 
         // ── fetch ──
-        ["fetch.prune"] = "Remove stale remote-tracking branches on fetch (true, false)",
-        ["fetch.pruneTags"] = "Remove stale remote tags on fetch (true, false)",
+        ["fetch.prune"] = "Delete remote-tracking branches that no longer exist on the remote during fetch (true, false)",
+        ["fetch.pruneTags"] = "Delete local remote-tracking tags that no longer exist on the remote during fetch (true, false)",
 
         // ── merge ──
-        ["merge.ff"] = "Fast-forward behaviour for merge (true, false, only)",
-        ["merge.conflictstyle"] = "Conflict marker style (merge, diff3, zdiff3)",
-        ["merge.tool"] = "Default merge tool",
+        ["merge.ff"] = "Allow fast-forward merges (true = allow, false = always create merge commit, only = refuse non-FF)",
+        ["merge.conflictstyle"] = "Conflict marker style written to conflicted files (merge = standard <<<<, diff3 = with ancestor, zdiff3 = compacted)",
+        ["merge.tool"] = "GUI or CLI tool launched by git mergetool to resolve conflicts",
 
         // ── rebase ──
         ["rebase.autosquash"] = "Automatically reorder fixup!/squash! commits (true, false)",
@@ -91,10 +94,10 @@ public sealed class GitConfigNameCompleterAttribute : ArgumentCompleterFactoryAt
         ["diff.renames"] = "Detect renames in diffs (true, false, copies)",
 
         // ── color ──
-        ["color.ui"] = "Enable coloured terminal output (auto, always, never)",
-        ["color.diff"] = "Enable coloured diff output (auto, always, never)",
-        ["color.status"] = "Enable coloured status output (auto, always, never)",
-        ["color.branch"] = "Enable coloured branch output (auto, always, never)",
+        ["color.ui"] = "Master switch for colored terminal output: auto = color when writing to a terminal, always = force color codes, never = disable",
+        ["color.diff"] = "Colorize diff output (auto, always, never)",
+        ["color.status"] = "Colorize status output (auto, always, never)",
+        ["color.branch"] = "Colorize branch listing output (auto, always, never)",
 
         // ── credential ──
         ["credential.helper"] = "Credential storage back-end (store, cache, manager)",
@@ -136,9 +139,9 @@ public sealed class GitConfigNameCompleterAttribute : ArgumentCompleterFactoryAt
         ["rerere.autoupdate"] = "Auto-stage rerere-resolved files (true, false)",
 
         // ── commit ──
-        ["commit.gpgsign"] = "Sign commits with GPG by default (true, false)",
-        ["commit.template"] = "Path to a default commit message template file",
-        ["commit.verbose"] = "Show diff in commit message editor (true, false)",
+        ["commit.gpgsign"] = "Sign all commits with the GPG key in user.signingkey by default (true, false)",
+        ["commit.template"] = "Path to a file whose contents are used as the initial commit message template in the editor",
+        ["commit.verbose"] = "Include the full diff of changes below the commit message in the editor (true, false)",
 
         // ── status ──
         ["status.showUntrackedFiles"] = "Show untracked files in status (no, normal, all)",
@@ -151,7 +154,10 @@ public sealed class GitConfigNameCompleterAttribute : ArgumentCompleterFactoryAt
         ["transfer.fsckObjects"] = "Validate objects on transfer (true, false)",
 
         // ── receive ──
-        ["receive.denyCurrentBranch"] = "Deny pushing to checked-out branch (refuse, warn, ignore, updateInstead)",
+        ["receive.fsckObjects"] = "Validate SHA-1 checksums and object graph integrity on every push; can slow large repositories (true, false)",
+        ["receive.denyNonFastForwards"] = "Reject force-pushes that rewrite history on the server (true, false)",
+        ["receive.denyDeletes"] = "Prevent deletion of branches or tags via push; branches can only be removed directly on the server (true, false)",
+        ["receive.denyCurrentBranch"] = "Deny pushing to the currently checked-out branch on a non-bare repository (refuse, warn, ignore, updateInstead)",
     };
 
     internal sealed class ConfigNameCompleter(IGitConfigService configService) : IArgumentCompleter
