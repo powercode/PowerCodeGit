@@ -5,10 +5,17 @@
     Author               = 'Staffan Gustafsson'
     CompanyName          = 'PowerCode'
     Copyright            = '(c) Staffan Gustafsson. All rights reserved.'
-    Description          = 'PowerShell Git binary module implemented in C#.'
+    Description          = 'A PowerShell module for Git that provides discoverability through standard PowerShell noun-verb naming, rich pipeline support for composing commands, and tab completion for parameters such as branch names, tags, and remotes.'
     PowerShellVersion    = '7.4'
     CompatiblePSEditions = @('Core')
     FormatsToProcess     = @('PowerCode.Git.Format.ps1xml')
+    PrivateData          = @{
+        PSData = @{
+            ProjectUri = 'https://github.com/powercode/PowerCodeGit'
+            LicenseUri = 'https://github.com/powercode/PowerCodeGit/blob/main/LICENSE'
+            Tags       = @('Git', 'VersionControl', 'SourceControl')
+        }
+    }
     CmdletsToExport      = @(
         'Get-GitLog'
         'Get-GitStatus'
