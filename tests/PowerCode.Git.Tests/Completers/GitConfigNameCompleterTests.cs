@@ -3,6 +3,7 @@ using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Completers;
+using PowerCode.Git.Tests.Stubs;
 
 namespace PowerCode.Git.Tests.Completers;
 
@@ -139,20 +140,6 @@ public sealed class GitConfigNameCompleterTests
 
         var sorted = results.OrderBy(r => r.CompletionText, StringComparer.OrdinalIgnoreCase).ToList();
         CollectionAssert.AreEqual(sorted.Select(r => r.CompletionText).ToList(), results.Select(r => r.CompletionText).ToList());
-    }
-
-    private sealed class StubGitConfigService(IReadOnlyList<GitConfigEntry> entries) : IGitConfigService
-    {
-        public IReadOnlyList<GitConfigEntry> GetConfigEntries(GitConfigGetOptions options) => entries;
-
-        public GitConfigEntry? GetConfigValue(GitConfigGetOptions options) =>
-            throw new NotImplementedException();
-
-        public void SetConfigValue(GitConfigSetOptions options) =>
-            throw new NotImplementedException();
-
-        public void UnsetConfigValue(GitConfigUnsetOptions options) =>
-            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitConfigService : IGitConfigService
