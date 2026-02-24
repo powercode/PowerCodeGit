@@ -448,11 +448,55 @@
       </ListControl>
     </View>
 
-    <!-- Default table view for GitBranchInfo — colored branch names -->
+    <!-- Default table view for GitBranchInfo — colored branch names (no reference comparison) -->
     <View>
       <Name>GitBranchInfo-Default</Name>
       <ViewSelectedBy>
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+            <Width>30</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Commit</Label>
+            <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Tracking</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Worktree</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!-- Default table view for GitBranchInfo with reference comparison — includes Reference column -->
+    <View>
+      <Name>GitBranchInfo-WithReference-Default</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
       </ViewSelectedBy>
       <TableControl>
         <TableHeaders>
@@ -498,11 +542,51 @@
       </TableControl>
     </View>
 
-    <!-- Detailed list view for GitBranchInfo -->
+    <!-- Detailed list view for GitBranchInfo (no reference comparison) -->
     <View>
       <Name>GitBranchInfo-Detailed</Name>
       <ViewSelectedBy>
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Name</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>IsHead</Label>
+                <PropertyName>IsHead</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>IsRemote</Label>
+                <PropertyName>IsRemote</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Commit</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Tracking</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Worktree</Label>
+                <PropertyName>WorktreePath</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <!-- Detailed list view for GitBranchInfo with reference comparison — includes Reference item -->
+    <View>
+      <Name>GitBranchInfo-WithReference-Detailed</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
       </ViewSelectedBy>
       <ListControl>
         <ListEntries>

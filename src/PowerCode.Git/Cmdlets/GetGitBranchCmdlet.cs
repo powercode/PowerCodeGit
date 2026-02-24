@@ -122,10 +122,11 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
         {
             var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
             var branches = branchService.GetBranches(options);
+            var hasReference = !string.IsNullOrEmpty(options.ReferenceBranch);
 
             foreach (var branch in branches)
             {
-                WriteObject(branch);
+                WriteObject(CreateOutputObject(branch, hasReference));
             }
         }
         catch (Exception exception)
@@ -136,6 +137,31 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
                 ErrorCategory.InvalidOperation,
                 RepoPath));
         }
+    }
+
+    /// <summary>
+    /// Wraps a <see cref="GitBranchInfo"/> in a <see cref="PSObject"/> and, when reference
+    /// comparison data is present, prepends the <c>#WithReference</c> synthetic typename so that
+    /// the formatter selects the view that includes the Reference column.
+    /// </summary>
+    /// <param name="branch">The branch info to wrap.</param>
+    /// <param name="hasReference">
+    /// <see langword="true"/> when <c>-ReferenceBranch</c> was specified, causing the wider
+    /// formatting view to be selected.
+    /// </param>
+    /// <returns>A <see cref="PSObject"/> ready to pass to <see cref="Cmdlet.WriteObject(object)"/>.</returns>
+    internal static PSObject CreateOutputObject(GitBranchInfo branch, bool hasReference)
+    {
+        var pso = PSObject.AsPSObject(branch);
+
+        if (hasReference)
+        {
+            // Add a synthetic typename so the formatter can select a view that includes
+            // the Reference comparison columns (ahead/behind vs. the reference branch).
+            pso.TypeNames.Insert(0, "PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference");
+        }
+
+        return pso;
     }
 
     /// <summary>
