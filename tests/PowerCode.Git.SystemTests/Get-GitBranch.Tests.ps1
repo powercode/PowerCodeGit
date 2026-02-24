@@ -338,3 +338,99 @@ Describe 'Get-GitBranch -Include and -Exclude combined' {
         $Branches | Where-Object { $_.Name -eq 'feature/temp' } | Should -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitBranch -ReferenceBranch' {
+    BeforeAll {
+        # Scenario:
+        #   origin/main: A → B → C   (2 commits ahead of where feature branched)
+        #   feature:     A → D       (1 commit not on origin/main)
+        #
+        # Expected for 'feature' vs origin/main: AheadBy=1, BehindBy=2
+        # Expected for 'main'    vs origin/main: AheadBy=0, BehindBy=0
+
+        $script:Repos = New-TestRepoWithRemote
+        $script:RepoPath = $script:Repos.WorkingPath
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Record the SHA of the first commit so we can branch from it later
+            $script:InitialSha = git rev-parse HEAD
+
+            # Add two commits to main and push them to origin
+            Set-Content -Path 'commit_b.txt' -Value 'B'
+            git add .       2>&1 | Out-Null
+            git commit -m 'Commit B' 2>&1 | Out-Null
+
+            Set-Content -Path 'commit_c.txt' -Value 'C'
+            git add .       2>&1 | Out-Null
+            git commit -m 'Commit C' 2>&1 | Out-Null
+            git push origin main 2>&1 | Out-Null
+
+            # Create feature branch from the initial commit and add one commit
+            git checkout -b feature $script:InitialSha 2>&1 | Out-Null
+            Set-Content -Path 'commit_d.txt' -Value 'D'
+            git add .       2>&1 | Out-Null
+            git commit -m 'Commit D' 2>&1 | Out-Null
+
+            git checkout main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:Repos.WorkingPath
+        Remove-TestGitRepository -Path $script:Repos.BarePath
+    }
+
+    It 'Populates ReferenceComparison when -ReferenceBranch is specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/main')
+        $FeatureBranch = $Branches | Where-Object { $_.Name -eq 'feature' }
+
+        $FeatureBranch | Should -Not -BeNullOrEmpty
+        $FeatureBranch.ReferenceComparison | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Sets ReferenceBranchName on the comparison object' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/main')
+        $FeatureBranch = $Branches | Where-Object { $_.Name -eq 'feature' }
+
+        $FeatureBranch.ReferenceComparison.ReferenceBranchName | Should -BeExactly 'origin/main'
+    }
+
+    It 'Computes correct AheadBy for feature branch (1 commit not on origin/main)' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/main')
+        $FeatureBranch = $Branches | Where-Object { $_.Name -eq 'feature' }
+
+        $FeatureBranch.ReferenceComparison.AheadBy | Should -Be 1
+    }
+
+    It 'Computes correct BehindBy for feature branch (2 commits on origin/main not in feature)' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/main')
+        $FeatureBranch = $Branches | Where-Object { $_.Name -eq 'feature' }
+
+        $FeatureBranch.ReferenceComparison.BehindBy | Should -Be 2
+    }
+
+    It 'Shows AheadBy=0 and BehindBy=0 for main which equals origin/main' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/main')
+        $MainBranch = $Branches | Where-Object { $_.Name -eq 'main' }
+
+        $MainBranch.ReferenceComparison.AheadBy  | Should -Be 0
+        $MainBranch.ReferenceComparison.BehindBy | Should -Be 0
+    }
+
+    It 'ReferenceComparison is null when -ReferenceBranch is not specified' {
+        $Branches = @(Get-GitBranch -RepoPath $script:RepoPath)
+
+        $Branches | ForEach-Object {
+            $_.ReferenceComparison | Should -BeNullOrEmpty -Because "no -ReferenceBranch was provided"
+        }
+    }
+
+    It 'Throws for a non-existent reference branch' {
+        { Get-GitBranch -RepoPath $script:RepoPath -ReferenceBranch 'origin/nonexistent' -ErrorAction Stop } |
+            Should -Throw
+    }
+}

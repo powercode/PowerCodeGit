@@ -468,6 +468,9 @@
             <Label>Tracking</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>Reference</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>Worktree</Label>
           </TableColumnHeader>
         </TableHeaders>
@@ -482,6 +485,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
@@ -521,6 +527,10 @@
               <ListItem>
                 <Label>Tracking</Label>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Reference</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Worktree</Label>

@@ -50,6 +50,7 @@ public sealed class GetGitBranchCmdletTests
         Assert.IsNull(options.NotMergedInto);
         Assert.IsNull(options.Include);
         Assert.IsNull(options.Exclude);
+        Assert.IsNull(options.ReferenceBranch);
     }
 
     [TestMethod]
@@ -164,6 +165,20 @@ public sealed class GetGitBranchCmdletTests
         var options = cmdlet.BuildOptions("C:\\repo");
 
         CollectionAssert.AreEqual(new[] { "temp/*" }, options.Exclude);
+    }
+
+    [TestMethod]
+    public void BuildOptions_ReferenceBranchSet_ReferenceBranchMapped()
+    {
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            ReferenceBranch = "origin/main",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("origin/main", options.ReferenceBranch);
     }
 
     [TestMethod]

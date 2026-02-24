@@ -61,6 +61,13 @@ public sealed class GitBranchListOptions
     /// </summary>
     public string[]? Exclude { get; set; }
 
+    /// <summary>
+    /// Gets or sets the name of a branch to compare all returned branches against,
+    /// computing ahead/behind divergence relative to it (e.g. <c>origin/master</c>).
+    /// When <see langword="null"/>, no reference comparison is performed.
+    /// </summary>
+    public string? ReferenceBranch { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -73,6 +80,7 @@ public sealed class GitBranchListOptions
         if (NotMergedInto is not null) parts.Add($"no-merged={NotMergedInto}");
         if (Include is { Length: > 0 }) parts.Add($"include={string.Join(",", Include)}");
         if (Exclude is { Length: > 0 }) parts.Add($"exclude={string.Join(",", Exclude)}");
+        if (ReferenceBranch is not null) parts.Add($"reference={ReferenceBranch}");
         return parts.Count > 0
             ? $"GitBranchListOptions({string.Join(", ", parts)})"
             : "GitBranchListOptions()";

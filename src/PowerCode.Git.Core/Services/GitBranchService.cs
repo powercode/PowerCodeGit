@@ -24,6 +24,21 @@ public sealed class GitBranchService : IGitBranchService
         // can report which worktree (if any) it is currently checked out in.
         var worktreePaths = BuildWorktreeLookup(repository);
 
+        // Resolve the reference branch tip once so each branch can be compared against it.
+        string? referenceBranchName = options.ReferenceBranch;
+        Commit? referenceTip = null;
+        if (referenceBranchName is not null)
+        {
+            var refBranch = repository.Branches[referenceBranchName]
+                ?? throw new ArgumentException(
+                    $"Reference branch '{referenceBranchName}' was not found in the repository.",
+                    nameof(options));
+            referenceTip = refBranch.Tip
+                ?? throw new ArgumentException(
+                    $"Reference branch '{referenceBranchName}' has no commits.",
+                    nameof(options));
+        }
+
         IEnumerable<Branch> branches = repository.Branches;
 
         // Filter by local/remote/all
@@ -37,7 +52,20 @@ public sealed class GitBranchService : IGitBranchService
         }
         // else: ListAll — include both local and remote
 
-        var result = branches.Select(b => MapBranch(b, worktreePaths)).ToList();
+        var result = branches.Select(b =>
+        {
+            GitBranchComparisonInfo? comparison = null;
+            if (referenceTip is not null && b.Tip is not null)
+            {
+                var divergence = repository.ObjectDatabase.CalculateHistoryDivergence(b.Tip, referenceTip);
+                comparison = new GitBranchComparisonInfo(
+                    referenceBranchName!,
+                    divergence.AheadBy ?? 0,
+                    divergence.BehindBy ?? 0);
+            }
+
+            return MapBranch(b, worktreePaths, comparison);
+        }).ToList();
 
         // Pattern filter (glob-like: supports * and ?)
         if (options.Pattern is not null)
@@ -296,7 +324,7 @@ public sealed class GitBranchService : IGitBranchService
         return mergeBase?.Sha == branch.Tip.Sha;
     }
 
-    private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null)
+    private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null, GitBranchComparisonInfo? referenceComparison = null)
     {
         string? worktreePath = null;
         worktreePaths?.TryGetValue(branch.FriendlyName, out worktreePath);
@@ -309,7 +337,8 @@ public sealed class GitBranchService : IGitBranchService
             branch.TrackedBranch?.FriendlyName,
             branch.TrackingDetails?.AheadBy,
             branch.TrackingDetails?.BehindBy,
-            worktreePath);
+            worktreePath,
+            referenceComparison);
     }
 
     /// <summary>

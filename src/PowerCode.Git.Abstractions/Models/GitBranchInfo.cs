@@ -16,6 +16,7 @@ public sealed class GitBranchInfo
     /// <param name="aheadBy">The number of commits ahead of the tracked branch, or <see langword="null"/>.</param>
     /// <param name="behindBy">The number of commits behind the tracked branch, or <see langword="null"/>.</param>
     /// <param name="worktreePath">The filesystem path of the worktree where this branch is checked out, or <see langword="null"/>.</param>
+    /// <param name="referenceComparison">The ahead/behind comparison against a user-specified reference branch, or <see langword="null"/>.</param>
     public GitBranchInfo(
         string name,
         bool isHead,
@@ -24,7 +25,8 @@ public sealed class GitBranchInfo
         string? trackedBranchName,
         int? aheadBy,
         int? behindBy,
-        string? worktreePath = null)
+        string? worktreePath = null,
+        GitBranchComparisonInfo? referenceComparison = null)
     {
         Name = name;
         IsHead = isHead;
@@ -35,6 +37,7 @@ public sealed class GitBranchInfo
         AheadBy = aheadBy;
         BehindBy = behindBy;
         WorktreePath = worktreePath;
+        ReferenceComparison = referenceComparison;
     }
 
     /// <summary>
@@ -82,6 +85,12 @@ public sealed class GitBranchInfo
     /// or <see langword="null"/> if the branch is not checked out in any worktree.
     /// </summary>
     public string? WorktreePath { get; }
+
+    /// <summary>
+    /// Gets the ahead/behind comparison against a user-specified reference branch,
+    /// or <see langword="null"/> when <c>-ReferenceBranch</c> was not provided.
+    /// </summary>
+    public GitBranchComparisonInfo? ReferenceComparison { get; }
 
     /// <inheritdoc/>
     public override string ToString()

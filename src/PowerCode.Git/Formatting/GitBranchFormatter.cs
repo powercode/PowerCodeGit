@@ -93,4 +93,25 @@ public static class GitBranchFormatter
 
         return AnsiCodes.Colorize(branch.WorktreePath, AnsiCodes.Dim);
     }
+
+    /// <summary>
+    /// Formats the ahead/behind comparison against a user-specified reference branch.
+    /// </summary>
+    /// <param name="branch">The branch info to format.</param>
+    /// <returns>
+    /// A magenta-colored string like <c>(ahead 1) | (behind 3) origin/master</c>,
+    /// or an empty string when no reference comparison was requested.
+    /// </returns>
+    public static string FormatReferenceComparison(GitBranchInfo branch)
+    {
+        if (branch.ReferenceComparison is null)
+        {
+            return string.Empty;
+        }
+
+        var c = branch.ReferenceComparison;
+        return AnsiCodes.Colorize(
+            $"(ahead {c.AheadBy}) | (behind {c.BehindBy}) {c.ReferenceBranchName}",
+            AnsiCodes.Magenta);
+    }
 }

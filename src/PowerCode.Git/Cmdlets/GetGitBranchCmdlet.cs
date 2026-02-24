@@ -98,6 +98,16 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     public string[]? Exclude { get; set; }
 
     /// <summary>
+    /// Gets or sets the name of a branch to compare each result against,
+    /// computing ahead/behind divergence (e.g. <c>origin/master</c>).
+    /// When set, each returned <see cref="GitBranchInfo"/> will have its
+    /// <see cref="GitBranchInfo.ReferenceComparison"/> property populated.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    [GitCommittishCompleter]
+    public string? ReferenceBranch { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built options object for full control over branch listing.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
@@ -154,6 +164,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             NotMergedInto = NoMerged,
             Include = Include,
             Exclude = Exclude,
+            ReferenceBranch = ReferenceBranch,
         };
     }
 }
