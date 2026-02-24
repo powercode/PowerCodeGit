@@ -35,19 +35,20 @@ public sealed class GetGitLogCmdlet : GitCmdlet
     private readonly IGitHistoryService gitHistoryService;
 
     /// <summary>
+    /// Gets or sets the branch name used for log traversal.
+    /// </summary>
+    [Parameter(ParameterSetName = LogParameterSet, Position = 1)]
+    [GitBranchCompleter]
+    public string? Branch { get; set; }
+
+    /// <summary>
     /// Gets or sets one or more repository-relative file paths to filter
     /// the log to commits that touched those files.
     /// </summary>
-    [Parameter(ParameterSetName = LogParameterSet)]
+    [Parameter(ParameterSetName = LogParameterSet, Position = 2)]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 
-    /// <summary>
-    /// Gets or sets the branch name used for log traversal.
-    /// </summary>
-    [Parameter(ParameterSetName = LogParameterSet)]
-    [GitBranchCompleter]
-    public string? Branch { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to include commits from all local branches.
