@@ -114,6 +114,100 @@ Describe 'Start-GitRebase pipeline input from Get-GitBranch' {
     }
 }
 
+Describe 'Start-GitRebase pipeline input from Get-GitLog' {
+    BeforeEach {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Create a second commit to rebase onto
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'second.txt') -Value 'second'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Second commit' 2>&1 | Out-Null
+
+            # Create feature branch from first commit
+            git checkout HEAD~1 2>&1 | Out-Null
+            git checkout -b feature 2>&1 | Out-Null
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'feature.txt') -Value 'feature'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Feature commit' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterEach {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Accepts a GitCommitInfo piped from Get-GitLog and uses its Sha' {
+        # Get the second commit from main and rebase feature onto it
+        $Result = Get-GitLog -RepoPath $script:RepoPath -Branch main -MaxCount 1 | Start-GitRebase -RepoPath $script:RepoPath
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Success | Should -BeTrue
+    }
+
+    It 'Stops with a terminating error when multiple commits are piped' {
+        { Get-GitLog -RepoPath $script:RepoPath -Branch main | Start-GitRebase -RepoPath $script:RepoPath } |
+            Should -Throw
+    }
+}
+
+Describe 'Start-GitRebase pipeline input from PSCustomObject' {
+    BeforeEach {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git checkout -b feature 2>&1 | Out-Null
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'feature.txt') -Value 'feature change'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Feature commit' 2>&1 | Out-Null
+
+            git checkout main 2>&1 | Out-Null
+            Set-Content -Path (Join-Path -Path $script:RepoPath -ChildPath 'main.txt') -Value 'main change'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Main commit' 2>&1 | Out-Null
+
+            git checkout feature 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterEach {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Resolves upstream from PSCustomObject with Upstream property' {
+        $CustomObject = [PSCustomObject]@{ Upstream = 'main' }
+        $Result = $CustomObject | Start-GitRebase -RepoPath $script:RepoPath
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Success | Should -BeTrue
+    }
+
+    It 'Resolves upstream from PSCustomObject with Name property' {
+        $CustomObject = [PSCustomObject]@{ Name = 'main' }
+        $Result = $CustomObject | Start-GitRebase -RepoPath $script:RepoPath
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Success | Should -BeTrue
+    }
+
+    It 'Resolves upstream from PSCustomObject with BranchName property' {
+        $CustomObject = [PSCustomObject]@{ BranchName = 'main' }
+        $Result = $CustomObject | Start-GitRebase -RepoPath $script:RepoPath
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Success | Should -BeTrue
+    }
+
+    It 'Stops with a terminating error when object has no matching properties' {
+        $CustomObject = [PSCustomObject]@{ SomeOtherProperty = 'value' }
+        { $CustomObject | Start-GitRebase -RepoPath $script:RepoPath } | Should -Throw
+    }
+}
+
 Describe 'Start-GitRebase with autostash' {
     BeforeEach {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')

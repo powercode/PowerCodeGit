@@ -10,13 +10,16 @@ namespace PowerCode.Git.Cmdlets;
 /// <summary>
 /// Starts a rebase operation, replaying commits from the current branch on top
 /// of the specified upstream branch (<c>git rebase &lt;upstream&gt;</c>).
-/// Accepts pipeline input from <c>Get-GitBranch</c>, but stops with an error
-/// if more than one branch is received.
+/// Accepts pipeline input from <c>Get-GitBranch</c>, <c>Get-GitLog</c>, or custom objects,
+/// but stops with a terminating error if more than one object is received.
 /// <example>
 /// <code>Start-GitRebase -Upstream main</code>
 /// </example>
 /// <example>
-/// <code>Get-GitBranch -Name main | Start-GitRebase</code>
+/// <code>Get-GitBranch -Pattern main | Start-GitRebase</code>
+/// </example>
+/// <example>
+/// <code>Get-GitLog -n 1 | Start-GitRebase</code>
 /// </example>
 /// </summary>
 [Cmdlet(VerbsLifecycle.Start, "GitRebase", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium, DefaultParameterSetName = RebaseParameterSet)]
@@ -44,22 +47,22 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
 
     private const string RebaseParameterSet = "Rebase";
     private const string InteractiveParameterSet = "Interactive";
+    private const string InputObjectParameterSet = "InputObject";
     private const string OptionsParameterSet = "Options";
 
-    // Accumulates branch names received via the pipeline so we can validate
-    // that exactly one branch was supplied before executing.
-    private readonly List<string> pipelineNames = [];
+    // Accumulates pipeline input objects so we can validate that exactly one was supplied.
+    private readonly List<PSObject> pipelineInputs = [];
 
     // ── Rebase parameter set ─────────────────────────────────────────────────
 
     /// <summary>
     /// Gets or sets the name of the upstream branch to rebase the current branch onto.
-    /// Binds from the <c>Name</c> property when pipeline input comes from
-    /// <c>Get-GitBranch</c>.
+    /// When invoking directly, this is a required parameter. When piping objects, use the
+    /// <c>InputObject</c> parameter instead, which resolves the upstream from
+    /// <see cref="GitBranchInfo.Name"/>, <see cref="GitCommitInfo.Sha"/>, or duck-typed properties.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = RebaseParameterSet)]
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true, ParameterSetName = InteractiveParameterSet)]
-    [Alias("Name")]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = RebaseParameterSet)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = InteractiveParameterSet)]
     [ValidateNotNullOrEmpty]
     [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeRelativeRefs = true)]
     public string Upstream { get; set; } = string.Empty;
@@ -68,11 +71,11 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
 
     /// <summary>
     /// Gets or sets a value indicating whether to open an interactive rebase session
-    /// (<c>git rebase -i</c>). When set, the <c>Interactive</c> parameter set is
-    /// activated, unlocking <c>-AutoSquash</c>, <c>-Exec</c>, <c>-RebaseMerges</c>,
-    /// and <c>-UpdateRefs</c>.
+    /// (<c>git rebase -i</c>). When set in the <c>Interactive</c> parameter set,
+    /// this is mandatory. When used with <c>InputObject</c>, it is optional.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter Interactive { get; set; }
 
     /// <summary>
@@ -81,6 +84,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// (<c>git rebase -i --autosquash</c>).
     /// </summary>
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter AutoSquash { get; set; }
 
     /// <summary>
@@ -89,6 +93,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// An <c>exec</c> line is inserted after every <c>pick</c> line in the todo list.
     /// </summary>
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     [ValidateNotNullOrEmpty]
     public string? Exec { get; set; }
 
@@ -97,6 +102,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// linearising history (<c>git rebase --rebase-merges</c>).
     /// </summary>
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter RebaseMerges { get; set; }
 
     /// <summary>
@@ -105,9 +111,23 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// (<c>git rebase --update-refs</c>).
     /// </summary>
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter UpdateRefs { get; set; }
 
-    // ── Shared optional (Rebase + Interactive) ───────────────────────────────
+    // ── InputObject parameter set ────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets an object from which to resolve the upstream ref.
+    /// Supports <see cref="GitBranchInfo"/> (uses <c>Name</c>),
+    /// <see cref="GitCommitInfo"/> (uses <c>Sha</c>), <see cref="string"/>,
+    /// or <see cref="PSCustomObject"/> with properties <c>Upstream</c>, <c>BranchName</c>,
+    /// <c>Name</c>, or <c>Sha</c> (checked in that order).
+    /// Only one object may be piped; multiple objects produce a terminating error.
+    /// </summary>
+    [Parameter(Mandatory = true, ValueFromPipeline = true, ParameterSetName = InputObjectParameterSet)]
+    public PSObject? InputObject { get; set; }
+
+    // ── Shared optional (Rebase + Interactive + InputObject) ─────────────────
 
     /// <summary>
     /// Gets or sets an optional target ref for a three-way rebase
@@ -115,6 +135,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = RebaseParameterSet)]
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     [GitCommittishCompleter]
     public string? Onto { get; set; }
 
@@ -125,6 +146,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = RebaseParameterSet)]
     [Parameter(ParameterSetName = InteractiveParameterSet)]
+    [Parameter(ParameterSetName = InputObjectParameterSet)]
     public SwitchParameter AutoStash { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────
@@ -138,8 +160,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     // ────────────────────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Collects branch names from the pipeline for validation in
-    /// <see cref="EndProcessing"/>.
+    /// Collects pipeline input objects for validation in <see cref="EndProcessing"/>.
     /// </summary>
     protected override void ProcessRecord()
     {
@@ -150,12 +171,15 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
             return;
         }
 
-        pipelineNames.Add(Upstream);
+        if (ParameterSetName == InputObjectParameterSet && InputObject is not null)
+        {
+            pipelineInputs.Add(InputObject);
+        }
     }
 
     /// <summary>
-    /// Validates that exactly one branch was received from the pipeline, then
-    /// executes the rebase.
+    /// Validates pipeline input (if any), resolves the upstream ref from
+    /// <see cref="InputObject"/>, then executes the rebase.
     /// </summary>
     protected override void EndProcessing()
     {
@@ -165,24 +189,18 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
             return;
         }
 
-        if (pipelineNames.Count > 1)
+        if (ParameterSetName == InputObjectParameterSet)
         {
-            ThrowTerminatingError(new ErrorRecord(
-                new InvalidOperationException(
-                    $"Start-GitRebase accepts exactly one upstream branch. " +
-                    $"Received {pipelineNames.Count} branches from the pipeline. " +
-                    $"Pipe a single branch or specify -Upstream explicitly."),
-                "StartGitRebase_MultiplePipelineInputs",
-                ErrorCategory.InvalidArgument,
-                pipelineNames));
-            return;
-        }
+            ValidateSinglePipelineInput();
 
-        if (pipelineNames.Count == 0)
-        {
-            // No pipeline input and no -Upstream: parameter binder would have
-            // already enforced Mandatory, but guard defensively.
-            return;
+            if (pipelineInputs.Count == 0)
+            {
+                // No pipeline input: parameter binder would have enforced Mandatory.
+                return;
+            }
+
+            // Resolve upstream from the single pipeline object.
+            Upstream = ResolveUpstreamFromInputObject(pipelineInputs[0]);
         }
 
         var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
@@ -219,6 +237,55 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Validates that exactly one object was received from the pipeline.
+    /// Throws a terminating error if multiple objects were received.
+    /// </summary>
+    private void ValidateSinglePipelineInput()
+    {
+        if (pipelineInputs.Count > 1)
+        {
+            ThrowTerminatingError(new ErrorRecord(
+                new InvalidOperationException(
+                    $"Start-GitRebase accepts exactly one pipeline object. " +
+                    $"Received {pipelineInputs.Count} objects. " +
+                    $"Pipe a single object or specify -Upstream explicitly."),
+                "StartGitRebase_MultiplePipelineInputs",
+                ErrorCategory.InvalidArgument,
+                pipelineInputs));
+        }
+    }
+
+    /// <summary>
+    /// Resolves the upstream ref from a <see cref="PSObject"/> by inspecting its
+    /// <see cref="PSObject.BaseObject"/> type or duck-typing well-known property names.
+    /// </summary>
+    /// <param name="obj">The pipeline input object.</param>
+    /// <returns>The resolved upstream ref string.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the object type is unsupported or no suitable property is found.
+    /// </exception>
+    private string ResolveUpstreamFromInputObject(PSObject obj)
+    {
+        var resolved = GitPSObjectHelper.ResolveInputObjectUpstream(obj);
+
+        if (resolved is null)
+        {
+            var displayType = obj.BaseObject?.GetType().Name ?? "PSCustomObject";
+            ThrowTerminatingError(new ErrorRecord(
+                new InvalidOperationException(
+                    $"Cannot resolve upstream from object of type '{displayType}'. " +
+                    $"Supported types: GitBranchInfo, GitCommitInfo, string. " +
+                    $"For custom objects, ensure one of these properties exists: " +
+                    $"Upstream, BranchName, Name, Sha."),
+                "StartGitRebase_CannotResolveUpstream",
+                ErrorCategory.InvalidArgument,
+                obj));
+        }
+
+        return resolved;
+    }
 
     private void ExecuteRebase(GitRebaseOptions options)
     {

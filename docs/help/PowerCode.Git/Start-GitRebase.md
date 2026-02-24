@@ -39,13 +39,21 @@ Start-GitRebase -Options <GitRebaseOptions> [-RepoPath <string>] [-WhatIf] [-Con
  [<CommonParameters>]
 ```
 
+### InputObject
+
+```
+Start-GitRebase -InputObject <PSObject> [-Interactive] [-AutoSquash] [-Exec <string>]
+ [-RebaseMerges] [-UpdateRefs] [-Onto <string>] [-AutoStash] [-RepoPath <string>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
+```
+
 ## ALIASES
 
 None.
 
 ## DESCRIPTION
 
-The Start-GitRebase cmdlet replays commits from the current branch on top of the specified upstream branch, equivalent to `git rebase <upstream>`. Use `-Interactive` for an interactive rebase session, `-Onto` for a three-way rebase, and `-AutoStash` to automatically stash and restore uncommitted changes. Accepts pipeline input from `Get-GitBranch`, but stops with a terminating error if more than one branch is received.
+The Start-GitRebase cmdlet replays commits from the current branch on top of the specified upstream branch, equivalent to `git rebase <upstream>`. Use `-Interactive` for an interactive rebase session, `-Onto` for a three-way rebase, and `-AutoStash` to automatically stash and restore uncommitted changes. Accepts pipeline input from `Get-GitBranch`, `Get-GitLog`, or custom objects with properties like `Upstream`, `Name`, or `Sha`. Stops with a terminating error if more than one object is received from the pipeline.
 
 ## EXAMPLES
 
@@ -59,13 +67,21 @@ Start-GitRebase -Upstream main
 
 ### Example 2 - Rebase using pipeline input from Get-GitBranch
 
-Pipes a single branch from `Get-GitBranch` as the upstream target.
+Pipes a single branch from `Get-GitBranch` as the upstream target. Uses the `InputObject` parameter set and resolves the upstream from the `Name` property of the `GitBranchInfo` object.
 
 ```powershell
 Get-GitBranch -Pattern main | Start-GitRebase
 ```
 
-### Example 3 - Rebase with autostash
+### Example 3 - Rebase onto a commit from Get-GitLog
+
+Pipes a commit from `Get-GitLog` and rebases onto that specific commit SHA.
+
+```powershell
+Get-GitLog -MaxCount 1 -Pattern "feature" | Start-GitRebase
+```
+
+### Example 4 - Rebase with autostash
 
 Automatically stashes uncommitted changes before rebasing and restores them afterwards.
 
@@ -73,7 +89,15 @@ Automatically stashes uncommitted changes before rebasing and restores them afte
 Start-GitRebase -Upstream main -AutoStash
 ```
 
-### Example 4 - Interactive rebase with autosquash
+### Example 5 - Interactive rebase with pipeline input
+
+Pipes a branch and performs an interactive rebase with autosquash enabled.
+
+```powershell
+Get-GitBranch -Pattern develop | Start-GitRebase -Interactive -AutoSquash
+```
+
+### Example 6 - Interactive rebase with autosquash
 
 Automatically squashes `fixup!` and `squash!` commits into their target commits. Commit messages must follow the naming convention `fixup! <original message>`.
 
@@ -81,7 +105,7 @@ Automatically squashes `fixup!` and `squash!` commits into their target commits.
 Start-GitRebase -Upstream main -Interactive -AutoSquash
 ```
 
-### Example 5 - Interactive rebase with exec
+### Example 7 - Interactive rebase with exec
 
 Runs `dotnet test` after each replayed commit. The rebase aborts automatically if any exec step exits non-zero.
 
@@ -93,7 +117,7 @@ Start-GitRebase -Upstream main -Interactive -Exec 'dotnet test'
 
 ### -AutoSquash
 
-Automatically applies `fixup!` and `squash!` commit ordering when populating the interactive rebase todo list. Equivalent to `git rebase -i --autosquash`.
+Automatically applies `fixup!` and `squash!` commit ordering when populating the interactive rebase todo list. Equivalent to `git rebase -i --autosquash`. Available in `Interactive` and `InputObject` parameter sets.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -134,6 +158,12 @@ ParameterSets:
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
 HelpMessage: ''
@@ -163,7 +193,7 @@ HelpMessage: ''
 
 ### -Exec
 
-A shell command to execute after each rebased commit. An `exec` line is inserted after every `pick` line in the todo list. Equivalent to `git rebase -i --exec <cmd>`.
+A shell command to execute after each rebased commit. An `exec` line is inserted after every `pick` line in the todo list. Equivalent to `git rebase -i --exec <cmd>`. Available in `Interactive` and `InputObject` parameter sets.
 
 ```yaml
 Type: System.String
@@ -184,7 +214,7 @@ HelpMessage: ''
 
 ### -Interactive
 
-Opens an interactive rebase session. Equivalent to `git rebase -i`. Activates the `Interactive` parameter set, which unlocks `-AutoSquash`, `-Exec`, `-RebaseMerges`, and `-UpdateRefs`.
+Opens an interactive rebase session. Equivalent to `git rebase -i`. When mandatory in the `Interactive` parameter set, this activates `-AutoSquash`, `-Exec`, `-RebaseMerges`, and `-UpdateRefs`. When used with the `InputObject` parameter set, it is optional.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -195,6 +225,12 @@ ParameterSets:
 - Name: Interactive
   Position: Named
   IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
@@ -220,6 +256,12 @@ ParameterSets:
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 - Name: Interactive
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: InputObject
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -253,7 +295,7 @@ HelpMessage: ''
 
 ### -RebaseMerges
 
-Recreates merge commits during the rebase rather than linearising history. Equivalent to `git rebase --rebase-merges`.
+Recreates merge commits during the rebase rather than linearising history. Equivalent to `git rebase --rebase-merges`. Available in `Interactive` and `InputObject` parameter sets.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -296,7 +338,7 @@ HelpMessage: ''
 
 ### -UpdateRefs
 
-Automatically updates any branch refs that point to commits being rebased. Useful when working with stacked branches. Equivalent to `git rebase --update-refs`.
+Automatically updates any branch refs that point to commits being rebased. Useful when working with stacked branches. Equivalent to `git rebase --update-refs`. Available in `Interactive` and `InputObject` parameter sets.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -317,7 +359,7 @@ HelpMessage: ''
 
 ### -Upstream
 
-The name of the upstream branch to rebase the current branch onto. Binds from the `Name` property when pipeline input comes from `Get-GitBranch`.
+The name of the upstream branch to rebase the current branch onto. Required when using `-Upstream` directly in the `Rebase` or `Interactive` parameter sets. When using the `InputObject` parameter set, the upstream is resolved from the piped object's properties.
 
 ```yaml
 Type: System.String
@@ -330,13 +372,13 @@ ParameterSets:
   Position: 0
   IsRequired: true
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 - Name: Interactive
   Position: 0
   IsRequired: true
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -374,9 +416,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### System.String
+### System.Management.Automation.PSObject
 
-The upstream branch name, bound via the `Name` property from `Get-GitBranch` pipeline input.
+Objects from which to resolve the upstream ref. Supports `GitBranchInfo`, `GitCommitInfo`, strings, or custom objects with `Upstream`, `BranchName`, `Name`, or `Sha` properties.
 
 ## OUTPUTS
 
@@ -386,7 +428,7 @@ A result object indicating whether the rebase completed successfully or encounte
 
 ## NOTES
 
-This cmdlet supports `-WhatIf` and `-Confirm` for safety. Only one branch may be piped from `Get-GitBranch`; piping multiple branches produces a terminating error.
+This cmdlet supports `-WhatIf` and `-Confirm` for safety. Only one object may be piped; piping multiple objects produces a terminating error. The `InputObject` parameter set automatically resolves the upstream from `GitBranchInfo.Name`, `GitCommitInfo.Sha`, or well-known properties on custom objects.
 
 ## RELATED LINKS
 
