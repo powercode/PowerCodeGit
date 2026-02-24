@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
@@ -8,6 +9,11 @@ namespace PowerCode.Git.Tests.Cmdlets;
 [TestClass]
 public sealed class GetGitLogCmdletTests
 {
+    [TestInitialize]
+    public void ResetConfiguration()
+    {
+        ModuleConfiguration.Current.Reset();
+    }
     [TestMethod]
     public void BuildOptions_PathNotSpecified_UsesCurrentPath()
     {
@@ -30,6 +36,7 @@ public sealed class GetGitLogCmdletTests
             Since = new DateTime(2024, 01, 01),
             Until = new DateTime(2024, 12, 31),
             MessagePattern = "fix",
+            BoundParameterOverrides = new HashSet<string> { nameof(GetGitLogCmdlet.MaxCount) },
         };
 
         var options = cmdlet.BuildOptions("C:\\ignored");
@@ -93,6 +100,42 @@ public sealed class GetGitLogCmdletTests
         var options = cmdlet.BuildOptions("C:\\ignored");
 
         Assert.AreSame(prebuilt, options);
+    }
+
+    [TestMethod]
+    public void BuildOptions_MaxCountNotSet_UsesModuleConfigDefault()
+    {
+        ModuleConfiguration.Current.LogMaxCount = 50;
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService());
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual(50, options.MaxCount);
+    }
+
+    [TestMethod]
+    public void BuildOptions_MaxCountNotSet_ConfigNull_ReturnsNull()
+    {
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService());
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsNull(options.MaxCount);
+    }
+
+    [TestMethod]
+    public void BuildOptions_MaxCountExplicitlySet_OverridesModuleConfig()
+    {
+        ModuleConfiguration.Current.LogMaxCount = 50;
+        var cmdlet = new GetGitLogCmdlet(new StubGitHistoryService())
+        {
+            MaxCount = 10,
+            BoundParameterOverrides = new HashSet<string> { nameof(GetGitLogCmdlet.MaxCount) },
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual(10, options.MaxCount);
     }
 
 }

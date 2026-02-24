@@ -61,7 +61,7 @@ public sealed class GetGitLogCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = LogParameterSet)]
     [ValidateRange(1, int.MaxValue)]
-    public int? MaxCount { get; set; }
+    public int MaxCount { get; set; }
 
     /// <summary>
     /// Gets or sets the author filter.
@@ -155,7 +155,7 @@ public sealed class GetGitLogCmdlet : GitCmdlet
             RepositoryPath = repositoryPath,
             BranchName = Branch,
             AllBranches = AllBranches.IsPresent,
-            MaxCount = MaxCount,
+            MaxCount = ResolveMaxCount(),
             AuthorFilter = Author,
             Since = Since,
             Until = Until,
@@ -164,5 +164,21 @@ public sealed class GetGitLogCmdlet : GitCmdlet
             FirstParent = FirstParent.IsPresent,
             NoMerges = NoMerges.IsPresent,
         };
+    }
+
+    /// <summary>
+    /// Returns the effective <c>MaxCount</c> value.  If the user explicitly
+    /// specified <c>-MaxCount</c> on the command line that value wins;
+    /// otherwise the <see cref="ModuleConfiguration.LogMaxCount"/> default
+    /// is used (which may itself be <c>null</c>, meaning unlimited).
+    /// </summary>
+    private int? ResolveMaxCount()
+    {
+        if (IsParameterBound(nameof(MaxCount)))
+        {
+            return MaxCount;
+        }
+
+        return ModuleConfiguration.Current.LogMaxCount;
     }
 }

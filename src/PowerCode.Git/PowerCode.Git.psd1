@@ -37,6 +37,8 @@
         'Get-GitCommitFile'
         'Set-GitConfiguration'
         'Get-GitConfiguration'
+        'Get-GitModuleConfiguration'
+        'Set-GitModuleConfiguration'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Management.Automation;
 using PowerCode.Git.Services;
 
@@ -28,6 +29,30 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
     /// unchanged — a safe fallback for unit-test scenarios.
     /// </summary>
     internal IPathResolver? PathResolver { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional set of parameter names that are treated as
+    /// explicitly bound.  Unit tests set this to simulate
+    /// <see cref="InvocationInfo.BoundParameters"/> without running inside
+    /// the PowerShell engine.
+    /// </summary>
+    internal ISet<string>? BoundParameterOverrides { get; set; }
+
+    /// <summary>
+    /// Returns <c>true</c> when the user explicitly specified the named
+    /// parameter on the command line.  At runtime this delegates to
+    /// <see cref="InvocationInfo.BoundParameters"/>; in unit tests it
+    /// checks <see cref="BoundParameterOverrides"/>.
+    /// </summary>
+    /// <param name="parameterName">
+    /// The name of the parameter to check, typically passed via
+    /// <c>nameof(...)</c>.
+    /// </param>
+    /// <returns><c>true</c> if the parameter was explicitly bound.</returns>
+    internal bool IsParameterBound(string parameterName) =>
+        BoundParameterOverrides?.Contains(parameterName)
+        ?? MyInvocation?.BoundParameters?.ContainsKey(parameterName)
+        ?? false;
 
     /// <summary>
     /// Binds the <see cref="PathResolver"/> to the current
