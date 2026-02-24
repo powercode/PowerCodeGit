@@ -36,7 +36,7 @@ Describe 'Set-GitModuleConfiguration -BranchIncludeDescription' {
     }
 
     It 'Enables branch descriptions by default' {
-        Set-GitModuleConfiguration -BranchIncludeDescription $true
+        Set-GitModuleConfiguration -BranchIncludeDescription
 
         $Config = Get-GitModuleConfiguration
         $Config.BranchIncludeDescription | Should -BeTrue
@@ -45,7 +45,7 @@ Describe 'Set-GitModuleConfiguration -BranchIncludeDescription' {
 
 Describe 'Set-GitModuleConfiguration -Reset' {
     It 'Clears all configuration values' {
-        Set-GitModuleConfiguration -LogMaxCount 50 -BranchIncludeDescription $true
+        Set-GitModuleConfiguration -LogMaxCount 50 -BranchIncludeDescription
         Set-GitModuleConfiguration -Reset
 
         $Config = Get-GitModuleConfiguration
