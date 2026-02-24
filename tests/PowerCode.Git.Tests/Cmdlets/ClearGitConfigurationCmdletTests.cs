@@ -47,7 +47,7 @@ public sealed class ClearGitConfigurationCmdletTests
             Name = ["user.name"],
         };
 
-        Assert.AreEqual(1, cmdlet.Name.Length);
+        Assert.HasCount(1, cmdlet.Name);
         Assert.AreEqual("user.name", cmdlet.Name[0]);
     }
 
@@ -59,7 +59,7 @@ public sealed class ClearGitConfigurationCmdletTests
             Name = ["user.name", "user.email", "core.autocrlf"],
         };
 
-        Assert.AreEqual(3, cmdlet.Name.Length);
+        Assert.HasCount(3, cmdlet.Name);
         Assert.AreEqual("user.name", cmdlet.Name[0]);
         Assert.AreEqual("user.email", cmdlet.Name[1]);
         Assert.AreEqual("core.autocrlf", cmdlet.Name[2]);

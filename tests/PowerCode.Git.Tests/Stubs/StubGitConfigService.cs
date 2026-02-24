@@ -6,12 +6,16 @@ using PowerCode.Git.Abstractions.Services;
 namespace PowerCode.Git.Tests.Stubs;
 
 /// <summary>
-/// A no-op stub for <see cref="IGitConfigService"/> suitable for use across cmdlet unit tests.
+/// A configurable stub for <see cref="IGitConfigService"/> suitable for use across cmdlet unit tests.
 /// </summary>
-internal sealed class StubGitConfigService : IGitConfigService
+/// <remarks>
+/// Pass a list of <see cref="GitConfigEntry"/> values to control what
+/// <see cref="GetConfigEntries"/> returns. When omitted, the stub returns an empty list.
+/// </remarks>
+internal sealed class StubGitConfigService(IReadOnlyList<GitConfigEntry>? entries = null) : IGitConfigService
 {
     public IReadOnlyList<GitConfigEntry> GetConfigEntries(GitConfigGetOptions options) =>
-        Array.Empty<GitConfigEntry>();
+        entries ?? Array.Empty<GitConfigEntry>();
 
     public GitConfigEntry? GetConfigValue(GitConfigGetOptions options) =>
         new() { Name = options.Name!, Value = "stub-value" };
