@@ -40,4 +40,10 @@ public interface IGitConfigService
     /// </summary>
     /// <param name="options">The set options specifying key, value, and optional scope.</param>
     void SetConfigValue(GitConfigSetOptions options);
+
+    /// <summary>
+    /// Removes a configuration key. Equivalent to <c>git config --unset &lt;name&gt;</c>.
+    /// </summary>
+    /// <param name="options">The unset options specifying the key and optional scope.</param>
+    void UnsetConfigValue(GitConfigUnsetOptions options);
 }

@@ -19,4 +19,8 @@ internal sealed class StubGitConfigService : IGitConfigService
     public void SetConfigValue(GitConfigSetOptions options)
     {
     }
+
+    public void UnsetConfigValue(GitConfigUnsetOptions options)
+    {
+    }
 }
