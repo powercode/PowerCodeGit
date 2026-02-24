@@ -480,7 +480,7 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
-              </TableColumnItem>
+              </TableColumnItem>              
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
               </TableColumnItem>
@@ -544,9 +544,9 @@
       </TableControl>
     </View>
 
-    <!-- Detailed list view for GitBranchInfo (no reference comparison) -->
+    <!-- Detailed list view for GitBranchInfo with reference comparison — includes Reference item -->
     <View>
-      <Name>GitBranchInfo-Detailed</Name>
+      <Name>Detailed</Name>
       <ViewSelectedBy>
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
       </ViewSelectedBy>
@@ -559,141 +559,11 @@
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
               </ListItem>
               <ListItem>
-                <Label>IsHead</Label>
-                <PropertyName>IsHead</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>IsRemote</Label>
-                <PropertyName>IsRemote</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>Commit</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Tracking</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Worktree</Label>
-                <PropertyName>WorktreePath</PropertyName>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-        </ListEntries>
-      </ListControl>
-    </View>
-
-    <!-- Detailed list view for GitBranchInfo with reference comparison — includes Reference item -->
-    <View>
-      <Name>GitBranchInfo-WithReference-Detailed</Name>
-      <ViewSelectedBy>
-        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
-      </ViewSelectedBy>
-      <ListControl>
-        <ListEntries>
-          <ListEntry>
-            <ListItems>
-              <ListItem>
-                <Label>Name</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>IsHead</Label>
-                <PropertyName>IsHead</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>IsRemote</Label>
-                <PropertyName>IsRemote</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>Commit</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Tracking</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Reference</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Worktree</Label>
-                <PropertyName>WorktreePath</PropertyName>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-        </ListEntries>
-      </ListControl>
-    </View>
-
-    <!-- Detailed list view for GitBranchInfo with description — shows Description only when not null -->
-    <View>
-      <Name>GitBranchInfo-WithDescription-Detailed</Name>
-      <ViewSelectedBy>
-        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription</TypeName>
-      </ViewSelectedBy>
-      <ListControl>
-        <ListEntries>
-          <ListEntry>            
-            <ListItems>
-              <ListItem>
-                <Label>Name</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>IsHead</Label>
-                <PropertyName>IsHead</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>IsRemote</Label>
-                <PropertyName>IsRemote</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>Commit</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Tracking</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
                 <Label>Description</Label>
                 <ItemSelectionCondition><PropertyName>Description</PropertyName></ItemSelectionCondition>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatDescription($_)</ScriptBlock>
               </ListItem>
               <ListItem>
-                <Label>Worktree</Label>
-                <PropertyName>WorktreePath</PropertyName>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-        </ListEntries>
-      </ListControl>
-    </View>
-
-    <!-- Detailed list view for GitBranchInfo with description and reference comparison -->
-    <View>
-      <Name>GitBranchInfo-WithDescription-WithReference-Detailed</Name>
-      <ViewSelectedBy>
-        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription#WithReference</TypeName>
-      </ViewSelectedBy>
-      <ListControl>
-        <ListEntries>
-          <ListEntry>
-            <EntrySelectedBy>
-              <SelectionCondition>
-                <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
-                <ScriptBlock>$_.Description -ne $null</ScriptBlock>
-              </SelectionCondition>
-            </EntrySelectedBy>
-            <ListItems>
-              <ListItem>
-                <Label>Name</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
                 <Label>IsHead</Label>
                 <PropertyName>IsHead</PropertyName>
               </ListItem>
@@ -707,50 +577,17 @@
               </ListItem>
               <ListItem>
                 <Label>Tracking</Label>
+                <ItemSelectionCondition><PropertyName>Tracking</PropertyName></ItemSelectionCondition>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Reference</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Description</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatDescription($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Worktree</Label>
-                <PropertyName>WorktreePath</PropertyName>
-              </ListItem>
-            </ListItems>
-          </ListEntry>
-          <ListEntry>
-            <ListItems>
-              <ListItem>
-                <Label>Name</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>IsHead</Label>
-                <PropertyName>IsHead</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>IsRemote</Label>
-                <PropertyName>IsRemote</PropertyName>
-              </ListItem>
-              <ListItem>
-                <Label>Commit</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatFullSha($_.TipSha)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Tracking</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </ListItem>
-              <ListItem>
-                <Label>Reference</Label>
+                <ItemSelectionCondition><PropertyName>Reference</PropertyName></ItemSelectionCondition>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
               </ListItem>
               <ListItem>
                 <Label>Worktree</Label>
+                <ItemSelectionCondition><PropertyName>WorktreePath</PropertyName></ItemSelectionCondition>
                 <PropertyName>WorktreePath</PropertyName>
               </ListItem>
             </ListItems>
