@@ -178,6 +178,9 @@ public sealed class GitBranchCompleterTests
 
         public void DeleteBranch(GitBranchDeleteOptions options) =>
             throw new NotImplementedException();
+
+        public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitBranchService : IGitBranchService
@@ -192,6 +195,9 @@ public sealed class GitBranchCompleterTests
             throw new NotImplementedException();
 
         public void DeleteBranch(GitBranchDeleteOptions options) =>
+            throw new NotImplementedException();
+
+        public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
             throw new NotImplementedException();
     }
 }

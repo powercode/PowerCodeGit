@@ -318,6 +318,60 @@ public sealed class GitBranchService : IGitBranchService
         repository.Branches.Remove(branch);
     }
 
+    /// <inheritdoc/>
+    public GitBranchInfo SetBranch(GitBranchSetOptions options)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Branch name (options.Name) is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var branch = repository.Branches[options.Name]
+            ?? throw new ArgumentException($"The branch '{options.Name}' does not exist.", nameof(options));
+
+        if (branch.IsRemote)
+        {
+            throw new ArgumentException($"Cannot configure remote-tracking branch '{options.Name}'. Only local branches can be configured.", nameof(options));
+        }
+
+        // Set remote tracking: branch.<name>.remote and branch.<name>.merge
+        if (options.Remote is not null)
+        {
+            var remote = repository.Network.Remotes[options.Remote]
+                ?? throw new ArgumentException($"Remote '{options.Remote}' was not found in the repository.", nameof(options));
+
+            var upstreamRef = options.Upstream is not null
+                ? (options.Upstream.StartsWith("refs/", StringComparison.Ordinal)
+                    ? options.Upstream
+                    : $"refs/heads/{options.Upstream}")
+                : $"refs/heads/{options.Name}";
+
+            repository.Branches.Update(
+                branch,
+                b => b.Remote = remote.Name,
+                b => b.UpstreamBranch = upstreamRef);
+        }
+        else if (options.Upstream is not null)
+        {
+            // Upstream without explicit remote — set merge ref only
+            var mergeRef = options.Upstream.StartsWith("refs/", StringComparison.Ordinal)
+                ? options.Upstream
+                : $"refs/heads/{options.Upstream}";
+            repository.Config.Set($"branch.{options.Name}.merge", mergeRef);
+        }
+
+        // Set branch description
+        if (options.Description is not null)
+        {
+            repository.Config.Set($"branch.{options.Name}.description", options.Description);
+        }
+
+        // Re-read the branch to return updated info
+        var updatedBranch = repository.Branches[options.Name]!;
+        var descriptions = BuildDescriptionLookup(repository);
+        return MapBranch(updatedBranch, descriptions: descriptions);
+    }
+
     private static bool IsBranchMerged(Repository repository, Branch branch)
     {
         if (branch.Tip is null || repository.Head.Tip is null)

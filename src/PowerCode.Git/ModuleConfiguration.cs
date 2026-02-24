@@ -48,6 +48,14 @@ public sealed class ModuleConfiguration
     public string? BranchReferenceBranch { get; set; }
 
     /// <summary>
+    /// Gets or sets the default value for <c>-IncludeDescription</c> on
+    /// <c>Get-GitBranch</c>. When <c>true</c>, branch descriptions are
+    /// included by default. When <c>null</c>, descriptions are not included
+    /// unless the parameter is explicitly specified.
+    /// </summary>
+    public bool? BranchIncludeDescription { get; set; }
+
+    /// <summary>
     /// Resets all configuration values to their initial defaults.
     /// </summary>
     public void Reset()
@@ -55,5 +63,6 @@ public sealed class ModuleConfiguration
         LogMaxCount = null;
         DiffContext = null;
         BranchReferenceBranch = null;
+        BranchIncludeDescription = null;
     }
 }

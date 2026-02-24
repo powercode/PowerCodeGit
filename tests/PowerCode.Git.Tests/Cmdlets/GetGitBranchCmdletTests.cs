@@ -189,10 +189,47 @@ public sealed class GetGitBranchCmdletTests
             RepoPath = "C:\\repo",
             IncludeDescription = new System.Management.Automation.SwitchParameter(true),
         };
+        cmdlet.BoundParameterOverrides = new HashSet<string> { nameof(cmdlet.IncludeDescription) };
 
         var options = cmdlet.BuildOptions("C:\\repo");
 
         Assert.IsTrue(options.IncludeDescription);
+    }
+
+    [TestMethod]
+    public void BuildOptions_IncludeDescriptionNotSet_UsesModuleConfigDefault()
+    {
+        ModuleConfiguration.Current.Reset();
+        ModuleConfiguration.Current.BranchIncludeDescription = true;
+
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.IncludeDescription);
+        ModuleConfiguration.Current.Reset();
+    }
+
+    [TestMethod]
+    public void BuildOptions_IncludeDescriptionExplicitlySet_OverridesModuleConfig()
+    {
+        ModuleConfiguration.Current.Reset();
+        ModuleConfiguration.Current.BranchIncludeDescription = true;
+
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            IncludeDescription = new System.Management.Automation.SwitchParameter(false),
+        };
+        cmdlet.BoundParameterOverrides = new HashSet<string> { nameof(cmdlet.IncludeDescription) };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsFalse(options.IncludeDescription);
+        ModuleConfiguration.Current.Reset();
     }
 
     [TestMethod]

@@ -37,6 +37,7 @@
         'Get-GitCommitFile'
         'Set-GitConfiguration'
         'Get-GitConfiguration'
+        'Set-GitBranch'
         'Get-GitModuleConfiguration'
         'Set-GitModuleConfiguration'
     )

@@ -37,6 +37,12 @@ public sealed class ModuleConfigurationTests
     }
 
     [TestMethod]
+    public void BranchIncludeDescription_DefaultsToNull()
+    {
+        Assert.IsNull(ModuleConfiguration.Current.BranchIncludeDescription);
+    }
+
+    [TestMethod]
     public void LogMaxCount_SetAndGet_RetainsValue()
     {
         ModuleConfiguration.Current.LogMaxCount = 42;
@@ -61,17 +67,27 @@ public sealed class ModuleConfigurationTests
     }
 
     [TestMethod]
+    public void BranchIncludeDescription_SetAndGet_RetainsValue()
+    {
+        ModuleConfiguration.Current.BranchIncludeDescription = true;
+
+        Assert.IsTrue(ModuleConfiguration.Current.BranchIncludeDescription);
+    }
+
+    [TestMethod]
     public void Reset_ClearsAllValues()
     {
         var config = ModuleConfiguration.Current;
         config.LogMaxCount = 100;
         config.DiffContext = 5;
         config.BranchReferenceBranch = "origin/main";
+        config.BranchIncludeDescription = true;
 
         config.Reset();
 
         Assert.IsNull(config.LogMaxCount);
         Assert.IsNull(config.DiffContext);
         Assert.IsNull(config.BranchReferenceBranch);
+        Assert.IsNull(config.BranchIncludeDescription);
     }
 }

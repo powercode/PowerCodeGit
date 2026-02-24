@@ -590,6 +590,9 @@ public sealed class GitCommittishCompleterTests
 
         public void DeleteBranch(GitBranchDeleteOptions options) =>
             throw new NotImplementedException();
+
+        public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
+            throw new NotImplementedException();
     }
 
     private sealed class StubGitTagService(IReadOnlyList<GitTagInfo> tags) : IGitTagService

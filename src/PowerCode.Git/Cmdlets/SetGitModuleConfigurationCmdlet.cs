@@ -42,6 +42,13 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
     public string? BranchReferenceBranch { get; set; }
 
     /// <summary>
+    /// Gets or sets the default value for <c>-IncludeDescription</c> on
+    /// <c>Get-GitBranch</c>. Use <c>$null</c> to clear the default.
+    /// </summary>
+    [Parameter]
+    public bool? BranchIncludeDescription { get; set; }
+
+    /// <summary>
     /// When specified, resets all configuration values to their initial defaults
     /// before applying any other parameter values.
     /// </summary>
@@ -73,6 +80,11 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
         if (MyInvocation.BoundParameters.ContainsKey(nameof(BranchReferenceBranch)))
         {
             config.BranchReferenceBranch = string.IsNullOrEmpty(BranchReferenceBranch) ? null : BranchReferenceBranch;
+        }
+
+        if (MyInvocation.BoundParameters.ContainsKey(nameof(BranchIncludeDescription)))
+        {
+            config.BranchIncludeDescription = BranchIncludeDescription;
         }
     }
 }

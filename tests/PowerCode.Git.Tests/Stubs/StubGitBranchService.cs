@@ -20,4 +20,7 @@ internal sealed class StubGitBranchService : IGitBranchService
     public void DeleteBranch(GitBranchDeleteOptions options)
     {
     }
+
+    public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
+        new(options.Name, false, false, "abc1234", null, null, null);
 }

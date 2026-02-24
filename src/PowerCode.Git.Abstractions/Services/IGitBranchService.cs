@@ -72,4 +72,12 @@ public interface IGitBranchService
     /// </param>
     void DeleteBranch(string repositoryPath, string name, bool force = false)
         => DeleteBranch(new GitBranchDeleteOptions { RepositoryPath = repositoryPath, Name = name, Force = force });
+
+    /// <summary>
+    /// Configures an existing local branch by setting its remote, upstream,
+    /// and/or description.
+    /// </summary>
+    /// <param name="options">Options identifying the branch and the configuration values to set.</param>
+    /// <returns>The updated branch information.</returns>
+    GitBranchInfo SetBranch(GitBranchSetOptions options);
 }

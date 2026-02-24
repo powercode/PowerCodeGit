@@ -214,7 +214,24 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             Include = Include,
             Exclude = Exclude,
             ReferenceBranch = ReferenceBranch,
-            IncludeDescription = IncludeDescription.IsPresent,
+            IncludeDescription = ResolveIncludeDescription(),
         };
+    }
+
+    /// <summary>
+    /// Returns the effective <c>IncludeDescription</c> value. If the user
+    /// explicitly specified <c>-IncludeDescription</c> on the command line
+    /// that value wins; otherwise the
+    /// <see cref="ModuleConfiguration.BranchIncludeDescription"/> default is
+    /// used (which may itself be <c>null</c>, meaning not included).
+    /// </summary>
+    private bool ResolveIncludeDescription()
+    {
+        if (IsParameterBound(nameof(IncludeDescription)))
+        {
+            return IncludeDescription.IsPresent;
+        }
+
+        return ModuleConfiguration.Current.BranchIncludeDescription ?? false;
     }
 }
