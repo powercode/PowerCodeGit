@@ -44,6 +44,16 @@ public sealed class GitWorktreeService : IGitWorktreeService
                 nameof(options));
         }
 
+        // Reject non-empty target directories — git itself refuses to create a
+        // worktree in a directory that already has content, so we surface the
+        // same restriction early with a clear error message.
+        if (System.IO.Directory.Exists(options.Path) &&
+            System.IO.Directory.EnumerateFileSystemEntries(options.Path).Any())
+        {
+            throw new InvalidOperationException(
+                $"Cannot create worktree at '{options.Path}': the directory already exists and is not empty.");
+        }
+
         // Ensure the parent directory exists — LibGit2Sharp does not create
         // intermediate directories and will fail with a path-not-found error.
         var parentDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(options.Path));

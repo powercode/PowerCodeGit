@@ -196,6 +196,122 @@ public sealed class NewGitWorktreeCmdletTests
         Assert.AreEqual("feature-login.wt", options.Name);
         Assert.AreEqual("feature/login", options.Branch);
     }
+
+    [TestMethod]
+    public void BuildOptions_BranchOnly_DerivesNameAndPath()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            Branch = "feature",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Create");
+
+        Assert.AreEqual("feature.wt", options.Name);
+        Assert.AreEqual("C:\\repos\\MyProject-feature", options.Path);
+        Assert.AreEqual("feature", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_BranchWithSlash_DerivesNameAndPathWithSafeName()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "D:\\dev\\MyRepo",
+            Branch = "feature/my-branch",
+        };
+
+        var options = cmdlet.BuildOptions("D:\\dev\\MyRepo", "Create");
+
+        Assert.AreEqual("feature-my-branch.wt", options.Name);
+        Assert.AreEqual("D:\\dev\\MyRepo-feature-my-branch", options.Path);
+        Assert.AreEqual("feature/my-branch", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_BranchAndExplicitName_UsesProvidedName()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            Branch = "feature/login",
+            Name = "login-wt",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Create");
+
+        Assert.AreEqual("login-wt", options.Name);
+        Assert.AreEqual("C:\\repos\\MyProject-feature-login", options.Path);
+        Assert.AreEqual("feature/login", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_BranchAndExplicitPath_UsesProvidedPath()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            Branch = "hotfix/p1",
+            Path = "C:\\worktrees\\hotfix",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Create");
+
+        Assert.AreEqual("hotfix-p1.wt", options.Name);
+        Assert.AreEqual("C:\\worktrees\\hotfix", options.Path);
+        Assert.AreEqual("hotfix/p1", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_BranchAndExplicitNameAndPath_UsesBothProvided()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            Branch = "feature/my-branch",
+            Name = "my-wt",
+            Path = "C:\\worktrees\\my",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Create");
+
+        Assert.AreEqual("my-wt", options.Name);
+        Assert.AreEqual("C:\\worktrees\\my", options.Path);
+        Assert.AreEqual("feature/my-branch", options.Branch);
+    }
+
+    [TestMethod]
+    public void BuildOptions_BranchOnly_LockedIsRespected()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repos\\MyProject",
+            Branch = "develop",
+            Locked = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repos\\MyProject", "Create");
+
+        Assert.IsTrue(options.Locked);
+    }
+
+    [TestMethod]
+    public void BuildOptions_NoBranch_UsesExplicitNameAndPath()
+    {
+        var cmdlet = new NewGitWorktreeCmdlet(new StubGitWorktreeService())
+        {
+            RepoPath = "C:\\repo",
+            Name = "my-wt",
+            Path = "C:\\worktrees\\my",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo", "Create");
+
+        Assert.AreEqual("my-wt", options.Name);
+        Assert.AreEqual("C:\\worktrees\\my", options.Path);
+        Assert.IsNull(options.Branch);
+    }
 }
 
 [TestClass]

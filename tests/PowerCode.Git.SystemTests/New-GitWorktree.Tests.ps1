@@ -235,3 +235,215 @@ Describe 'New-GitWorktree pipeline with default path' {
         $Result.Path | Should -BeExactly $script:DefaultWorktreePath
     }
 }
+
+Describe 'New-GitWorktree positional branch — default name and path' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:RepoName = Split-Path -Path $script:RepoPath -Leaf
+        $script:DefaultWorktreePath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$($script:RepoName)-feature"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch feature 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:DefaultWorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:DefaultWorktreePath) {
+            Remove-Item -Path $script:DefaultWorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Help Example 1 - Positional branch derives name (<branch>.wt) and path (../repo-branch)
+    It 'Creates a worktree using positional branch argument with derived name and path' {
+        $Result = New-GitWorktree -RepoPath $script:RepoPath feature
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'feature.wt'
+        $Result.Path | Should -BeExactly $script:DefaultWorktreePath
+    }
+
+    It 'The derived worktree appears in Get-GitWorktree' {
+        $Worktrees = @(Get-GitWorktree -RepoPath $script:RepoPath)
+        $Worktrees | Where-Object { $_.Name -eq 'feature.wt' } | Should -Not -BeNullOrEmpty
+    }
+}
+
+Describe 'New-GitWorktree positional branch with slashes — safe name' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:RepoName = Split-Path -Path $script:RepoPath -Leaf
+        $script:DefaultWorktreePath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$($script:RepoName)-feature-login"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch 'feature/login' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:DefaultWorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:DefaultWorktreePath) {
+            Remove-Item -Path $script:DefaultWorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'Replaces slashes with dashes in the derived worktree name and path' {
+        $Result = New-GitWorktree -RepoPath $script:RepoPath 'feature/login'
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'feature-login.wt'
+        $Result.Path | Should -BeExactly $script:DefaultWorktreePath
+    }
+}
+
+Describe 'New-GitWorktree positional branch with explicit -Name override' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:WorktreePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_branchname_$([System.Guid]::NewGuid().ToString('N'))"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch feature 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:WorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:WorktreePath) {
+            Remove-Item -Path $script:WorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Help Example 2 - Positional branch with explicit -Name and -Path
+    It 'Uses the provided -Name and -Path when both are supplied alongside a positional branch' {
+        $Result = New-GitWorktree -RepoPath $script:RepoPath feature -Name 'my-wt' -Path $script:WorktreePath
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'my-wt'
+        $Result.Path | Should -BeExactly $script:WorktreePath
+    }
+}
+
+Describe 'New-GitWorktree positional branch with explicit -Path override' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:WorktreePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_branchpath_$([System.Guid]::NewGuid().ToString('N'))"
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch hotfix 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:WorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:WorktreePath) {
+            Remove-Item -Path $script:WorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'Derives name from branch but uses the explicit -Path' {
+        $Result = New-GitWorktree -RepoPath $script:RepoPath hotfix -Path $script:WorktreePath
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'hotfix.wt'
+        $Result.Path | Should -BeExactly $script:WorktreePath
+    }
+}
+
+Describe 'New-GitWorktree fails on non-empty target directory' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:WorktreePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_nonempty_$([System.Guid]::NewGuid().ToString('N'))"
+        New-Item -Path $script:WorktreePath -ItemType Directory -Force | Out-Null
+        Set-Content -Path (Join-Path -Path $script:WorktreePath -ChildPath 'existing.txt') -Value 'content'
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:WorktreePath) {
+            Remove-Item -Path $script:WorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'Throws when the target directory is non-empty' {
+        { New-GitWorktree -RepoPath $script:RepoPath -Name 'test-wt' -Path $script:WorktreePath } |
+            Should -Throw '*already exists and is not empty*'
+    }
+
+    It 'Does not emit a worktree entry after the failure' {
+        $Worktrees = @(Get-GitWorktree -RepoPath $script:RepoPath)
+        $Worktrees | Where-Object { $_.Name -eq 'test-wt' } | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'New-GitWorktree positional branch -WhatIf' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git branch feature 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Does not create a worktree when -WhatIf is passed with a positional branch' {
+        $RepoName = Split-Path -Path $script:RepoPath -Leaf
+        $ExpectedPath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$RepoName-feature"
+
+        New-GitWorktree -RepoPath $script:RepoPath feature -WhatIf
+
+        $Worktrees = @(Get-GitWorktree -RepoPath $script:RepoPath)
+        $Worktrees | Where-Object { $_.Name -eq 'feature.wt' } | Should -BeNullOrEmpty
+        Test-Path -Path $ExpectedPath | Should -BeFalse
+    }
+}

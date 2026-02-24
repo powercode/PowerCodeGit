@@ -138,6 +138,33 @@ public sealed class GitWorktreeServiceTests
     }
 
     [TestMethod]
+    public void AddWorktree_NonEmptyTargetDirectory_ThrowsInvalidOperationException()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+        var worktreePath = CreateTemporaryDirectory();
+
+        // Put a file in the target directory so it is non-empty.
+        File.WriteAllText(Path.Combine(worktreePath, "existing.txt"), "content");
+
+        try
+        {
+            var service = new GitWorktreeService();
+
+            Assert.Throws<InvalidOperationException>(() => service.AddWorktree(new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "test-wt",
+                Path = worktreePath,
+            }));
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(worktreePath);
+        }
+    }
+
+    [TestMethod]
     public void AddWorktree_BranchEqualToName_ThrowsArgumentException()
     {
         var repositoryPath = CreateRepositoryWithCommit();
