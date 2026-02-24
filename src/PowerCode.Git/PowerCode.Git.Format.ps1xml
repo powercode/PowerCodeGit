@@ -148,7 +148,7 @@
               <ListItem>
                 <ItemSelectionCondition><ScriptBlock>$_.RepositoryPath -ne $pwd</ScriptBlock></ItemSelectionCondition>
                 <PropertyName>RepositoryPath</PropertyName>
-              </ListItem>              
+              </ListItem>
               <ListItem>
                 <Label>Branch</Label>
                 <PropertyName>CurrentBranch</PropertyName>
@@ -167,7 +167,7 @@
               </ListItem>
               <ListItem>
                 <Label>Changes</Label>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntries($_.Entries)</ScriptBlock>                
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatEntries($_.Entries)</ScriptBlock>
               </ListItem>
             </ListItems>
           </ListEntry>
@@ -448,9 +448,66 @@
       </ListControl>
     </View>
 
+    <!-- Default table view for GitBranchInfo with reference comparison — includes Reference column -->
+    <View>
+      <Name>Reference</Name>
+      <ViewSelectedBy>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
+        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <AutoSize>true</AutoSize>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Description</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Commit</Label>
+            <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Tracking</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Reference</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Worktree</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatDescription($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
     <!-- Default table view for GitBranchInfo — colored branch names (no reference comparison) -->
     <View>
-      <Name>GitBranchInfo-Default</Name>
+      <Name>Default</Name>
       <ViewSelectedBy>
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
       </ViewSelectedBy>
@@ -480,60 +537,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
-              </TableColumnItem>              
-              <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </TableColumnItem>
-              <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <!-- Default table view for GitBranchInfo with reference comparison — includes Reference column -->
-    <View>
-      <Name>GitBranchInfo-WithReference-Default</Name>
-      <ViewSelectedBy>
-        <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
-      </ViewSelectedBy>
-      <TableControl>
-        <AutoSize>true</AutoSize>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>Name</Label>
-            <Width>30</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Commit</Label>
-            <Width>9</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Tracking</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Reference</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Worktree</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatBranchName($_)</ScriptBlock>
-              </TableColumnItem>
-              <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitLogFormatter]::FormatShortSha($_.TipShortSha)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatTracking($_)</ScriptBlock>
-              </TableColumnItem>
-              <TableColumnItem>
-                <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatReferenceComparison($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitBranchFormatter]::FormatWorktree($_)</ScriptBlock>
