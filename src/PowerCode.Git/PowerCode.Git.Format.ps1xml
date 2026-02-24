@@ -455,6 +455,7 @@
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo</TypeName>
       </ViewSelectedBy>
       <TableControl>
+        <AutoSize>true</AutoSize>
         <TableHeaders>
           <TableColumnHeader>
             <Label>Name</Label>
@@ -499,6 +500,7 @@
         <TypeName>PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference</TypeName>
       </ViewSelectedBy>
       <TableControl>
+        <AutoSize>true</AutoSize>
         <TableHeaders>
           <TableColumnHeader>
             <Label>Name</Label>
