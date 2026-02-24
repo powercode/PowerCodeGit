@@ -20,8 +20,8 @@ Creates a new worktree in a git repository, equivalent to git worktree add.
 ### Create (Default)
 
 ```
-New-GitWorktree [-Name] <string> [-Path] <string> [-Branch <string>] [-Locked] [-RepoPath <string>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-GitWorktree [[-Branch] <string>] [-Name <string>] [-Path <string>] [-Locked]
+ [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Pipeline
@@ -93,7 +93,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Create
-  Position: Named
+  Position: 0
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -184,8 +184,8 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Create
-  Position: 0
-  IsRequired: true
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
@@ -226,8 +226,8 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Create
-  Position: 1
-  IsRequired: true
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false

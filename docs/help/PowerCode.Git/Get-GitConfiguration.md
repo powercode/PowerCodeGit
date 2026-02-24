@@ -32,9 +32,6 @@ Get-GitConfiguration -Options <GitConfigGetOptions> [-RepoPath <string>] [<Commo
 
 ## ALIASES
 
-This cmdlet has the following aliases,
-  {{Insert list of aliases}}
-
 ## DESCRIPTION
 
 The Get-GitConfiguration cmdlet reads configuration values from git configuration files. Git stores configuration in multiple scopes: system (`$(prefix)/etc/gitconfig`), global (`~/.gitconfig`), local (`.git/config`), and worktree (`.git/config.worktree`). By default, values are read from all available scopes with the last value found taking precedence. Use the `-Scope` parameter to restrict reads to a single scope. When `-Name` is omitted, all configuration entries are returned.
@@ -155,4 +152,3 @@ This cmdlet wraps `git config list` and `git config get`. Configuration values a
 
 - [Set-GitConfiguration](Set-GitConfiguration.md)
 - [git-config documentation](https://git-scm.com/docs/git-config)
-

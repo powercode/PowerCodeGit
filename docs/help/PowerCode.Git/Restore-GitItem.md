@@ -367,11 +367,14 @@ Diff hunks piped from `Get-GitDiff -Hunk`, bound via the `-Hunk` parameter.
 
 ### System.String[]
 
-An array of repository-relative file paths bound via the `-Path` parameter.
+One or more repository-relative file paths bound via the `-Path` parameter.
+When paths are specified, those files are restored from the source tree.
 
 ### PowerCode.Git.Abstractions.Models.GitDiffHunk[]
 
-An array of diff hunk objects bound via the `-Hunk` parameter.
+One or more diff hunk objects piped from `Get-GitDiff -Hunk`, bound via the
+`-Hunk` parameter. When hunks are provided, only the selected diff regions are
+restored instead of the entire file.
 
 ## OUTPUTS
 

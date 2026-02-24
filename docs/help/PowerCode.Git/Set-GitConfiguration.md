@@ -33,9 +33,6 @@ Set-GitConfiguration -Options <GitConfigSetOptions> [-RepoPath <string>] [-WhatI
 
 ## ALIASES
 
-This cmdlet has the following aliases,
-  {{Insert list of aliases}}
-
 ## DESCRIPTION
 
 The Set-GitConfiguration cmdlet writes a value to a git configuration file. By default, the value is written to the repository-local configuration file (`.git/config`). Use the `-Scope` parameter to write to a different scope such as Global (`~/.gitconfig`), System (`$(prefix)/etc/gitconfig`), or Worktree (`.git/config.worktree`). The cmdlet supports `-WhatIf` and `-Confirm` for safety.
@@ -221,4 +218,3 @@ This cmdlet wraps `git config set`. The confirm impact is set to Medium.
 
 - [Get-GitConfiguration](Get-GitConfiguration.md)
 - [git-config documentation](https://git-scm.com/docs/git-config)
-

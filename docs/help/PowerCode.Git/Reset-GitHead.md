@@ -280,7 +280,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-An array of repository-relative file paths bound via the `-Path` parameter.
+One or more repository-relative file paths bound via the `-Path` parameter.
+When paths are specified, only those files are reset in the index while leaving
+other staged changes intact.
 
 ## OUTPUTS
 

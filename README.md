@@ -120,6 +120,7 @@ Suggested aliases are:
 Set-Alias agi Add-GitItem
 Set-Alias ggb Get-GitBranch
 Set-Alias ggcf Get-GitCommitFile
+Set-Alias ggd Get-GitDiff
 Set-Alias ggl Get-GitLog
 Set-Alias ggs Get-GitStatus
 Set-Alias ggwt Get-GitWorkTree

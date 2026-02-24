@@ -21,8 +21,8 @@ Lists branches in a git repository, equivalent to git branch.
 
 ```
 Get-GitBranch [[-Include] <string[]>] [-Remote] [-All] [-Pattern <string>] [-Contains <string>]
- [-Merged <string>] [-NoMerged <string>] [-Exclude <string[]>] [-IncludeDescription] [-RepoPath <string>]
- [<CommonParameters>]
+ [-Merged <string>] [-NoMerged <string>] [-Exclude <string[]>] [-ReferenceBranch <string>]
+ [-IncludeDescription] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Options
@@ -263,6 +263,30 @@ HelpMessage: ''
 ### -Pattern
 
 A glob pattern to filter branch names. Equivalent to `git branch -l <pattern>`.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: List
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ReferenceBranch
+
+The name of a branch to compare each result against, computing ahead/behind
+divergence (e.g. `origin/master`). When set, each returned branch will have its
+`ReferenceComparison` property populated with a `GitBranchComparisonInfo` object
+containing `AheadBy` and `BehindBy` counts.
 
 ```yaml
 Type: System.String

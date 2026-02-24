@@ -20,9 +20,9 @@ Retrieves commit history from a git repository, equivalent to git log.
 ### Log (Default)
 
 ```
-Get-GitLog [-Path <string[]>] [-Branch <string>] [-AllBranches] [-MaxCount <int>] [-Author <string>]
- [-Since <datetime>] [-Until <datetime>] [-MessagePattern <string>] [-FirstParent] [-NoMerges]
- [-RepoPath <string>] [<CommonParameters>]
+Get-GitLog [[-Branch] <string>] [[-Path] <string[]>] [-AllBranches] [-MaxCount <int>]
+ [-Author <string>] [-Since <datetime>] [-Until <datetime>] [-MessagePattern <string>]
+ [-FirstParent] [-NoMerges] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Options
@@ -114,7 +114,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Log
-  Position: Named
+  Position: 1
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -150,7 +150,7 @@ HelpMessage: ''
 Limits the number of commits returned. Must be 1 or greater.
 
 ```yaml
-Type: System.Nullable`1[System.Int32]
+Type: System.Int32
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -240,7 +240,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: Log
-  Position: Named
+  Position: 2
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

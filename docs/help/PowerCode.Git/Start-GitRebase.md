@@ -42,7 +42,7 @@ Start-GitRebase -Options <GitRebaseOptions> [-RepoPath <string>] [-WhatIf] [-Con
 ### InputObject
 
 ```
-Start-GitRebase -InputObject <PSObject> [-Interactive] [-AutoSquash] [-Exec <string>]
+Start-GitRebase -InputObject <psobject> [-Interactive] [-AutoSquash] [-Exec <string>]
  [-RebaseMerges] [-UpdateRefs] [-Onto <string>] [-AutoStash] [-RepoPath <string>] [-WhatIf]
  [-Confirm] [<CommonParameters>]
 ```
@@ -131,6 +131,12 @@ ParameterSets:
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
 HelpMessage: ''
@@ -205,6 +211,37 @@ ParameterSets:
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -InputObject
+
+An object from which to resolve the upstream ref for the rebase. Accepts a
+`GitBranchInfo` (uses `Name`), a `GitCommitInfo` (uses `Sha`), a plain string,
+or a `PSCustomObject` with properties `Upstream`, `BranchName`, `Name`, or `Sha`
+(checked in that order). Only one object may be piped; multiple objects produce
+a terminating error. This parameter is accepted from the pipeline.
+
+```yaml
+Type: System.Management.Automation.PSObject
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: InputObject
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -309,6 +346,12 @@ ParameterSets:
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
 HelpMessage: ''
@@ -352,6 +395,12 @@ ParameterSets:
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
+- Name: InputObject
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
 HelpMessage: ''
@@ -365,8 +414,7 @@ The name of the upstream branch to rebase the current branch onto. Required when
 Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- Name
+Aliases: []
 ParameterSets:
 - Name: Rebase
   Position: 0
