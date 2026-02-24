@@ -18,35 +18,36 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
 {
     /// <summary>
     /// Gets or sets the default maximum number of commits returned by
-    /// <c>Get-GitLog</c>. Use <c>0</c> or <c>$null</c> to clear the default.
+    /// <c>Get-GitLog</c>.
     /// </summary>
     [Parameter]
     [ValidateRange(1, int.MaxValue)]
     [ArgumentCompletions("10", "25", "50", "100", "250", "500", "1000")]
-    public int? LogMaxCount { get; set; }
+    public int LogMaxCount { get; set; }
 
     /// <summary>
     /// Gets or sets the default number of context lines shown by
-    /// <c>Get-GitDiff</c>. Use <c>$null</c> to clear the default.
+    /// <c>Get-GitDiff</c>.
     /// </summary>
     [Parameter]
     [ValidateRange(0, int.MaxValue)]
-    public int? DiffContext { get; set; }
+    public int DiffContext { get; set; }
 
     /// <summary>
     /// Gets or sets the default reference branch used by
-    /// <c>Get-GitBranch</c>. Use <c>$null</c> or an empty string to clear.
+    /// <c>Get-GitBranch</c>. Pass an empty string to clear.
     /// </summary>
     [Parameter]
     [GitBranchCompleter]
-    public string? BranchReferenceBranch { get; set; }
+    public string BranchReferenceBranch { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the default value for <c>-IncludeDescription</c> on
-    /// <c>Get-GitBranch</c>. Use <c>$null</c> to clear the default.
+    /// When specified, enables branch descriptions by default on
+    /// <c>Get-GitBranch</c>. Use <c>-BranchIncludeDescription:$false</c> to
+    /// explicitly disable.
     /// </summary>
     [Parameter]
-    public bool? BranchIncludeDescription { get; set; }
+    public SwitchParameter BranchIncludeDescription { get; set; }
 
     /// <summary>
     /// When specified, resets all configuration values to their initial defaults
@@ -84,7 +85,7 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
 
         if (MyInvocation.BoundParameters.ContainsKey(nameof(BranchIncludeDescription)))
         {
-            config.BranchIncludeDescription = BranchIncludeDescription;
+            config.BranchIncludeDescription = BranchIncludeDescription.IsPresent;
         }
     }
 }

@@ -21,7 +21,7 @@ Updates default parameter values for PowerCode.Git cmdlets.
 
 ```
 Set-GitModuleConfiguration [-LogMaxCount <int>] [-DiffContext <int>]
- [-BranchReferenceBranch <string>] [-BranchIncludeDescription <bool>] [-Reset] [<CommonParameters>]
+ [-BranchReferenceBranch <string>] [-BranchIncludeDescription] [-Reset] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -49,7 +49,7 @@ Set-GitModuleConfiguration -LogMaxCount 50
 Configures Get-GitBranch to include branch descriptions without needing `-IncludeDescription` each time.
 
 ```powershell
-Set-GitModuleConfiguration -BranchIncludeDescription $true
+Set-GitModuleConfiguration -BranchIncludeDescription
 ```
 
 ### Example 3 - Reset all defaults
@@ -64,11 +64,11 @@ Set-GitModuleConfiguration -Reset
 
 ### -BranchIncludeDescription
 
-Gets or sets the default value for `-IncludeDescription` on `Get-GitBranch`. When `$true`, branch descriptions are included by default. Use `$null` to clear the default.
+When specified, enables branch descriptions by default on `Get-GitBranch`. Use `-BranchIncludeDescription:$false` to explicitly disable.
 
 ```yaml
-Type: System.Nullable`1[System.Boolean]
-DefaultValue: ''
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -106,11 +106,11 @@ HelpMessage: ''
 
 ### -DiffContext
 
-Gets or sets the default number of context lines shown by `Get-GitDiff` when `-Context` is not specified. Use `$null` to clear the default.
+Gets or sets the default number of context lines shown by `Get-GitDiff` when `-Context` is not specified.
 
 ```yaml
-Type: System.Nullable`1[System.Int32]
-DefaultValue: ''
+Type: System.Int32
+DefaultValue: 0
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -127,11 +127,11 @@ HelpMessage: ''
 
 ### -LogMaxCount
 
-Gets or sets the default maximum number of commits returned by `Get-GitLog`. Use `0` or `$null` to clear the default.
+Gets or sets the default maximum number of commits returned by `Get-GitLog`.
 
 ```yaml
-Type: System.Nullable`1[System.Int32]
-DefaultValue: ''
+Type: System.Int32
+DefaultValue: 0
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
