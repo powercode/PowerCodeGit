@@ -112,6 +112,26 @@ Import-Module ./artifacts/module/PowerCode.Git/<version>/PowerCode.Git.psd1
 | `Lock-GitWorktree` | `git worktree lock` | Lock a worktree with optional reason |
 | `Unlock-GitWorktree` | `git worktree unlock` | Unlock a previously locked worktree |
 
+## Aliases
+
+Suggested aliases are:
+
+```powershell
+Set-Alias agi Add-GitItem
+Set-Alias ggb Get-GitBranch
+Set-Alias ggcf Get-GitCommitFile
+Set-Alias ggl Get-GitLog
+Set-Alias ggs Get-GitStatus
+Set-Alias ggwt Get-GitWorkTree
+Set-Alias ngwt New-GitWorkTree
+Set-Alias rrgi Restore-GitItem
+Set-Alias rsgh Reset-GitHead
+Set-Alias sagr Start-GitRebase
+Set-Alias spgr Stop-GitRebase
+Set-Alias rugr Resume-GitRebase
+Set-Alias swgb Switch-GitBranch
+```
+
 ## Examples
 
 ### View commit log with decorations
