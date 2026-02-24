@@ -150,6 +150,9 @@ public sealed class GitConfigNameCompleterTests
 
         public void SetConfigValue(GitConfigSetOptions options) =>
             throw new NotImplementedException();
+
+        public void UnsetConfigValue(GitConfigUnsetOptions options) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitConfigService : IGitConfigService
@@ -161,6 +164,9 @@ public sealed class GitConfigNameCompleterTests
             throw new InvalidOperationException("Not a git repository");
 
         public void SetConfigValue(GitConfigSetOptions options) =>
+            throw new InvalidOperationException("Not a git repository");
+
+        public void UnsetConfigValue(GitConfigUnsetOptions options) =>
             throw new InvalidOperationException("Not a git repository");
     }
 }

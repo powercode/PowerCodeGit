@@ -83,7 +83,7 @@ public sealed class GitConfigServiceTests
 
             var entries = service.GetConfigEntries(new GitConfigGetOptions { RepositoryPath = repoPath });
 
-            var match = entries.FirstOrDefault(e => e.Name == "user.name");
+            var match = entries.FirstOrDefault(e => e.Name == "user.name" && e.Scope == GitConfigScope.Local);
             Assert.IsNotNull(match);
             Assert.AreEqual("Jane", match.Value);
         }
@@ -321,6 +321,162 @@ public sealed class GitConfigServiceTests
             var entry = repo.Config.Get<string>("user.email", ConfigurationLevel.Local);
             Assert.IsNotNull(entry);
             Assert.AreEqual("jane@example.com", entry.Value);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    // ── UnsetConfigValue — argument validation ───────────────────────────────
+
+    [TestMethod]
+    public void UnsetConfigValue_NullOptions_Throws()
+    {
+        var service = new GitConfigService();
+
+        Assert.Throws<ArgumentNullException>(() => service.UnsetConfigValue(null!));
+    }
+
+    [TestMethod]
+    public void UnsetConfigValue_EmptyName_Throws()
+    {
+        var service = new GitConfigService();
+
+        Assert.Throws<ArgumentException>(() =>
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = "X:\\not-a-real-repo",
+                Name = "",
+            }));
+    }
+
+    [TestMethod]
+    public void UnsetConfigValue_InvalidRepositoryPath_Throws()
+    {
+        var service = new GitConfigService();
+
+        Assert.Throws<ArgumentException>(() =>
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = "X:\\not-a-real-repo",
+                Name = "user.name",
+            }));
+    }
+
+    // ── UnsetConfigValue — behaviour ─────────────────────────────────────────
+
+    [TestMethod]
+    public void UnsetConfigValue_RemovesLocalEntry()
+    {
+        var repoPath = CreateRepositoryWithLocalConfig("user.name", "Jane Doe");
+
+        try
+        {
+            var service = new GitConfigService();
+
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "user.name",
+            });
+
+            using var repo = new Repository(repoPath);
+            var entry = repo.Config.Get<string>("user.name", ConfigurationLevel.Local);
+            Assert.IsNull(entry);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void UnsetConfigValue_WithLocalScope_RemovesLocalEntry()
+    {
+        var repoPath = CreateRepositoryWithLocalConfig("user.email", "jane@example.com");
+
+        try
+        {
+            var service = new GitConfigService();
+
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "user.email",
+                Scope = GitConfigScope.Local,
+            });
+
+            using var repo = new Repository(repoPath);
+            var entry = repo.Config.Get<string>("user.email", ConfigurationLevel.Local);
+            Assert.IsNull(entry);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void UnsetConfigValue_EntryReadBackViaService_ReturnsNull()
+    {
+        var repoPath = CreateRepositoryWithLocalConfig("push.default", "simple");
+
+        try
+        {
+            var service = new GitConfigService();
+
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "push.default",
+                Scope = GitConfigScope.Local,
+            });
+
+            var entry = service.GetConfigValue(new GitConfigGetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "push.default",
+                Scope = GitConfigScope.Local,
+            });
+
+            Assert.IsNull(entry);
+        }
+        finally
+        {
+            DeleteDirectory(repoPath);
+        }
+    }
+
+    [TestMethod]
+    public void UnsetConfigValue_SetThenUnset_EntryAbsentInListByScope()
+    {
+        var repoPath = CreateRepository();
+
+        try
+        {
+            var service = new GitConfigService();
+
+            service.SetConfigValue(new GitConfigSetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "core.autocrlf",
+                Value = "input",
+            });
+
+            service.UnsetConfigValue(new GitConfigUnsetOptions
+            {
+                RepositoryPath = repoPath,
+                Name = "core.autocrlf",
+            });
+
+            var entries = service.GetConfigEntries(new GitConfigGetOptions
+            {
+                RepositoryPath = repoPath,
+                Scope = GitConfigScope.Local,
+            });
+
+            Assert.IsFalse(entries.Any(e => e.Name == "core.autocrlf"));
         }
         finally
         {

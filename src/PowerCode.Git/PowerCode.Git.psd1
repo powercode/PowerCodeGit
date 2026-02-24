@@ -36,6 +36,7 @@
         'Stop-GitRebase'
         'Get-GitCommitFile'
         'Set-GitConfiguration'
+        'Clear-GitConfiguration'
         'Get-GitConfiguration'
         'Set-GitBranch'
         'Get-GitModuleConfiguration'

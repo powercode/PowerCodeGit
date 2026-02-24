@@ -80,6 +80,30 @@ public sealed class GitConfigService : IGitConfigService
         }
     }
 
+    /// <inheritdoc/>
+    public void UnsetConfigValue(GitConfigUnsetOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        if (string.IsNullOrWhiteSpace(options.Name))
+        {
+            throw new ArgumentException("Name is required.", nameof(options));
+        }
+
+        RepositoryGuard.ValidateRepositoryPath(options.RepositoryPath, nameof(options));
+
+        using var repo = new Repository(options.RepositoryPath);
+
+        if (options.Scope.HasValue)
+        {
+            repo.Config.Unset(options.Name, MapScope(options.Scope.Value));
+        }
+        else
+        {
+            repo.Config.Unset(options.Name);
+        }
+    }
+
     /// <summary>
     /// Maps a <see cref="GitConfigScope"/> to the equivalent LibGit2Sharp <see cref="ConfigurationLevel"/>.
     /// </summary>
