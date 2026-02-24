@@ -114,4 +114,21 @@ public static class GitBranchFormatter
             $"(ahead {c.AheadBy}) | (behind {c.BehindBy}) {c.ReferenceBranchName}",
             AnsiCodes.Magenta);
     }
+
+    /// <summary>
+    /// Formats the branch description for display.
+    /// </summary>
+    /// <param name="branch">The branch info to format.</param>
+    /// <returns>
+    /// A dim-colored description string, or an empty string when no description is set.
+    /// </returns>
+    public static string FormatDescription(GitBranchInfo branch)
+    {
+        if (branch.Description is null)
+        {
+            return string.Empty;
+        }
+
+        return AnsiCodes.Colorize(branch.Description, AnsiCodes.Dim);
+    }
 }

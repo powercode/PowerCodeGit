@@ -24,6 +24,11 @@ public sealed class GitBranchService : IGitBranchService
         // can report which worktree (if any) it is currently checked out in.
         var worktreePaths = BuildWorktreeLookup(repository);
 
+        // Build a lookup of branch name → description when requested.
+        var descriptions = options.IncludeDescription
+            ? BuildDescriptionLookup(repository)
+            : null;
+
         // Resolve the reference branch tip once so each branch can be compared against it.
         string? referenceBranchName = options.ReferenceBranch;
         Commit? referenceTip = null;
@@ -64,7 +69,7 @@ public sealed class GitBranchService : IGitBranchService
                     divergence.BehindBy ?? 0);
             }
 
-            return MapBranch(b, worktreePaths, comparison);
+            return MapBranch(b, worktreePaths, comparison, descriptions);
         }).ToList();
 
         // Pattern filter (glob-like: supports * and ?)
@@ -324,10 +329,16 @@ public sealed class GitBranchService : IGitBranchService
         return mergeBase?.Sha == branch.Tip.Sha;
     }
 
-    private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null, GitBranchComparisonInfo? referenceComparison = null)
+    private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null, GitBranchComparisonInfo? referenceComparison = null, Dictionary<string, string>? descriptions = null)
     {
         string? worktreePath = null;
         worktreePaths?.TryGetValue(branch.FriendlyName, out worktreePath);
+
+        string? description = null;
+        if (!branch.IsRemote)
+        {
+            descriptions?.TryGetValue(branch.FriendlyName, out description);
+        }
 
         return new GitBranchInfo(
             branch.FriendlyName,
@@ -338,7 +349,8 @@ public sealed class GitBranchService : IGitBranchService
             branch.TrackingDetails?.AheadBy,
             branch.TrackingDetails?.BehindBy,
             worktreePath,
-            referenceComparison);
+            referenceComparison,
+            description);
     }
 
     /// <summary>
@@ -379,6 +391,25 @@ public sealed class GitBranchService : IGitBranchService
             catch
             {
                 // Stale or invalid worktree — skip it.
+            }
+        }
+
+        return lookup;
+    }
+
+    /// <summary>
+    /// Builds a dictionary mapping local branch names to their descriptions
+    /// from git config (<c>branch.&lt;name&gt;.description</c>).
+    /// </summary>
+    private static Dictionary<string, string> BuildDescriptionLookup(Repository repository)
+    {
+        var lookup = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var branch in repository.Branches.Where(b => !b.IsRemote))
+        {
+            var entry = repository.Config.Get<string>($"branch.{branch.FriendlyName}.description");
+            if (entry is not null && !string.IsNullOrWhiteSpace(entry.Value))
+            {
+                lookup[branch.FriendlyName] = entry.Value.TrimEnd();
             }
         }
 

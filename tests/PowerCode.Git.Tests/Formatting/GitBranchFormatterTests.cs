@@ -87,4 +87,24 @@ public sealed class GitBranchFormatterTests
 
         Assert.AreEqual($"{Esc}[36m[origin/main: behind 5]{Esc}[0m", result);
     }
+
+    [TestMethod]
+    public void FormatDescription_NullDescription_ReturnsEmpty()
+    {
+        var branch = new GitBranchInfo("main", isHead: true, isRemote: false, "abc1234", null, null, null);
+
+        var result = GitBranchFormatter.FormatDescription(branch);
+
+        Assert.AreEqual(string.Empty, result);
+    }
+
+    [TestMethod]
+    public void FormatDescription_HasDescription_ReturnsDimText()
+    {
+        var branch = new GitBranchInfo("feature/x", isHead: false, isRemote: false, "abc1234", null, null, null, description: "My feature branch");
+
+        var result = GitBranchFormatter.FormatDescription(branch);
+
+        Assert.AreEqual($"{Esc}[2mMy feature branch{Esc}[0m", result);
+    }
 }

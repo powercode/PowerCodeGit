@@ -182,6 +182,51 @@ public sealed class GetGitBranchCmdletTests
     }
 
     [TestMethod]
+    public void BuildOptions_IncludeDescriptionSet_IncludeDescriptionIsTrue()
+    {
+        var cmdlet = new GetGitBranchCmdlet(new StubGitBranchService())
+        {
+            RepoPath = "C:\\repo",
+            IncludeDescription = new System.Management.Automation.SwitchParameter(true),
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.IsTrue(options.IncludeDescription);
+    }
+
+    [TestMethod]
+    public void CreateOutputObject_WithDescription_InsertsWithDescriptionTypeName()
+    {
+        var branch = new GitBranchInfo("main", true, false, "abc1234567890", null, null, null, description: "Main development branch");
+
+        var pso = GetGitBranchCmdlet.CreateOutputObject(branch, hasReference: false, hasDescription: true);
+
+        Assert.Contains("PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription", pso.TypeNames);
+    }
+
+    [TestMethod]
+    public void CreateOutputObject_WithDescriptionAndReference_InsertsWithDescriptionWithReferenceTypeName()
+    {
+        var branch = new GitBranchInfo("feature/x", false, false, "abc1234567890", null, null, null, description: "Feature branch");
+
+        var pso = GetGitBranchCmdlet.CreateOutputObject(branch, hasReference: true, hasDescription: true);
+
+        Assert.Contains("PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription#WithReference", pso.TypeNames);
+        Assert.Contains("PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference", pso.TypeNames);
+    }
+
+    [TestMethod]
+    public void CreateOutputObject_WithoutDescription_DoesNotInsertDescriptionTypeName()
+    {
+        var branch = new GitBranchInfo("main", true, false, "abc1234567890", null, null, null);
+
+        var pso = GetGitBranchCmdlet.CreateOutputObject(branch, hasReference: false, hasDescription: false);
+
+        Assert.DoesNotContain("PowerCode.Git.Abstractions.Models.GitBranchInfo#WithDescription", pso.TypeNames);
+    }
+
+    [TestMethod]
     public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
     {
         var predefinedOptions = new GitBranchListOptions

@@ -108,6 +108,15 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     public string? ReferenceBranch { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether to include the branch description
+    /// from git config (<c>branch.&lt;name&gt;.description</c>) for each local branch.
+    /// When set, each returned <see cref="GitBranchInfo"/> will have its
+    /// <see cref="GitBranchInfo.Description"/> property populated.
+    /// </summary>
+    [Parameter(ParameterSetName = ListParameterSet)]
+    public SwitchParameter IncludeDescription { get; set; }
+
+    /// <summary>
     /// Gets or sets a pre-built options object for full control over branch listing.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = OptionsParameterSet)]
@@ -123,10 +132,11 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
             var branches = branchService.GetBranches(options);
             var hasReference = !string.IsNullOrEmpty(options.ReferenceBranch);
+            var hasDescription = options.IncludeDescription;
 
             foreach (var branch in branches)
             {
-                WriteObject(CreateOutputObject(branch, hasReference));
+                WriteObject(CreateOutputObject(branch, hasReference, hasDescription));
             }
         }
         catch (Exception exception)
@@ -143,14 +153,20 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Wraps a <see cref="GitBranchInfo"/> in a <see cref="PSObject"/> and, when reference
     /// comparison data is present, prepends the <c>#WithReference</c> synthetic typename so that
     /// the formatter selects the view that includes the Reference column.
+    /// When description data is requested, prepends <c>#WithDescription</c> (or the combined
+    /// <c>#WithDescription#WithReference</c>) so the list view includes the Description field.
     /// </summary>
     /// <param name="branch">The branch info to wrap.</param>
     /// <param name="hasReference">
     /// <see langword="true"/> when <c>-ReferenceBranch</c> was specified, causing the wider
     /// formatting view to be selected.
     /// </param>
+    /// <param name="hasDescription">
+    /// <see langword="true"/> when <c>-IncludeDescription</c> was specified, causing the
+    /// Description field to appear in list views.
+    /// </param>
     /// <returns>A <see cref="PSObject"/> ready to pass to <see cref="Cmdlet.WriteObject(object)"/>.</returns>
-    internal static PSObject CreateOutputObject(GitBranchInfo branch, bool hasReference)
+    internal static PSObject CreateOutputObject(GitBranchInfo branch, bool hasReference, bool hasDescription = false)
     {
         var pso = PSObject.AsPSObject(branch);
 
@@ -159,6 +175,13 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             // Add a synthetic typename so the formatter can select a view that includes
             // the Reference comparison columns (ahead/behind vs. the reference branch).
             pso.TypeNames.Insert(0, "PowerCode.Git.Abstractions.Models.GitBranchInfo#WithReference");
+        }
+
+        if (hasDescription)
+        {
+            // Add a synthetic typename for description-aware list views.
+            var suffix = hasReference ? "#WithDescription#WithReference" : "#WithDescription";
+            pso.TypeNames.Insert(0, $"PowerCode.Git.Abstractions.Models.GitBranchInfo{suffix}");
         }
 
         return pso;
@@ -191,6 +214,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
             Include = Include,
             Exclude = Exclude,
             ReferenceBranch = ReferenceBranch,
+            IncludeDescription = IncludeDescription.IsPresent,
         };
     }
 }

@@ -68,6 +68,12 @@ public sealed class GitBranchListOptions
     /// </summary>
     public string? ReferenceBranch { get; set; }
 
+    /// <summary>
+    /// Gets or sets a value indicating whether to read the branch description from
+    /// git config (<c>branch.&lt;name&gt;.description</c>) for each local branch.
+    /// </summary>
+    public bool IncludeDescription { get; set; }
+
     /// <inheritdoc/>
     public override string ToString()
     {
@@ -81,6 +87,7 @@ public sealed class GitBranchListOptions
         if (Include is { Length: > 0 }) parts.Add($"include={string.Join(",", Include)}");
         if (Exclude is { Length: > 0 }) parts.Add($"exclude={string.Join(",", Exclude)}");
         if (ReferenceBranch is not null) parts.Add($"reference={ReferenceBranch}");
+        if (IncludeDescription) parts.Add("includeDescription");
         return parts.Count > 0
             ? $"GitBranchListOptions({string.Join(", ", parts)})"
             : "GitBranchListOptions()";

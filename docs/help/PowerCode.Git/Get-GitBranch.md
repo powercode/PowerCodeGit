@@ -21,7 +21,7 @@ Lists branches in a git repository, equivalent to git branch.
 
 ```
 Get-GitBranch [[-Include] <string[]>] [-Remote] [-All] [-Pattern <string>] [-Contains <string>]
- [-Merged <string>] [-NoMerged <string>] [-Exclude <string[]>] [-RepoPath <string>]
+ [-Merged <string>] [-NoMerged <string>] [-Exclude <string[]>] [-IncludeDescription] [-RepoPath <string>]
  [<CommonParameters>]
 ```
 
@@ -167,6 +167,27 @@ Aliases: []
 ParameterSets:
 - Name: List
   Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeDescription
+
+Includes the branch description from git config (`branch.<name>.description`) for each local branch. When specified, the Description property is populated on the returned GitBranchInfo objects and shown in list views.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: List
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
