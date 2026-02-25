@@ -30,6 +30,44 @@ public static class GitStatusFormatter
         AnsiCodes.Colorize(branchName, AnsiCodes.BoldGreen);
 
     /// <summary>
+    /// Formats the upstream tracking information for a status result.
+    /// </summary>
+    /// <param name="result">The status result to format.</param>
+    /// <returns>
+    /// An ANSI-colored tracking string like <c>[origin/main: ahead 2, behind 1]</c>,
+    /// or an empty string when no tracking branch is configured.
+    /// </returns>
+    public static string FormatTracking(GitStatusResult result)
+    {
+        if (result.TrackedBranchName is null)
+        {
+            return string.Empty;
+        }
+
+        var ahead = result.AheadBy ?? 0;
+        var behind = result.BehindBy ?? 0;
+
+        if (ahead == 0 && behind == 0)
+        {
+            return AnsiCodes.Colorize($"[{result.TrackedBranchName}]", AnsiCodes.Cyan);
+        }
+
+        var parts = new System.Collections.Generic.List<string>();
+        if (ahead > 0)
+        {
+            parts.Add($"ahead {ahead}");
+        }
+
+        if (behind > 0)
+        {
+            parts.Add($"behind {behind}");
+        }
+
+        var tracking = string.Join(", ", parts);
+        return AnsiCodes.Colorize($"[{result.TrackedBranchName}: {tracking}]", AnsiCodes.Cyan);
+    }
+
+    /// <summary>
     /// Formats a staged-file count in green when non-zero.
     /// </summary>
     /// <param name="count">The staged file count.</param>

@@ -159,4 +159,58 @@ public sealed class GitStatusFormatterTests
         Assert.DoesNotContain("should-not-appear.cs",
 result, "FormatEntryStatus should return only the indicator, not the file path.");
     }
+
+    [TestMethod]
+    public void FormatTracking_NoTrackedBranch_ReturnsEmpty()
+    {
+        var status = new GitStatusResult("repo", "main", [], 0, 0, 0);
+
+        var result = GitStatusFormatter.FormatTracking(status);
+
+        Assert.AreEqual(string.Empty, result);
+    }
+
+    [TestMethod]
+    public void FormatTracking_UpToDate_ReturnsCyanBranchOnly()
+    {
+        var status = new GitStatusResult("repo", "main", [], 0, 0, 0,
+            trackedBranchName: "origin/main", aheadBy: 0, behindBy: 0);
+
+        var result = GitStatusFormatter.FormatTracking(status);
+
+        Assert.AreEqual($"{Esc}[36m[origin/main]{Esc}[0m", result);
+    }
+
+    [TestMethod]
+    public void FormatTracking_AheadOnly_ShowsAhead()
+    {
+        var status = new GitStatusResult("repo", "main", [], 0, 0, 0,
+            trackedBranchName: "origin/main", aheadBy: 3, behindBy: 0);
+
+        var result = GitStatusFormatter.FormatTracking(status);
+
+        Assert.AreEqual($"{Esc}[36m[origin/main: ahead 3]{Esc}[0m", result);
+    }
+
+    [TestMethod]
+    public void FormatTracking_BehindOnly_ShowsBehind()
+    {
+        var status = new GitStatusResult("repo", "main", [], 0, 0, 0,
+            trackedBranchName: "origin/main", aheadBy: 0, behindBy: 1);
+
+        var result = GitStatusFormatter.FormatTracking(status);
+
+        Assert.AreEqual($"{Esc}[36m[origin/main: behind 1]{Esc}[0m", result);
+    }
+
+    [TestMethod]
+    public void FormatTracking_AheadAndBehind_ShowsBoth()
+    {
+        var status = new GitStatusResult("repo", "main", [], 0, 0, 0,
+            trackedBranchName: "origin/main", aheadBy: 2, behindBy: 5);
+
+        var result = GitStatusFormatter.FormatTracking(status);
+
+        Assert.AreEqual($"{Esc}[36m[origin/main: ahead 2, behind 5]{Esc}[0m", result);
+    }
 }

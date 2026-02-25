@@ -70,13 +70,20 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         var currentBranch = repository.Head.FriendlyName ?? "(detached)";
 
+        var trackedBranchName = repository.Head.TrackedBranch?.FriendlyName;
+        var aheadBy = repository.Head.TrackingDetails?.AheadBy;
+        var behindBy = repository.Head.TrackingDetails?.BehindBy;
+
         return new GitStatusResult(
             options.RepositoryPath,
             currentBranch,
             entries,
             stagedCount,
             modifiedCount,
-            untrackedCount);
+            untrackedCount,
+            trackedBranchName,
+            aheadBy,
+            behindBy);
     }
 
     /// <inheritdoc/>
