@@ -69,69 +69,38 @@ internal static class DependencyContext
     }
 
     /// <summary>
-    /// Creates a new <see cref="IGitHistoryService"/> instance from the isolated
-    /// context. Because <c>IGitHistoryService</c> lives in the shared
-    /// <c>PowerCode.Git.Abstractions</c> assembly, the returned object can be cast
-    /// directly — no reflection needed for subsequent calls.
+    /// Creates a <c>LibGit2Sharp.Repository</c> instance loaded from the isolated
+    /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
     /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitHistoryService"/>.</returns>
-    public static IGitHistoryService CreateGitHistoryService() => CreateService<IGitHistoryService>();
+    /// <remarks>
+    /// This method intentionally breaks the ALC abstraction boundary: the returned
+    /// <see cref="object"/> is a <c>LibGit2Sharp.Repository</c> from the isolated
+    /// context, not a shared-Abstractions type. It exists exclusively for
+    /// <c>Invoke-GitRepository</c>, which is the "escape hatch" cmdlet that exposes
+    /// the raw LibGit2Sharp API to PowerShell ScriptBlocks. PowerShell's ETS accesses
+    /// members via reflection, which works across ALCs, so <c>$repo.Head.Tip.Sha</c>
+    /// and similar expressions work as expected inside the ScriptBlock.
+    /// The caller is responsible for disposing the returned object via
+    /// <see cref="IDisposable.Dispose"/> (BCL interface, shared across ALCs).
+    /// </remarks>
+    /// <param name="repositoryPath">
+    /// Path to the git repository (must point to a valid git repo).
+    /// </param>
+    /// <returns>
+    /// A <c>LibGit2Sharp.Repository</c> instance as <see cref="object"/>.
+    /// Cast to <see cref="IDisposable"/> to dispose.
+    /// </returns>
+    internal static object CreateRepository(string repositoryPath)
+    {
+        EnsureInitialized();
+        var libgit2Assembly = loadContext!.LoadFromAssemblyName(new AssemblyName("LibGit2Sharp"));
+        var repositoryType = libgit2Assembly.GetType("LibGit2Sharp.Repository")
+            ?? throw new InvalidOperationException("Could not locate LibGit2Sharp.Repository type in the isolated assembly.");
+        return Activator.CreateInstance(repositoryType, new object[] { repositoryPath })
+            ?? throw new InvalidOperationException("Failed to create a LibGit2Sharp.Repository instance.");
+    }
 
-    /// <summary>
-    /// Creates a new <see cref="IGitWorkingTreeService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitWorkingTreeService"/>.</returns>
-    public static IGitWorkingTreeService CreateGitWorkingTreeService() => CreateService<IGitWorkingTreeService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitBranchService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitBranchService"/>.</returns>
-    public static IGitBranchService CreateGitBranchService() => CreateService<IGitBranchService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitTagService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitTagService"/>.</returns>
-    public static IGitTagService CreateGitTagService() => CreateService<IGitTagService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitPathService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitPathService"/>.</returns>
-    public static IGitPathService CreateGitPathService() => CreateService<IGitPathService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitRemoteService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitRemoteService"/>.</returns>
-    public static IGitRemoteService CreateGitRemoteService() => CreateService<IGitRemoteService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitWorktreeService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitWorktreeService"/>.</returns>
-    public static IGitWorktreeService CreateGitWorktreeService() => CreateService<IGitWorktreeService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitRebaseService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitRebaseService"/>.</returns>
-    public static IGitRebaseService CreateGitRebaseService() => CreateService<IGitRebaseService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitCommitFileService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitCommitFileService"/>.</returns>
-    public static IGitCommitFileService CreateGitCommitFileService() => CreateService<IGitCommitFileService>();
-
-    /// <summary>
-    /// Creates a new <see cref="IGitConfigService"/> instance from the isolated context.
-    /// </summary>
-    /// <returns>A strongly-typed <see cref="IGitConfigService"/>.</returns>
-    public static IGitConfigService CreateGitConfigService() => CreateService<IGitConfigService>();
-
-    private static T CreateService<T>()
+    internal static T CreateService<T>()
     {
         EnsureInitialized();
         var typeName = GetServiceTypeName<T>();
