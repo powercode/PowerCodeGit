@@ -77,6 +77,12 @@ internal static class ServiceFactory
     public static IGitConfigService CreateGitConfigService() => DependencyContext.CreateService<IGitConfigService>();
 
     /// <summary>
+    /// Creates a git commit search service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitCommitSearchService"/> instance.</returns>
+    public static IGitCommitSearchService CreateGitCommitSearchService() => DependencyContext.CreateService<IGitCommitSearchService>();
+
+    /// <summary>
     /// Creates a <c>LibGit2Sharp.Repository</c> instance from the isolated
     /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
     /// </summary>
