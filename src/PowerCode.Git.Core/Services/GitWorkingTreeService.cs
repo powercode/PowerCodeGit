@@ -441,4 +441,81 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         gitExecutable.Run(options.RepositoryPath, args, patch);
     }
+
+    /// <inheritdoc/>
+    public int GetStashCount(string repositoryPath)
+    {
+        if (string.IsNullOrEmpty(repositoryPath))
+        {
+            throw new ArgumentException("Repository path must not be null or empty.", nameof(repositoryPath));
+        }
+
+        using var repository = new Repository(repositoryPath);
+        return repository.Stashes.Count();
+    }
+
+    /// <inheritdoc/>
+    public GitWorkingTreePromptInfo GetPromptInfo(string repositoryPath)
+    {
+        if (string.IsNullOrEmpty(repositoryPath))
+        {
+            throw new ArgumentException("Repository path must not be null or empty.", nameof(repositoryPath));
+        }
+
+        using var repository = new Repository(repositoryPath);
+
+        var isDetached = repository.Info.IsHeadDetached;
+        var branchName = isDetached
+            ? repository.Head.Tip?.Sha[..7] ?? "HEAD"
+            : repository.Head.FriendlyName;
+
+        var trackedBranchName = repository.Head.TrackedBranch?.FriendlyName;
+        var aheadBy = repository.Head.TrackingDetails?.AheadBy;
+        var behindBy = repository.Head.TrackingDetails?.BehindBy;
+
+        var status = repository.RetrieveStatus(new StatusOptions
+        {
+            IncludeIgnored = false,
+            IncludeUntracked = true,
+            RecurseUntrackedDirs = false,
+        });
+
+        var stagedCount = 0;
+        var modifiedCount = 0;
+        var untrackedCount = 0;
+
+        foreach (var entry in status)
+        {
+            var state = entry.State;
+            if ((state & (FileStatus.NewInIndex | FileStatus.ModifiedInIndex | FileStatus.DeletedFromIndex |
+                          FileStatus.RenamedInIndex | FileStatus.TypeChangeInIndex)) != 0)
+            {
+                stagedCount++;
+            }
+
+            if ((state & (FileStatus.ModifiedInWorkdir | FileStatus.DeletedFromWorkdir |
+                          FileStatus.TypeChangeInWorkdir | FileStatus.RenamedInWorkdir)) != 0)
+            {
+                modifiedCount++;
+            }
+
+            if ((state & FileStatus.NewInWorkdir) != 0)
+            {
+                untrackedCount++;
+            }
+        }
+
+        var stashCount = repository.Stashes.Count();
+
+        return new GitWorkingTreePromptInfo(
+            branchName,
+            isDetached,
+            trackedBranchName,
+            aheadBy,
+            behindBy,
+            stagedCount,
+            modifiedCount,
+            untrackedCount,
+            stashCount);
+    }
 }

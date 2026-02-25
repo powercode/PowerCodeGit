@@ -37,4 +37,7 @@ internal sealed class StubGitWorkingTreeService : IGitWorkingTreeService
     public void RestoreHunks(GitRestoreHunkOptions options)
     {
     }
+
+    public GitWorkingTreePromptInfo GetPromptInfo(string repositoryPath) =>
+        new("main", false, null, null, null, 0, 0, 0, 0);
 }
