@@ -55,6 +55,36 @@ public sealed class ModuleConfiguration
     /// </summary>
     public bool? BranchIncludeDescription { get; set; }
 
+    // ── Prompt defaults ───────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets the default value for <c>-HideUpstream</c> on
+    /// <c>Get-GitPromptStatus</c>. When <c>true</c>, the upstream provider icon
+    /// and ahead/behind counts are omitted from the prompt string by default.
+    /// </summary>
+    public bool? PromptHideUpstream { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default value for <c>-HideCounts</c> on
+    /// <c>Get-GitPromptStatus</c>. When <c>true</c>, staged, modified, and
+    /// untracked file counts are omitted from the prompt string by default.
+    /// </summary>
+    public bool? PromptHideCounts { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default value for <c>-HideStash</c> on
+    /// <c>Get-GitPromptStatus</c>. When <c>true</c>, the stash count indicator
+    /// is omitted from the prompt string by default.
+    /// </summary>
+    public bool? PromptHideStash { get; set; }
+
+    /// <summary>
+    /// Gets or sets the default value for <c>-NoColor</c> on
+    /// <c>Get-GitPromptStatus</c>. When <c>true</c>, ANSI color escape sequences
+    /// are stripped from the prompt string by default.
+    /// </summary>
+    public bool? PromptNoColor { get; set; }
+
     /// <summary>
     /// Resets all configuration values to their initial defaults.
     /// </summary>
@@ -64,5 +94,9 @@ public sealed class ModuleConfiguration
         DiffContext = null;
         BranchReferenceBranch = null;
         BranchIncludeDescription = null;
+        PromptHideUpstream = null;
+        PromptHideCounts = null;
+        PromptHideStash = null;
+        PromptNoColor = null;
     }
 }

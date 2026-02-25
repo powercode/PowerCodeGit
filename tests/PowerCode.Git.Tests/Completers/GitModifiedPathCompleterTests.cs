@@ -132,6 +132,8 @@ public sealed class GitModifiedPathCompleterTests
         public void StageHunks(GitStageHunkOptions options) { }
         public void Restore(GitRestoreOptions options) { }
         public void RestoreHunks(GitRestoreHunkOptions options) { }
+        public GitWorkingTreePromptInfo GetPromptInfo(string repositoryPath) =>
+            new("main", false, null, null, null, 0, 0, 0, 0);
     }
 
     private sealed class ThrowingGitWorkingTreeService : IGitWorkingTreeService
@@ -146,5 +148,7 @@ public sealed class GitModifiedPathCompleterTests
         public void StageHunks(GitStageHunkOptions options) { }
         public void Restore(GitRestoreOptions options) { }
         public void RestoreHunks(GitRestoreHunkOptions options) { }
+        public GitWorkingTreePromptInfo GetPromptInfo(string repositoryPath) =>
+            new("main", false, null, null, null, 0, 0, 0, 0);
     }
 }

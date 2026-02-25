@@ -44,6 +44,7 @@
         'Get-GitModuleConfiguration'
         'Set-GitModuleConfiguration'
         'Select-GitCommit'
+        'Get-GitPromptStatus'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()
