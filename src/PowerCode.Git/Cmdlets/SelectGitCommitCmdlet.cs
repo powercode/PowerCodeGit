@@ -104,6 +104,7 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     /// to include the commit in results.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = WhereParameterSet)]
+    [GitScriptBlockCompleter]
     public ScriptBlock? Where { get; set; }
 
     /// <summary>

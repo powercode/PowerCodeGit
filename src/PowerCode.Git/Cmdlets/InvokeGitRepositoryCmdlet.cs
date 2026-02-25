@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Management.Automation;
+using PowerCode.Git.Completers;
 
 namespace PowerCode.Git.Cmdlets;
 
@@ -38,6 +39,7 @@ public sealed class InvokeGitRepositoryCmdlet : GitCmdlet
     /// <c>$args[0]</c> and injected into the ScriptBlock's scope as <c>$repo</c>.
     /// </summary>
     [Parameter(Mandatory = true, Position = 0)]
+    [GitScriptBlockCompleter]
     public ScriptBlock Action { get; set; } = null!;
 
     /// <summary>
