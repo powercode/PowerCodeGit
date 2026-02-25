@@ -12,7 +12,10 @@ namespace PowerCode.Git.Cmdlets;
 /// <code>Get-GitTag</code>
 /// </example>
 /// <example>
-/// <code>Get-GitTag -Pattern "v1.*"</code>
+/// <code>Get-GitTag -Include "v1.*"</code>
+/// </example>
+/// <example>
+/// <code>Get-GitTag -Include "v*" -Exclude "v1.*"</code>
 /// </example>
 /// </summary>
 [Cmdlet(VerbsCommon.Get, "GitTag", DefaultParameterSetName = TagParameterSet)]
@@ -42,10 +45,19 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     private const string OptionsParameterSet = "Options";
 
     /// <summary>
-    /// Gets or sets a glob pattern to filter tag names.
+    /// Gets or sets a glob pattern to include tag names. Supports wildcards.
+    /// </summary>
+    [Parameter(Position = 0, ParameterSetName = TagParameterSet)]
+    [SupportsWildcards]
+    public string? Include { get; set; }
+
+    /// <summary>
+    /// Gets or sets a glob pattern to exclude tag names. Tags matching this pattern are omitted.
+    /// Supports wildcards.
     /// </summary>
     [Parameter(ParameterSetName = TagParameterSet)]
-    public string? Pattern { get; set; }
+    [SupportsWildcards]
+    public string? Exclude { get; set; }
 
     /// <summary>
     /// Gets or sets the sort order. Accepts "name" or "version".
@@ -80,7 +92,8 @@ public sealed class GetGitTagCmdlet : GitCmdlet
         return new GitTagListOptions
         {
             RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
-            Pattern = Pattern,
+            Pattern = Include,
+            Exclude = Exclude,
             SortBy = SortBy,
             ContainsCommit = ContainsCommit,
         };

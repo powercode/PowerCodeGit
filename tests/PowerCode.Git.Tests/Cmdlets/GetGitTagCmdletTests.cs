@@ -39,21 +39,35 @@ public sealed class GetGitTagCmdletTests
 
         Assert.AreEqual("C:\\repo", options.RepositoryPath);
         Assert.IsNull(options.Pattern);
+        Assert.IsNull(options.Exclude);
         Assert.IsNull(options.SortBy);
         Assert.IsNull(options.ContainsCommit);
     }
 
     [TestMethod]
-    public void BuildOptions_PatternSet_PatternMapped()
+    public void BuildOptions_IncludeSet_PatternMapped()
     {
         var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
         {
-            Pattern = "v1.*",
+            Include = "v1.*",
         };
 
         var options = cmdlet.BuildOptions("C:\\repo");
 
         Assert.AreEqual("v1.*", options.Pattern);
+    }
+
+    [TestMethod]
+    public void BuildOptions_ExcludeSet_ExcludeMapped()
+    {
+        var cmdlet = new GetGitTagCmdlet(new StubGitTagService())
+        {
+            Exclude = "v1.*",
+        };
+
+        var options = cmdlet.BuildOptions("C:\\repo");
+
+        Assert.AreEqual("v1.*", options.Exclude);
     }
 
     [TestMethod]

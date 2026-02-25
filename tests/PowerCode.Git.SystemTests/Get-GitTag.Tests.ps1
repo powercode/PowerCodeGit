@@ -130,7 +130,7 @@ Describe 'Get-GitTag error handling' {
     }
 }
 
-Describe 'Get-GitTag -Pattern' {
+Describe 'Get-GitTag -Include' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
 
@@ -149,10 +149,48 @@ Describe 'Get-GitTag -Pattern' {
         Remove-TestGitRepository -Path $script:RepoPath
     }
 
-    It 'Returns only matching tags when -Pattern is specified' {
-        $Tags = @(Get-GitTag -RepoPath $script:RepoPath -Pattern 'v*')
+    It 'Returns only matching tags when -Include is specified' {
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath -Include 'v*')
         $Tags | Should -HaveCount 2
         $Tags | ForEach-Object { $_.Name | Should -Match '^v' }
+    }
+
+    It 'Accepts -Include as positional argument' {
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath 'v1.*')
+        $Tags | Should -HaveCount 2
+        $Tags | ForEach-Object { $_.Name | Should -Match '^v1' }
+    }
+}
+
+Describe 'Get-GitTag -Exclude' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            git tag v1.0.0 2>&1 | Out-Null
+            git tag v1.1.0 2>&1 | Out-Null
+            git tag -a release-2.0 -m 'Major release' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Excludes tags matching the pattern' {
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath -Exclude 'v*')
+        $Tags | Should -HaveCount 1
+        $Tags[0].Name | Should -BeExactly 'release-2.0'
+    }
+
+    It 'Combines -Include and -Exclude' {
+        $Tags = @(Get-GitTag -RepoPath $script:RepoPath -Include 'v*' -Exclude 'v1.1*')
+        $Tags | Should -HaveCount 1
+        $Tags[0].Name | Should -BeExactly 'v1.0.0'
     }
 }
 
