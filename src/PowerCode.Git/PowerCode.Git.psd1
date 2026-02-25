@@ -17,8 +17,10 @@
         'Switch-GitBranch'
         'Get-GitTag'
         'Set-GitTag'
+        'Remove-GitTag'
         'Add-GitItem'
         'Save-GitCommit'
+        'Invoke-GitRepository'
         'New-GitBranch'
         'Remove-GitBranch'
         'Reset-GitHead'
@@ -41,6 +43,7 @@
         'Set-GitBranch'
         'Get-GitModuleConfiguration'
         'Set-GitModuleConfiguration'
+        'Select-GitCommit'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

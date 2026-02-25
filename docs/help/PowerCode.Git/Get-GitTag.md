@@ -20,7 +20,7 @@ Lists tags in a git repository, equivalent to git tag -l.
 ### Tag (Default)
 
 ```
-Get-GitTag [-Pattern <string>] [-SortBy <string>] [-ContainsCommit <string>] [-RepoPath <string>]
+Get-GitTag [[-Include] <string>] [-Exclude <string>] [-SortBy <string>] [-ContainsCommit <string>] [-RepoPath <string>]
  [<CommonParameters>]
 ```
 
@@ -36,7 +36,7 @@ None.
 
 ## DESCRIPTION
 
-The Get-GitTag cmdlet lists tags in a git repository. Use `-Pattern` to filter tag names with a glob pattern, `-SortBy` to control ordering, and `-ContainsCommit` to find tags that contain a specific commit.
+The Get-GitTag cmdlet lists tags in a git repository. Use `-Include` to filter tag names with a glob pattern, `-Exclude` to omit tags matching a pattern, `-SortBy` to control ordering, and `-ContainsCommit` to find tags that contain a specific commit.
 
 Each tag is returned as a GitTagInfo object.
 
@@ -55,7 +55,15 @@ Get-GitTag
 Lists tags matching a glob pattern.
 
 ```powershell
-Get-GitTag -Pattern 'v1.*'
+Get-GitTag -Include 'v1.*'
+```
+
+### Example 3 - Exclude tags by pattern
+
+Lists all tags except those starting with 'v1'.
+
+```powershell
+Get-GitTag -Include 'v*' -Exclude 'v1.*'
 ```
 
 ## PARAMETERS
@@ -102,18 +110,39 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Pattern
+### -Exclude
 
-A glob pattern to filter tag names.
+A glob pattern to exclude tag names. Tags whose names match this pattern are omitted from the results.
 
 ```yaml
 Type: System.String
 DefaultValue: ''
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: Tag
   Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Include
+
+A glob pattern to include tag names. Only tags whose names match this pattern are returned.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: Tag
+  Position: 0
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false

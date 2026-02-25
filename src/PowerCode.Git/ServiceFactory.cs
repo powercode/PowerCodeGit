@@ -20,89 +20,80 @@ internal static class ServiceFactory
     /// shared <see cref="IGitHistoryService"/> interface.
     /// </summary>
     /// <returns>An initialized <see cref="IGitHistoryService"/> instance.</returns>
-    public static IGitHistoryService CreateGitHistoryService()
-    {
-        return DependencyContext.CreateGitHistoryService();
-    }
+    public static IGitHistoryService CreateGitHistoryService() => DependencyContext.CreateService<IGitHistoryService>();
 
     /// <summary>
     /// Creates a git working tree service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitWorkingTreeService"/> instance.</returns>
-    public static IGitWorkingTreeService CreateGitWorkingTreeService()
-    {
-        return DependencyContext.CreateGitWorkingTreeService();
-    }
+    public static IGitWorkingTreeService CreateGitWorkingTreeService() => DependencyContext.CreateService<IGitWorkingTreeService>();
 
     /// <summary>
     /// Creates a git branch service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitBranchService"/> instance.</returns>
-    public static IGitBranchService CreateGitBranchService()
-    {
-        return DependencyContext.CreateGitBranchService();
-    }
+    public static IGitBranchService CreateGitBranchService() => DependencyContext.CreateService<IGitBranchService>();
 
     /// <summary>
     /// Creates a git tag service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitTagService"/> instance.</returns>
-    public static IGitTagService CreateGitTagService()
-    {
-        return DependencyContext.CreateGitTagService();
-    }
+    public static IGitTagService CreateGitTagService() => DependencyContext.CreateService<IGitTagService>();
 
     /// <summary>
     /// Creates a git path service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitPathService"/> instance.</returns>
-    public static IGitPathService CreateGitPathService()
-    {
-        return DependencyContext.CreateGitPathService();
-    }
+    public static IGitPathService CreateGitPathService() => DependencyContext.CreateService<IGitPathService>();
 
     /// <summary>
     /// Creates a git remote service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitRemoteService"/> instance.</returns>
-    public static IGitRemoteService CreateGitRemoteService()
-    {
-        return DependencyContext.CreateGitRemoteService();
-    }
+    public static IGitRemoteService CreateGitRemoteService() => DependencyContext.CreateService<IGitRemoteService>();
 
     /// <summary>
     /// Creates a git worktree service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitWorktreeService"/> instance.</returns>
-    public static IGitWorktreeService CreateGitWorktreeService()
-    {
-        return DependencyContext.CreateGitWorktreeService();
-    }
+    public static IGitWorktreeService CreateGitWorktreeService() => DependencyContext.CreateService<IGitWorktreeService>();
 
     /// <summary>
     /// Creates a git rebase service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitRebaseService"/> instance.</returns>
-    public static IGitRebaseService CreateGitRebaseService()
-    {
-        return DependencyContext.CreateGitRebaseService();
-    }
+    public static IGitRebaseService CreateGitRebaseService() => DependencyContext.CreateService<IGitRebaseService>();
 
     /// <summary>
     /// Creates a git commit file service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitCommitFileService"/> instance.</returns>
-    public static IGitCommitFileService CreateGitCommitFileService()
-    {
-        return DependencyContext.CreateGitCommitFileService();
-    }
+    public static IGitCommitFileService CreateGitCommitFileService() => DependencyContext.CreateService<IGitCommitFileService>();
 
     /// <summary>
     /// Creates a git configuration service implementation.
     /// </summary>
     /// <returns>An initialized <see cref="IGitConfigService"/> instance.</returns>
-    public static IGitConfigService CreateGitConfigService()
-    {
-        return DependencyContext.CreateGitConfigService();
-    }
+    public static IGitConfigService CreateGitConfigService() => DependencyContext.CreateService<IGitConfigService>();
+
+    /// <summary>
+    /// Creates a git commit search service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitCommitSearchService"/> instance.</returns>
+    public static IGitCommitSearchService CreateGitCommitSearchService() => DependencyContext.CreateService<IGitCommitSearchService>();
+
+    /// <summary>
+    /// Creates a <c>LibGit2Sharp.Repository</c> instance from the isolated
+    /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="DependencyContext.CreateRepository"/> for details on the
+    /// intentional ALC boundary break this entails.
+    /// </remarks>
+    /// <param name="repositoryPath">Path to the git repository.</param>
+    /// <returns>
+    /// A <c>LibGit2Sharp.Repository</c> instance as <see cref="object"/>.
+    /// Cast to <see cref="System.IDisposable"/> to dispose.
+    /// </returns>
+    public static object CreateRepository(string repositoryPath) => DependencyContext.CreateRepository(repositoryPath);
 }

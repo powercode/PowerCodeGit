@@ -36,6 +36,13 @@ public sealed class GitTagService : IGitTagService
             tags = tags.Where(t => regex.IsMatch(t.FriendlyName));
         }
 
+        if (options.Exclude is not null)
+        {
+            var excludePattern = "^" + Regex.Escape(options.Exclude).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
+            var excludeRegex = new Regex(excludePattern, RegexOptions.IgnoreCase);
+            tags = tags.Where(t => !excludeRegex.IsMatch(t.FriendlyName));
+        }
+
         if (options.ContainsCommit is not null)
         {
             var targetCommit = repository.Lookup<Commit>(options.ContainsCommit);
@@ -114,6 +121,21 @@ public sealed class GitTagService : IGitTagService
         }
 
         return MapTag(tag);
+    }
+
+    /// <inheritdoc/>
+    public void DeleteTag(GitTagDeleteOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Tag name (options.Name) is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var tag = repository.Tags[options.Name]
+            ?? throw new ArgumentException($"The tag '{options.Name}' does not exist.", nameof(options));
+
+        repository.Tags.Remove(tag);
     }
 
     private static string? ParseVersion(string tagName)

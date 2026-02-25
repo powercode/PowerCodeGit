@@ -601,5 +601,8 @@ public sealed class GitCommittishCompleterTests
 
         public GitTagInfo CreateTag(GitTagCreateOptions options) =>
             throw new NotImplementedException();
+
+        public void DeleteTag(GitTagDeleteOptions options) =>
+            throw new NotImplementedException();
     }
 }
