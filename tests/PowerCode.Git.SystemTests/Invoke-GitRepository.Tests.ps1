@@ -161,3 +161,47 @@ Describe 'Invoke-GitRepository error handling' {
         $Result | Should -BeNullOrEmpty
     }
 }
+
+# Example 1 — List all remote URLs
+Describe 'Invoke-GitRepository — remote URL enumeration' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemote
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:Repos.WorkingPath
+        Remove-TestGitRepository -Path $script:Repos.BarePath
+    }
+
+    It 'Returns a custom object per remote with Name and Url properties' {
+        $Results = @(Invoke-GitRepository -RepoPath $script:Repos.WorkingPath -Action {
+            $repo.Network.Remotes | ForEach-Object {
+                [pscustomobject]@{ Name = $_.Name; Url = $_.Url; PushUrl = $_.PushUrl }
+            }
+        })
+        $Results | Should -Not -BeNullOrEmpty
+        $Results[0].Name | Should -Be 'origin'
+        $Results[0].Url  | Should -Not -BeNullOrEmpty
+    }
+}
+
+# Example 3 — Count refs with explicit -RepoPath
+Describe 'Invoke-GitRepository — ref counting with explicit RepoPath' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit', 'Second commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Counts refs and reports HEAD SHA via a foreach loop' {
+        $Result = Invoke-GitRepository -RepoPath $script:RepoPath -Action {
+            $count = 0
+            foreach ($ref in $repo.Refs) { $count++ }
+            [pscustomobject]@{ RefCount = $count; HeadSha = $repo.Head.Tip.Sha }
+        }
+        $Result.RefCount | Should -BeGreaterThan 0
+        $Result.HeadSha  | Should -Match '^[0-9a-f]{40}$'
+    }
+}
