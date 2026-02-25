@@ -1,7 +1,7 @@
 namespace PowerCode.Git.Abstractions.Models;
 
 /// <summary>
-/// Represents options for a <c>Search-GitCommit</c> query.
+/// Represents options for a <c>Select-GitCommit</c> query.
 /// </summary>
 public sealed class GitCommitSearchOptions
 {
