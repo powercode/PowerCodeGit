@@ -108,9 +108,9 @@ Invoke-GitRepository {
 
 ---
 
-### 2. Search-GitCommit
+### 2. Select-GitCommit
 
-**Verb-Noun:** `Search-GitCommit`
+**Verb-Noun:** `Select-GitCommit`
 **Priority:** High — most common ad-hoc git task is searching history
 **Status:** Not implemented
 
@@ -149,26 +149,26 @@ Walks commit history with a PowerShell predicate ScriptBlock for filtering and a
 | `git log --format='%H %an %ae %s' \| awk ...` | String parsing. Breaks on messages containing delimiters. |
 | `git rev-list --all \| xargs -I{} git show --stat {} \| ...` | Spawns a process per commit. Extremely slow. |
 
-With `Search-GitCommit`, the user has the full `Commit` object graph: `Author`, `Committer`, `Tree`, `Parents`, `Notes`, `Message`, and can traverse related objects (diff against parents, inspect tree entries) — all in a single process, with PowerShell's full expression language.
+With `Select-GitCommit`, the user has the full `Commit` object graph: `Author`, `Committer`, `Tree`, `Parents`, `Notes`, `Message`, and can traverse related objects (diff against parents, inspect tree entries) — all in a single process, with PowerShell's full expression language.
 
 #### Example Scenarios
 
 ```powershell
 # Multi-author search (impossible with single --author flag)
-Search-GitCommit -Where {
+Select-GitCommit -Where {
     $c = $args[0]
     $c.Author.Name -in @('Alice', 'Bob') -and
     $c.Author.When.Year -eq 2025
 } -First 50
 
 # Commits that are merge commits with more than 2 parents
-Search-GitCommit -Where { $args[0].Parents.Count() -gt 2 }
+Select-GitCommit -Where { $args[0].Parents.Count() -gt 2 }
 
 # Commits where the tree has a specific file
-Search-GitCommit -Where { $args[0].Tree['README.md'] -ne $null }
+Select-GitCommit -Where { $args[0].Tree['README.md'] -ne $null }
 
 # Custom output projection
-Search-GitCommit -Where { $true } -Select {
+Select-GitCommit -Where { $true } -Select {
     $c = $args[0]
     [pscustomobject]@{
         Short    = $c.Sha.Substring(0, 8)
@@ -580,7 +580,7 @@ The completer opens the repository and enumerates branches/tags/remotes. This al
 
 ```powershell
 # User-defined completers for custom parameters
-Register-ArgumentCompleter -CommandName Search-GitCommit -ParameterName From -ScriptBlock {
+Register-ArgumentCompleter -CommandName Select-GitCommit -ParameterName From -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete)
     Invoke-GitRepository {
         $repo.Refs |
@@ -623,7 +623,7 @@ This would allow downstream cmdlets to automatically discover which repository a
 # Repository context flows automatically
 Get-GitBranch | Where-Object { $_.IsRemote } |
     ForEach-GitLog -First 5 |
-    Search-GitCommit -Where { $_.Author.Name -eq 'Alice' }
+    Select-GitCommit -Where { $_.Author.Name -eq 'Alice' }
 ```
 
 ### D. ScriptBlock-Based Diff Drivers
@@ -649,7 +649,7 @@ Get-GitDiff HEAD~1 -DiffRenderer {
 |--------|-----------|
 | `ScriptBlockExtensions` | Required by all other cmdlets. Implement first. |
 | `Invoke-GitRepository` | Escape hatch. Immediately useful. Lowest complexity. |
-| `Search-GitCommit` | Most frequently needed. Demonstrates the paradigm. |
+| `Select-GitCommit` | Most frequently needed. Demonstrates the paradigm. |
 
 ### Phase 2: Tree & Diff (Medium Priority)
 
@@ -679,7 +679,7 @@ Get-GitDiff HEAD~1 -DiffRenderer {
 
 | Capability | git.exe + Shell | PowerCode.Git + ScriptBlock |
 |------------|-----------------|----------------------------|
-| **Commit filtering** | `git log --author --since --grep` — fixed set of AND-only filters | `Search-GitCommit -Where { <arbitrary predicate> }` — any logic, OR/AND/NOT, access to tree |
+| **Commit filtering** | `git log --author --since --grep` — fixed set of AND-only filters | `Select-GitCommit -Where { <arbitrary predicate> }` — any logic, OR/AND/NOT, access to tree |
 | **Output formatting** | `git log --format='%H %an'` — string interpolation, limited to format codes | `-Select { <projection> }` — full object construction, type-safe |
 | **History rewriting** | `git filter-branch --env-filter '...'` — bash-only, string escaping issues, single script | `Edit-GitHistory -CommitFilter { ... } -TreeFilter { ... }` — typed objects, PowerShell closures |
 | **File search across refs** | `git ls-tree -r REF \| while read ...; git cat-file -p SHA` — process-per-file | `ForEach-GitBlob -Treeish REF { <access blob content lazily> }` — single process, lazy loading |
@@ -687,7 +687,7 @@ Get-GitDiff HEAD~1 -DiffRenderer {
 | **Merge conflict resolution** | Manual editing of `<<<<<<<` marker files | `Merge-GitBranch -ConflictResolver { ... }` — programmatic, content-aware, structured-data merging |
 | **Diff filtering** | `git diff --diff-filter=M` — single-character type codes | `Compare-GitTree -Where { <any predicate on TreeEntryChanges> }` — arbitrary filtering |
 | **Custom diff rendering** | `git diff --word-diff-regex=<regex>` — regex-based word splitting | `-Transform { <access both blobs, apply AST diff, semantic diff> }` — full .NET |
-| **Cross-commit analysis** | Complex pipelines: `git rev-list \| xargs \| sort \| uniq -c` | PowerShell pipeline: `Search-GitCommit \| Group-Object \| Measure-Object` — native objects throughout |
+| **Cross-commit analysis** | Complex pipelines: `git rev-list \| xargs \| sort \| uniq -c` | PowerShell pipeline: `Select-GitCommit \| Group-Object \| Measure-Object` — native objects throughout |
 | **Type safety** | None — everything is strings | Full — `Commit`, `Blob`, `Tree`, `Branch`, `Tag`, `Signature`, `ObjectId` |
 | **Error handling** | Exit codes, stderr parsing | PowerShell error records, try/catch, `-ErrorAction` |
 | **Composability** | Pipe text between processes | Pipe objects between cmdlets within a single process |
@@ -743,7 +743,7 @@ Get-GitDiff HEAD~1 -DiffRenderer {
 
 3. **Should we provide a DSL for common predicates?** For example, a hashtable-based query syntax:
    ```powershell
-   Search-GitCommit -Query @{ Author = 'Alice'; Since = '2025-01-01'; MessageMatch = 'fix' }
+   Select-GitCommit -Query @{ Author = 'Alice'; Since = '2025-01-01'; MessageMatch = 'fix' }
    ```
    This could be compiled to a single predicate without per-commit ScriptBlock invocation.
 
