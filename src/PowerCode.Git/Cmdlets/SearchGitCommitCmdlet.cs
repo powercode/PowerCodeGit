@@ -20,10 +20,9 @@ namespace PowerCode.Git.Cmdlets;
 /// </para>
 /// <list type="bullet">
 ///   <item>
-///     <description><b>Like</b> (default) — finds commits whose diff against the first
-///     parent contains a line matching the PowerShell wildcard pattern supplied via
-///     <see cref="Like"/>. Use <c>*</c> to match any sequence of characters and <c>?</c>
-///     to match a single character (e.g. <c>-Like '*TODO*'</c>).</description>
+///     <description><b>Contains</b> (default) — finds commits whose diff against the first
+///     parent contains the plain-text substring supplied via <see cref="Contains"/>.
+///     The comparison is case-sensitive and ordinal (e.g. <c>-Contains 'TODO'</c>).</description>
 ///   </item>
 ///   <item>
 ///     <description><b>Match</b> — finds commits whose diff against the first parent
@@ -37,7 +36,7 @@ namespace PowerCode.Git.Cmdlets;
 ///   </item>
 /// </list>
 /// <para>
-/// <see cref="Where"/> can be combined with either <see cref="Like"/> or
+/// <see cref="Where"/> can be combined with either <see cref="Contains"/> or
 /// <see cref="Match"/>: supply a diff-search parameter and <c>-Where</c> together to
 /// apply the diff search first and then run the ScriptBlock predicate on the surviving
 /// candidates only.
@@ -48,7 +47,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <see cref="Path"/> to narrow the candidate set.
 /// </para>
 /// </remarks>
-[Cmdlet(VerbsCommon.Search, "GitCommit", DefaultParameterSetName = LikeParameterSet)]
+[Cmdlet(VerbsCommon.Search, "GitCommit", DefaultParameterSetName = ContainsParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class SearchGitCommitCmdlet : GitCmdlet
 {
@@ -71,23 +70,21 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
             ?? throw new ArgumentNullException(nameof(commitSearchService));
     }
 
-    private const string LikeParameterSet = "Like";
+    private const string ContainsParameterSet = "Contains";
     private const string MatchParameterSet = "Match";
     private const string WhereParameterSet = "Where";
     private readonly IGitCommitSearchService commitSearchService;
 
     /// <summary>
-    /// Gets or sets a PowerShell wildcard pattern to match against commit diff text.
-    /// Only commits whose diff against the first parent contains a line matching this
-    /// pattern are returned. Use <c>*</c> to match any sequence of characters and
-    /// <c>?</c> to match a single character.
+    /// Gets or sets a plain-text search string. Only commits whose diff against the
+    /// first parent contains this substring (case-sensitive, ordinal) are returned.
     /// </summary>
     /// <example>
-    ///   <code>Search-GitCommit -Like '*TODO*'</code>
+    ///   <code>Search-GitCommit -Contains 'TODO'</code>
     /// </example>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = LikeParameterSet)]
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = ContainsParameterSet)]
     [Parameter(ParameterSetName = WhereParameterSet)]
-    public string Like { get; set; } = string.Empty;
+    public string Contains { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a .NET regular expression to match against commit diff text.
@@ -174,7 +171,7 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
             From = From,
             MaxCount = IsParameterBound(nameof(First)) ? First : null,
             Paths = Path,
-            Like = IsParameterBound(nameof(Like)) ? Like : null,
+            Contains = IsParameterBound(nameof(Contains)) ? Contains : null,
             Match = IsParameterBound(nameof(Match)) ? Match : null,
         };
     }
