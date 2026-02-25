@@ -15,25 +15,32 @@ namespace PowerCode.Git.Cmdlets;
 /// <remarks>
 /// <para>
 /// <c>Search-GitCommit</c> walks commit history and returns <see cref="GitCommitInfo"/>
-/// objects for every commit that matches the active filters. Two parameter sets are
+/// objects for every commit that matches the active filters. Three parameter sets are
 /// available:
 /// </para>
 /// <list type="bullet">
 ///   <item>
-///     <description><b>Search</b> (default) — finds commits whose diff against the first
-///     parent contains the text or pattern supplied via <see cref="ContentSearch"/>. This is
-///     the equivalent of <c>git log -S</c> (plain string) or <c>git log -G</c> (regex).</description>
+///     <description><b>Like</b> (default) — finds commits whose diff against the first
+///     parent contains a line matching the PowerShell wildcard pattern supplied via
+///     <see cref="Like"/>. Use <c>*</c> to match any sequence of characters and <c>?</c>
+///     to match a single character (e.g. <c>-Like '*TODO*'</c>).</description>
 ///   </item>
 ///   <item>
-///     <description><b>Where</b> — filters via an arbitrary PowerShell ScriptBlock. The block
-///     receives the raw <c>LibGit2Sharp.Commit</c> as <c>$args[0]</c>, giving access to the
-///     full LibGit2Sharp object graph (Author, Tree, Parents, Notes, etc.).</description>
+///     <description><b>Match</b> — finds commits whose diff against the first parent
+///     contains a line matching the .NET regular expression supplied via <see cref="Match"/>.
+///     Equivalent to <c>git log -G</c>.</description>
+///   </item>
+///   <item>
+///     <description><b>Where</b> — filters via an arbitrary PowerShell ScriptBlock. The
+///     block receives the raw <c>LibGit2Sharp.Commit</c> as <c>$args[0]</c>, giving access
+///     to the full LibGit2Sharp object graph (Author, Tree, Parents, Notes, etc.).</description>
 ///   </item>
 /// </list>
 /// <para>
-/// Both filters can be combined: supply <see cref="ContentSearch"/> (Search set) and
-/// <see cref="Where"/> together to apply content search first, then the ScriptBlock
-/// predicate on the surviving candidates.
+/// <see cref="Where"/> can be combined with either <see cref="Like"/> or
+/// <see cref="Match"/>: supply a diff-search parameter and <c>-Where</c> together to
+/// apply the diff search first and then run the ScriptBlock predicate on the surviving
+/// candidates only.
 /// </para>
 /// <para>
 /// <b>Performance note:</b> Walking large histories with a ScriptBlock per commit is
@@ -41,7 +48,7 @@ namespace PowerCode.Git.Cmdlets;
 /// <see cref="Path"/> to narrow the candidate set.
 /// </para>
 /// </remarks>
-[Cmdlet(VerbsCommon.Search, "GitCommit", DefaultParameterSetName = SearchParameterSet)]
+[Cmdlet(VerbsCommon.Search, "GitCommit", DefaultParameterSetName = LikeParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
 public sealed class SearchGitCommitCmdlet : GitCmdlet
 {
@@ -64,33 +71,41 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
             ?? throw new ArgumentNullException(nameof(commitSearchService));
     }
 
-    private const string SearchParameterSet = "Search";
+    private const string LikeParameterSet = "Like";
+    private const string MatchParameterSet = "Match";
     private const string WhereParameterSet = "Where";
     private readonly IGitCommitSearchService commitSearchService;
 
     /// <summary>
-    /// Gets or sets the pickaxe content search string. Only commits whose diff
-    /// against the first parent contains this string (or matches this pattern
-    /// when <see cref="ContentSearchIsRegex"/> is set) are returned.
-    /// Equivalent to <c>git log -S</c> (plain) or <c>git log -G</c> (regex).
+    /// Gets or sets a PowerShell wildcard pattern to match against commit diff text.
+    /// Only commits whose diff against the first parent contains a line matching this
+    /// pattern are returned. Use <c>*</c> to match any sequence of characters and
+    /// <c>?</c> to match a single character.
     /// </summary>
-    [Parameter(Mandatory = true, Position = 0, ParameterSetName = SearchParameterSet)]
-    public string ContentSearch { get; set; } = string.Empty;
+    /// <example>
+    ///   <code>Search-GitCommit -Like '*TODO*'</code>
+    /// </example>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = LikeParameterSet)]
+    [Parameter(ParameterSetName = WhereParameterSet)]
+    public string Like { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a value indicating whether <see cref="ContentSearch"/> is
-    /// treated as a regular expression. When specified, the pattern must appear
-    /// in the diff of the matching commit (equivalent to <c>git log -G</c>).
+    /// Gets or sets a .NET regular expression to match against commit diff text.
+    /// Only commits whose diff against the first parent contains a line matching this
+    /// regex are returned. Equivalent to <c>git log -G &lt;pattern&gt;</c>.
     /// </summary>
-    [Parameter(ParameterSetName = SearchParameterSet)]
-    public SwitchParameter ContentSearchIsRegex { get; set; }
+    /// <example>
+    ///   <code>Search-GitCommit -Match 'TODO|FIXME'</code>
+    /// </example>
+    [Parameter(Mandatory = true, Position = 0, ParameterSetName = MatchParameterSet)]
+    [Parameter(ParameterSetName = WhereParameterSet)]
+    public string Match { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets a ScriptBlock predicate. The block receives the raw
     /// <c>LibGit2Sharp.Commit</c> as <c>$args[0]</c>. Return <see langword="$true"/>
     /// to include the commit in results.
     /// </summary>
-    [Parameter(ParameterSetName = SearchParameterSet)]
     [Parameter(Mandatory = true, ParameterSetName = WhereParameterSet)]
     public ScriptBlock? Where { get; set; }
 
@@ -159,8 +174,8 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
             From = From,
             MaxCount = IsParameterBound(nameof(First)) ? First : null,
             Paths = Path,
-            ContentSearch = ContentSearch,
-            ContentSearchIsRegex = ContentSearchIsRegex.IsPresent,
+            Like = IsParameterBound(nameof(Like)) ? Like : null,
+            Match = IsParameterBound(nameof(Match)) ? Match : null,
         };
     }
 

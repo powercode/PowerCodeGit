@@ -26,12 +26,12 @@ Describe 'Search-GitCommit output type' {
     }
 
     It 'Returns GitCommitInfo objects' {
-        $Result = Search-GitCommit -ContentSearch 'TODO' -RepoPath $script:RepoPath
+        $Result = Search-GitCommit -Like '*TODO*' -RepoPath $script:RepoPath
         $Result | Should -BeOfType 'PowerCode.Git.Abstractions.Models.GitCommitInfo'
     }
 
     It 'Returns expected properties on matched commit' {
-        $Result = Search-GitCommit -ContentSearch 'TODO' -RepoPath $script:RepoPath
+        $Result = Search-GitCommit -Like '*TODO*' -RepoPath $script:RepoPath
 
         $Result.Sha | Should -Match '^[0-9a-f]{40}$'
         $Result.ShortSha.Length | Should -Be 7
@@ -41,7 +41,7 @@ Describe 'Search-GitCommit output type' {
     }
 }
 
-Describe 'Search-GitCommit -ContentSearch' {
+Describe 'Search-GitCommit -Like' {
     BeforeAll {
         # File content matches commit message, so 'TODO' appears in the diff of the second commit
         $script:RepoPath = New-TestGitRepository -CommitMessages @(
@@ -56,29 +56,29 @@ Describe 'Search-GitCommit -ContentSearch' {
         Remove-TestGitRepository -Path $script:RepoPath
     }
 
-    It 'Finds commits whose diff contains the search string' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -RepoPath $script:RepoPath)
+    It 'Finds commits whose diff contains the search pattern' {
+        $Results = @(Search-GitCommit -Like '*TODO*' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 2
     }
 
     It 'Returns commits in newest-first order' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -RepoPath $script:RepoPath)
         $Results[0].MessageShort | Should -BeExactly 'Add another TODO entry'
         $Results[1].MessageShort | Should -BeExactly 'Add TODO item'
     }
 
-    It 'Returns empty when no diff contains the search string' {
-        $Results = @(Search-GitCommit -ContentSearch 'NONEXISTENT_MARKER_XYZ' -RepoPath $script:RepoPath)
+    It 'Returns empty when no diff contains the search pattern' {
+        $Results = @(Search-GitCommit -Like '*NONEXISTENT_MARKER_XYZ*' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 0
     }
 
     It 'Search is case-sensitive by default' {
-        $Results = @(Search-GitCommit -ContentSearch 'todo' -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*todo*' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 0
     }
 }
 
-Describe 'Search-GitCommit -ContentSearchIsRegex' {
+Describe 'Search-GitCommit -Match' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @(
             'Initial commit',
@@ -93,12 +93,12 @@ Describe 'Search-GitCommit -ContentSearchIsRegex' {
     }
 
     It 'Finds commits matching a regex pattern' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO|FIXME' -ContentSearchIsRegex -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Match 'TODO|FIXME' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 2
     }
 
     It 'Handles anchored regex patterns' {
-        $Results = @(Search-GitCommit -ContentSearch '^Add TODO' -ContentSearchIsRegex -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Match '^\+Add TODO' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 1
         $Results[0].MessageShort | Should -BeExactly 'Add TODO item'
     }
@@ -118,12 +118,12 @@ Describe 'Search-GitCommit -First' {
     }
 
     It 'Limits the number of returned commits' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -First 2 -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -First 2 -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 2
     }
 
     It 'Returns the most recent matching commits when limited' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -First 1 -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -First 1 -RepoPath $script:RepoPath)
         $Results[0].MessageShort | Should -BeExactly 'Add TODO third'
     }
 }
@@ -183,7 +183,7 @@ Describe 'Search-GitCommit -Where' {
     }
 }
 
-Describe 'Search-GitCommit -ContentSearch combined with -Where' {
+Describe 'Search-GitCommit -Like combined with -Where' {
     BeforeAll {
         $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
         New-Item -Path $script:RepoPath -ItemType Directory -Force | Out-Null
@@ -212,8 +212,8 @@ Describe 'Search-GitCommit -ContentSearch combined with -Where' {
         Remove-TestGitRepository -Path $script:RepoPath
     }
 
-    It 'Applies both ContentSearch and Where predicate' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -RepoPath $script:RepoPath -Where {
+    It 'Applies both -Like and -Where predicate' {
+        $Results = @(Search-GitCommit -Like '*TODO*' -RepoPath $script:RepoPath -Where {
             $args[0].Author.Name -eq 'Alice'
         })
         $Results | Should -HaveCount 1
@@ -251,7 +251,7 @@ Describe 'Search-GitCommit -Path' {
     }
 
     It 'Restricts candidates to commits touching the specified path' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -Path 'src.txt' -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -Path 'src.txt' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 1
         $Results[0].MessageShort | Should -BeExactly 'Add src'
     }
@@ -294,12 +294,12 @@ Describe 'Search-GitCommit -From' {
     }
 
     It 'Walks commits reachable from the specified branch' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -From 'feature' -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -From 'feature' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 3
     }
 
     It 'Excludes commits not reachable from the specified branch' {
-        $Results = @(Search-GitCommit -ContentSearch 'TODO' -From 'main' -RepoPath $script:RepoPath)
+        $Results = @(Search-GitCommit -Like '*TODO*' -From 'main' -RepoPath $script:RepoPath)
         $Results | Should -HaveCount 2
     }
 }
@@ -311,7 +311,7 @@ Describe 'Search-GitCommit error handling' {
 
     It 'Writes a non-terminating error for an invalid repository path' {
         $Errors = @()
-        Search-GitCommit -ContentSearch 'test' -RepoPath $NonExistentRepoPath -ErrorVariable Errors -ErrorAction SilentlyContinue
+        Search-GitCommit -Like '*test*' -RepoPath $NonExistentRepoPath -ErrorVariable Errors -ErrorAction SilentlyContinue
         $Errors | Should -HaveCount 1
     }
 }
