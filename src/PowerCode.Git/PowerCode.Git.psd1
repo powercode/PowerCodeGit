@@ -19,6 +19,7 @@
         'Set-GitTag'
         'Add-GitItem'
         'Save-GitCommit'
+        'Invoke-GitRepository'
         'New-GitBranch'
         'Remove-GitBranch'
         'Reset-GitHead'
