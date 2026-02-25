@@ -39,4 +39,18 @@ public interface IGitTagService
     /// <returns>Information about the newly created tag.</returns>
     GitTagInfo CreateTag(string repositoryPath, string name)
         => CreateTag(new GitTagCreateOptions { RepositoryPath = repositoryPath, Name = name });
+
+    /// <summary>
+    /// Deletes a tag from the repository.
+    /// </summary>
+    /// <param name="options">The options controlling tag deletion.</param>
+    void DeleteTag(GitTagDeleteOptions options);
+
+    /// <summary>
+    /// Deletes a tag from the repository by name.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <param name="name">The tag name to delete.</param>
+    void DeleteTag(string repositoryPath, string name)
+        => DeleteTag(new GitTagDeleteOptions { RepositoryPath = repositoryPath, Name = name });
 }

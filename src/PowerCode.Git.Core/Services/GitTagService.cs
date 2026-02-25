@@ -123,6 +123,21 @@ public sealed class GitTagService : IGitTagService
         return MapTag(tag);
     }
 
+    /// <inheritdoc/>
+    public void DeleteTag(GitTagDeleteOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Tag name (options.Name) is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var tag = repository.Tags[options.Name]
+            ?? throw new ArgumentException($"The tag '{options.Name}' does not exist.", nameof(options));
+
+        repository.Tags.Remove(tag);
+    }
+
     private static string? ParseVersion(string tagName)
     {
         // Strip common prefixes like v, V
