@@ -304,6 +304,55 @@ Describe 'Select-GitCommit -From' {
     }
 }
 
+Describe 'Select-GitCommit -From with tag' {
+    BeforeAll {
+        $script:RepoPath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitTest_$([System.Guid]::NewGuid().ToString('N'))"
+        New-Item -Path $script:RepoPath -ItemType Directory -Force | Out-Null
+        Push-Location -Path $script:RepoPath
+        try {
+            git init --initial-branch main 2>&1 | Out-Null
+            git config user.name 'Test Author'
+            git config user.email 'test@example.com'
+
+            Set-Content -Path 'a.txt' -Value 'commit one with TODO'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Commit one' 2>&1 | Out-Null
+
+            # Lightweight tag after first commit
+            git tag v1.0 2>&1 | Out-Null
+
+            Set-Content -Path 'b.txt' -Value 'commit two with TODO'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Commit two' 2>&1 | Out-Null
+
+            # Annotated tag after second commit
+            git tag -a v2.0 -m 'Release v2.0' 2>&1 | Out-Null
+
+            Set-Content -Path 'c.txt' -Value 'commit three with TODO'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Commit three' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Walks commits reachable from a lightweight tag' {
+        $Results = @(Select-GitCommit -Contains 'TODO' -From 'v1.0' -RepoPath $script:RepoPath)
+        $Results | Should -HaveCount 1
+        $Results[0].MessageShort | Should -BeExactly 'Commit one'
+    }
+
+    It 'Walks commits reachable from an annotated tag' {
+        $Results = @(Select-GitCommit -Contains 'TODO' -From 'v2.0' -RepoPath $script:RepoPath)
+        $Results | Should -HaveCount 2
+    }
+}
+
 Describe 'Select-GitCommit error handling' {
     BeforeAll {
         . "$PSScriptRoot/SystemTest-Helpers.ps1"
