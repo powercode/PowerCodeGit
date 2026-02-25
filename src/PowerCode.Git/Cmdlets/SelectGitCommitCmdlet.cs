@@ -14,7 +14,7 @@ namespace PowerCode.Git.Cmdlets;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>Search-GitCommit</c> walks commit history and returns <see cref="GitCommitInfo"/>
+/// <c>Select-GitCommit</c> walks commit history and returns <see cref="GitCommitInfo"/>
 /// objects for every commit that matches the active filters. Three parameter sets are
 /// available:
 /// </para>
@@ -47,24 +47,24 @@ namespace PowerCode.Git.Cmdlets;
 /// <see cref="Path"/> to narrow the candidate set.
 /// </para>
 /// </remarks>
-[Cmdlet(VerbsCommon.Search, "GitCommit", DefaultParameterSetName = ContainsParameterSet)]
+[Cmdlet(VerbsCommon.Select, "GitCommit", DefaultParameterSetName = ContainsParameterSet)]
 [OutputType(typeof(GitCommitInfo))]
-public sealed class SearchGitCommitCmdlet : GitCmdlet
+public sealed class SelectGitCommitCmdlet : GitCmdlet
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SearchGitCommitCmdlet"/> class.
+    /// Initializes a new instance of the <see cref="SelectGitCommitCmdlet"/> class.
     /// </summary>
-    public SearchGitCommitCmdlet()
+    public SelectGitCommitCmdlet()
         : this(ServiceFactory.CreateGitCommitSearchService())
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SearchGitCommitCmdlet"/> class
+    /// Initializes a new instance of the <see cref="SelectGitCommitCmdlet"/> class
     /// with an explicit service (used in unit tests).
     /// </summary>
     /// <param name="commitSearchService">The commit search service to use.</param>
-    internal SearchGitCommitCmdlet(IGitCommitSearchService commitSearchService)
+    internal SelectGitCommitCmdlet(IGitCommitSearchService commitSearchService)
     {
         this.commitSearchService = commitSearchService
             ?? throw new ArgumentNullException(nameof(commitSearchService));
@@ -80,7 +80,7 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
     /// first parent contains this substring (case-sensitive, ordinal) are returned.
     /// </summary>
     /// <example>
-    ///   <code>Search-GitCommit -Contains 'TODO'</code>
+    ///   <code>Select-GitCommit -Contains 'TODO'</code>
     /// </example>
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = ContainsParameterSet)]
     [Parameter(ParameterSetName = WhereParameterSet)]
@@ -92,7 +92,7 @@ public sealed class SearchGitCommitCmdlet : GitCmdlet
     /// regex are returned. Equivalent to <c>git log -G &lt;pattern&gt;</c>.
     /// </summary>
     /// <example>
-    ///   <code>Search-GitCommit -Match 'TODO|FIXME'</code>
+    ///   <code>Select-GitCommit -Match 'TODO|FIXME'</code>
     /// </example>
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = MatchParameterSet)]
     [Parameter(ParameterSetName = WhereParameterSet)]

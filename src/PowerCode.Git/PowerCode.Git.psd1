@@ -42,7 +42,7 @@
         'Set-GitBranch'
         'Get-GitModuleConfiguration'
         'Set-GitModuleConfiguration'
-        'Search-GitCommit'
+        'Select-GitCommit'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

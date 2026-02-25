@@ -1,15 +1,15 @@
 ﻿---
 document type: cmdlet
 external help file: PowerCode.Git.dll-Help.xml
-HelpUri: https://github.com/powercode/PowerCodeGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Search-GitCommit.md
+HelpUri: https://github.com/powercode/PowerCodeGit/blob/{{BranchName}}/docs/help/PowerCode.Git/Select-GitCommit.md
 Locale: en-US
 Module Name: PowerCode.Git
 ms.date: 02-25-2026
 PlatyPS schema version: 2024-05-01
-title: Search-GitCommit
+title: Select-GitCommit
 ---
 
-# Search-GitCommit
+# Select-GitCommit
 
 ## SYNOPSIS
 
@@ -20,21 +20,21 @@ Searches git commit history for commits whose diff contains a string or matches 
 ### Contains (Default)
 
 ```
-Search-GitCommit [-Contains] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
+Select-GitCommit [-Contains] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
  [-Path <string[]>] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Match
 
 ```
-Search-GitCommit [-Match] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
+Select-GitCommit [-Match] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
  [-Path <string[]>] [-RepoPath <string>] [<CommonParameters>]
 ```
 
 ### Where
 
 ```
-Search-GitCommit -Where <scriptblock> [-First <int>] [-From <string>] [-Path <string[]>]
+Select-GitCommit -Where <scriptblock> [-First <int>] [-From <string>] [-Path <string[]>]
  [-RepoPath <string>] [<CommonParameters>]
 ```
 
@@ -45,7 +45,7 @@ This cmdlet has no aliases.
 
 ## DESCRIPTION
 
-`Search-GitCommit` walks commit history and emits `GitCommitInfo` objects for every commit that satisfies the active filters. Results are returned in reverse-chronological order (newest first).
+`Select-GitCommit` walks commit history and emits `GitCommitInfo` objects for every commit that satisfies the active filters. Results are returned in reverse-chronological order (newest first).
 
 Three parameter sets are available, following the same operator convention as `Where-Object`:
 
@@ -66,7 +66,7 @@ Three parameter sets are available, following the same operator convention as `W
 Searches the entire history of the current repository for commits whose diff contains the string `TODO`. Results are returned newest-first.
 
 ```powershell
-Search-GitCommit -Contains 'TODO'
+Select-GitCommit -Contains 'TODO'
 ```
 
 ```output
@@ -81,7 +81,7 @@ def67890… def6789  Bob Jones     Add TODO item
 Uses `-Match` with a regular expression to find commits whose diff contains either `TODO` or `FIXME`. This is the `-Match` operator analogue from `Where-Object`.
 
 ```powershell
-Search-GitCommit -Match 'TODO|FIXME'
+Select-GitCommit -Match 'TODO|FIXME'
 ```
 
 ### Example 3 — Anchored regex to find lines starting with a phrase
@@ -89,7 +89,7 @@ Search-GitCommit -Match 'TODO|FIXME'
 Finds commits that added a line starting with `Add TODO` anywhere in the diff. The `\+` matches the unified-diff `+` prefix that marks added lines.
 
 ```powershell
-Search-GitCommit -Match '^\+Add TODO'
+Select-GitCommit -Match '^\+Add TODO'
 ```
 
 ### Example 4 — Limit results with -First
@@ -97,7 +97,7 @@ Search-GitCommit -Match '^\+Add TODO'
 Returns only the two most recent commits whose diff contains `FIXME`.
 
 ```powershell
-Search-GitCommit -Contains 'FIXME' -First 2
+Select-GitCommit -Contains 'FIXME' -First 2
 ```
 
 ### Example 5 — Filter by author using -Where
@@ -105,7 +105,7 @@ Search-GitCommit -Contains 'FIXME' -First 2
 Returns every commit authored by Alice. The `-Where` ScriptBlock receives the raw `LibGit2Sharp.Commit` as `$args[0]`, mirroring `Where-Object` semantics.
 
 ```powershell
-Search-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
+Select-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
 ```
 
 ### Example 6 — Combine -Contains and -Where
@@ -113,7 +113,7 @@ Search-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
 Finds commits whose diff contains `TODO` **and** that were authored by Alice. The substring filter runs first; `-Where` is only evaluated on the surviving commits.
 
 ```powershell
-Search-GitCommit -Contains 'TODO' -Where { $args[0].Author.Name -eq 'Alice' }
+Select-GitCommit -Contains 'TODO' -Where { $args[0].Author.Name -eq 'Alice' }
 ```
 
 ### Example 7 — Restrict candidates to a specific file
@@ -121,7 +121,7 @@ Search-GitCommit -Contains 'TODO' -Where { $args[0].Author.Name -eq 'Alice' }
 Only commits that touch `src/handler.ts` are considered, then filtered by the substring.
 
 ```powershell
-Search-GitCommit -Contains 'FIXME' -Path 'src/handler.ts'
+Select-GitCommit -Contains 'FIXME' -Path 'src/handler.ts'
 ```
 
 ### Example 8 — Start the walk from a specific branch
@@ -129,7 +129,7 @@ Search-GitCommit -Contains 'FIXME' -Path 'src/handler.ts'
 Walks commits reachable from `feature/my-work` rather than `HEAD`. Useful for searching within a feature branch without switching branches.
 
 ```powershell
-Search-GitCommit -Contains 'TODO' -From 'feature/my-work'
+Select-GitCommit -Contains 'TODO' -From 'feature/my-work'
 ```
 
 ## PARAMETERS
