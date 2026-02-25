@@ -11,10 +11,16 @@ public sealed class GitTagListOptions
     public string RepositoryPath { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets a glob pattern to filter tag names
+    /// Gets or sets a glob pattern to include tag names
     /// (equivalent to <c>git tag -l &lt;pattern&gt;</c>).
     /// </summary>
     public string? Pattern { get; set; }
+
+    /// <summary>
+    /// Gets or sets a glob pattern to exclude tag names. Tags whose names match this pattern
+    /// are omitted from the result.
+    /// </summary>
+    public string? Exclude { get; set; }
 
     /// <summary>
     /// Gets or sets the sort field. Supported values: <c>"name"</c>, <c>"version"</c> (or <c>"v:refname"</c>).
@@ -33,6 +39,7 @@ public sealed class GitTagListOptions
     {
         var parts = new System.Collections.Generic.List<string>();
         if (Pattern is not null) parts.Add($"pattern={Pattern}");
+        if (Exclude is not null) parts.Add($"exclude={Exclude}");
         if (SortBy is not null) parts.Add($"sortBy={SortBy}");
         if (ContainsCommit is not null) parts.Add($"contains={ContainsCommit}");
         return parts.Count > 0

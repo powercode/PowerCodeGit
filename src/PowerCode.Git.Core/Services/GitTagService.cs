@@ -36,6 +36,13 @@ public sealed class GitTagService : IGitTagService
             tags = tags.Where(t => regex.IsMatch(t.FriendlyName));
         }
 
+        if (options.Exclude is not null)
+        {
+            var excludePattern = "^" + Regex.Escape(options.Exclude).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
+            var excludeRegex = new Regex(excludePattern, RegexOptions.IgnoreCase);
+            tags = tags.Where(t => !excludeRegex.IsMatch(t.FriendlyName));
+        }
+
         if (options.ContainsCommit is not null)
         {
             var targetCommit = repository.Lookup<Commit>(options.ContainsCommit);
