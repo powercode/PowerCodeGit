@@ -13,14 +13,14 @@ title: Search-GitCommit
 
 ## SYNOPSIS
 
-Searches git commit history for commits whose diff matches a string or regular expression, or that satisfy a PowerShell ScriptBlock predicate.
+Searches git commit history for commits whose diff contains a string or matches a regular expression, or that satisfy a PowerShell ScriptBlock predicate.
 
 ## SYNTAX
 
-### Like (Default)
+### Contains (Default)
 
 ```
-Search-GitCommit [-Like] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
+Search-GitCommit [-Contains] <string> [-Where <scriptblock>] [-First <int>] [-From <string>]
  [-Path <string[]>] [-RepoPath <string>] [<CommonParameters>]
 ```
 
@@ -49,24 +49,24 @@ This cmdlet has no aliases.
 
 Three parameter sets are available, following the same operator convention as `Where-Object`:
 
-- **Like** (default) — matches commits whose diff against the first parent contains a line that satisfies the PowerShell wildcard pattern. Use `*` to match any sequence of characters and `?` to match a single character (e.g. `-Like '*TODO*'`). The match is case-sensitive.
+- **Contains** (default) — matches commits whose diff against the first parent contains the given plain-text substring (case-sensitive, ordinal). For example `-Contains 'TODO'` finds every commit that added or removed a line containing the word TODO.
 
 - **Match** — matches commits whose diff against the first parent contains a line matching a .NET regular expression (e.g. `-Match 'TODO|FIXME'`). Equivalent to `git log -G <pattern>`.
 
 - **Where** — filters commits using an arbitrary PowerShell ScriptBlock. The block receives the raw `LibGit2Sharp.Commit` as `$args[0]`, which exposes the full object graph including `Author`, `Committer`, `Tree`, `Parents`, and `Notes`.
 
-`-Where` can be combined with either `-Like` or `-Match`: the diff filter runs first, and the ScriptBlock predicate is only evaluated on the commits that survive it.
+`-Where` can be combined with either `-Contains` or `-Match`: the diff filter runs first, and the ScriptBlock predicate is only evaluated on the commits that survive it.
 
 **Performance:** Walking large histories with a per-commit ScriptBlock is slower than native `git log`. Use `-First` to stop early and `-Path` to narrow the candidate set.
 
 ## EXAMPLES
 
-### Example 1 — Wildcard search for commits that mention TODO
+### Example 1 — Plain-text search for commits that mention TODO
 
-Searches the entire history of the current repository for commits whose diff contains `TODO`. Results are returned newest-first. The `*` wildcards match any surrounding characters, making this equivalent to a substring search.
+Searches the entire history of the current repository for commits whose diff contains the string `TODO`. Results are returned newest-first.
 
 ```powershell
-Search-GitCommit -Like '*TODO*'
+Search-GitCommit -Contains 'TODO'
 ```
 
 ```output
@@ -86,7 +86,7 @@ Search-GitCommit -Match 'TODO|FIXME'
 
 ### Example 3 — Anchored regex to find lines starting with a phrase
 
-Finds commits that added or removed a line starting with `Add TODO` anywhere in the diff.
+Finds commits that added a line starting with `Add TODO` anywhere in the diff. The `\+` matches the unified-diff `+` prefix that marks added lines.
 
 ```powershell
 Search-GitCommit -Match '^\+Add TODO'
@@ -94,10 +94,10 @@ Search-GitCommit -Match '^\+Add TODO'
 
 ### Example 4 — Limit results with -First
 
-Returns only the two most recent commits whose diff matches `*FIXME*`.
+Returns only the two most recent commits whose diff contains `FIXME`.
 
 ```powershell
-Search-GitCommit -Like '*FIXME*' -First 2
+Search-GitCommit -Contains 'FIXME' -First 2
 ```
 
 ### Example 5 — Filter by author using -Where
@@ -108,20 +108,20 @@ Returns every commit authored by Alice. The `-Where` ScriptBlock receives the ra
 Search-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
 ```
 
-### Example 6 — Combine -Like and -Where
+### Example 6 — Combine -Contains and -Where
 
-Finds commits whose diff contains `*TODO*` **and** that were authored by Alice. The wildcard filter runs first; `-Where` is only evaluated on the surviving commits.
+Finds commits whose diff contains `TODO` **and** that were authored by Alice. The substring filter runs first; `-Where` is only evaluated on the surviving commits.
 
 ```powershell
-Search-GitCommit -Like '*TODO*' -Where { $args[0].Author.Name -eq 'Alice' }
+Search-GitCommit -Contains 'TODO' -Where { $args[0].Author.Name -eq 'Alice' }
 ```
 
 ### Example 7 — Restrict candidates to a specific file
 
-Only commits that touch `src/handler.ts` are considered, then filtered by the wildcard pattern.
+Only commits that touch `src/handler.ts` are considered, then filtered by the substring.
 
 ```powershell
-Search-GitCommit -Like '*FIXME*' -Path 'src/handler.ts'
+Search-GitCommit -Contains 'FIXME' -Path 'src/handler.ts'
 ```
 
 ### Example 8 — Start the walk from a specific branch
@@ -129,7 +129,7 @@ Search-GitCommit -Like '*FIXME*' -Path 'src/handler.ts'
 Walks commits reachable from `feature/my-work` rather than `HEAD`. Useful for searching within a feature branch without switching branches.
 
 ```powershell
-Search-GitCommit -Like '*TODO*' -From 'feature/my-work'
+Search-GitCommit -Contains 'TODO' -From 'feature/my-work'
 ```
 
 ## PARAMETERS
@@ -180,21 +180,19 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Like
+### -Contains
 
-A PowerShell wildcard pattern matched against the text of each changed hunk in the commit diff. Only commits whose diff against the first parent contains a line that satisfies the pattern are returned.
-
-Use `*` to match any sequence of characters and `?` to match a single character. To search for a literal substring wrap it with `*` on both sides (e.g. `-Like '*TODO*'`). The match is case-sensitive and follows the same rules as the PowerShell `-like` operator and `Where-Object -Like`.
+A plain-text search string matched against the patch text of each changed file in the commit diff. Only commits whose diff against the first parent contains this substring are returned. The comparison is case-sensitive and ordinal.
 
 Mutually exclusive with `-Match`.
 
 ```yaml
 Type: System.String
 DefaultValue: ''
-SupportsWildcards: true
+SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: Like
+- Name: Contains
   Position: 0
   IsRequired: true
   ValueFromPipeline: false
@@ -211,7 +209,7 @@ A .NET regular expression matched against the text of each changed hunk in the c
 
 Follows the same `-match` operator semantics as `Where-Object -Match`. The pattern is applied with `RegexOptions.Multiline` so `^` and `$` anchor to line boundaries within the hunk.
 
-Mutually exclusive with `-Like`.
+Mutually exclusive with `-Contains`.
 
 ```yaml
 Type: System.String
@@ -283,7 +281,7 @@ A PowerShell ScriptBlock used as a per-commit predicate, following the same conv
 
 The `LibGit2Sharp.Commit` object exposes properties such as `Author`, `Committer`, `Message`, `Tree`, `Parents`, and `Notes`, giving access to the full commit object graph.
 
-In the **Like** and **Match** parameter sets this predicate is applied *after* the diff filter, so it only evaluates commits that already passed the pattern match. In the **Where** parameter set it is the only filter applied.
+In the **Contains** and **Match** parameter sets this predicate is applied *after* the diff filter, so it only evaluates commits that already passed the pattern match. In the **Where** parameter set it is the only filter applied.
 
 > **Performance note:** ScriptBlock predicates invoke the PowerShell engine once per candidate commit. Use `-First` and `-Path` to limit the candidate set and improve throughput.
 
@@ -293,7 +291,7 @@ DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: Like
+- Name: Contains
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
@@ -345,13 +343,13 @@ Each returned object represents a matching commit and exposes the following key 
 
 ## NOTES
 
-**`-Like` vs `-Match`:** Use `-Like` when you want the familiar PowerShell wildcard syntax (`*`, `?`). Use `-Match` when you need the full power of .NET regular expressions. Both operators are case-sensitive and follow the same conventions as the PowerShell `-like` and `-match` operators used in `Where-Object`.
+**`-Contains` vs `-Match`:** Use `-Contains` for straightforward substring searches — it is the simplest and fastest option. Use `-Match` when you need the full power of .NET regular expressions (alternation, anchors, character classes, etc.). `-Contains` performs a case-sensitive ordinal comparison; `-Match` follows the same conventions as the PowerShell `-match` operator used in `Where-Object`.
 
 **Walk order:** Commits are always returned in reverse-chronological order (newest first), following the default `git log` walk strategy from the starting commit.
 
 **ScriptBlock scope:** The ScriptBlock supplied to `-Where` runs in the calling session's scope, so it has access to variables defined in the caller.
 
-**Multiline matching:** Both `-Like` and `-Match` are applied against the full raw patch text for each file in the diff, which includes `+`/`-` prefix characters and hunk headers. Account for these when writing precise patterns.
+**Patch text format:** Both `-Contains` and `-Match` are applied against the full raw patch text for each file in the diff, which includes `+`/`-` prefix characters and hunk headers. Account for these when writing precise patterns.
 
 ## RELATED LINKS
 

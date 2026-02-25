@@ -55,17 +55,12 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         var decorationMap = CommitMapper.BuildDecorationMap(repository);
 
-        // Compile the diff-search pattern once, outside the per-commit loop.
-        // -Like  → convert the PowerShell wildcard to a case-sensitive regex.
-        // -Match → compile the caller-supplied regex directly.
+        // Build the diff-search filter once, outside the per-commit loop.
+        // -Contains → plain case-sensitive substring match (no regex needed).
+        // -Match    → compile the caller-supplied regex directly.
+        string? containsSearch = !string.IsNullOrEmpty(options.Contains) ? options.Contains : null;
         Regex? diffRegex = null;
-        if (!string.IsNullOrEmpty(options.Like))
-        {
-            diffRegex = new Regex(
-                WildcardToRegex(options.Like),
-                RegexOptions.Compiled | RegexOptions.Multiline);
-        }
-        else if (!string.IsNullOrEmpty(options.Match))
+        if (!string.IsNullOrEmpty(options.Match))
         {
             diffRegex = new Regex(
                 options.Match,
@@ -76,8 +71,15 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         foreach (var commit in commits)
         {
-            // Diff-search: match the compiled regex against each changed hunk.
-            if (diffRegex is not null)
+            // Diff-search: plain substring or compiled regex against each changed hunk.
+            if (containsSearch is not null)
+            {
+                if (!PatchContainsText(repository, commit, containsSearch))
+                {
+                    continue;
+                }
+            }
+            else if (diffRegex is not null)
             {
                 if (!PatchMatchesRegex(repository, commit, diffRegex))
                 {
@@ -99,6 +101,29 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
                 yield break;
             }
         }
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if the unified diff of <paramref name="commit"/>
+    /// against its first parent contains <paramref name="text"/> as a case-sensitive
+    /// substring. Inspection short-circuits on the first hit.
+    /// </summary>
+    private static bool PatchContainsText(Repository repository, Commit commit, string text)
+    {
+        var parentTree = commit.Parents.FirstOrDefault()?.Tree;
+
+        using var patch = repository.Diff.Compare<Patch>(parentTree, commit.Tree);
+
+        foreach (var entry in patch)
+        {
+            var patchText = entry.Patch;
+            if (!string.IsNullOrEmpty(patchText) && patchText.Contains(text, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -124,22 +149,4 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
         return false;
     }
 
-    /// <summary>
-    /// Converts a PowerShell wildcard pattern (<c>*</c> and <c>?</c>) to an
-    /// equivalent .NET regular expression string.
-    /// All regex metacharacters in the original pattern are escaped first so that
-    /// only the wildcard characters retain special meaning.
-    /// </summary>
-    /// <param name="pattern">A PowerShell-style wildcard pattern, e.g. <c>*TODO*</c>.</param>
-    /// <returns>A regex string that is semantically equivalent to the wildcard pattern.</returns>
-    private static string WildcardToRegex(string pattern)
-    {
-        // Escape all regex metacharacters, then restore * and ? wildcard semantics.
-        var escaped = Regex.Escape(pattern);
-
-        // Regex.Escape turns * into \* and ? into \? — convert those back to .* and .
-        return escaped
-            .Replace(@"\*", ".*", StringComparison.Ordinal)
-            .Replace(@"\?", ".", StringComparison.Ordinal);
-    }
 }

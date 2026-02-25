@@ -29,16 +29,14 @@ public sealed class GitCommitSearchOptions
     public string[]? Paths { get; set; }
 
     /// <summary>
-    /// Gets or sets a PowerShell wildcard pattern (e.g. <c>*TODO*</c>). When set, only
-    /// commits whose diff against the first parent contains a line that matches the
-    /// pattern are candidates. <c>*</c> matches any sequence of characters; <c>?</c>
-    /// matches a single character. The match is case-sensitive and corresponds
-    /// conceptually to <c>git log -G &lt;wildcard-as-regex&gt;</c>.
+    /// Gets or sets a plain-text search string. When set, only commits whose diff
+    /// against the first parent contains this substring (case-sensitive, ordinal)
+    /// are candidates. This is a simple substring match — no wildcards or regex.
     /// </summary>
     /// <remarks>
     /// Mutually exclusive with <see cref="Match"/>. Set at most one of the two.
     /// </remarks>
-    public string? Like { get; set; }
+    public string? Contains { get; set; }
 
     /// <summary>
     /// Gets or sets a .NET regular expression. When set, only commits whose diff
@@ -46,7 +44,7 @@ public sealed class GitCommitSearchOptions
     /// Equivalent to <c>git log -G &lt;pattern&gt;</c>.
     /// </summary>
     /// <remarks>
-    /// Mutually exclusive with <see cref="Like"/>. Set at most one of the two.
+    /// Mutually exclusive with <see cref="Contains"/>. Set at most one of the two.
     /// </remarks>
     public string? Match { get; set; }
 
@@ -54,7 +52,7 @@ public sealed class GitCommitSearchOptions
     public override string ToString()
     {
         return $"RepositoryPath={RepositoryPath}, From={From}, MaxCount={MaxCount}, " +
-               $"Like={Like}, Match={Match}, " +
+               $"Contains={Contains}, Match={Match}, " +
                $"Paths=[{string.Join(", ", Paths ?? [])}]";
     }
 }
