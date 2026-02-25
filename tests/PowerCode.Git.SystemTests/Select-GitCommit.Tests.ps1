@@ -160,7 +160,7 @@ Describe 'Select-GitCommit -Where' {
 
     It 'Filters commits using a ScriptBlock predicate on the raw Commit object' {
         $Results = @(Select-GitCommit -RepoPath $script:RepoPath -Where {
-            $args[0].Author.Name -eq 'Alice'
+            $commit.Author.Name -eq 'Alice'
         })
         $Results | Should -HaveCount 1
         $Results[0].AuthorName | Should -BeExactly 'Alice'
@@ -168,7 +168,7 @@ Describe 'Select-GitCommit -Where' {
 
     It 'Returns empty when no commit satisfies the predicate' {
         $Results = @(Select-GitCommit -RepoPath $script:RepoPath -Where {
-            $args[0].Author.Name -eq 'Nobody'
+            $commit.Author.Name -eq 'Nobody'
         })
         $Results | Should -HaveCount 0
     }
@@ -176,7 +176,7 @@ Describe 'Select-GitCommit -Where' {
     It 'Can access full object graph (Parents.Count)' {
         # Only the second commit has a parent
         $Results = @(Select-GitCommit -RepoPath $script:RepoPath -Where {
-            $args[0].Parents.Count -gt 0
+            $commit.Parents.Count -gt 0
         })
         $Results | Should -HaveCount 1
         $Results[0].MessageShort | Should -BeExactly 'Bob commit'
@@ -214,7 +214,7 @@ Describe 'Select-GitCommit -Contains combined with -Where' {
 
     It 'Applies both -Contains and -Where predicate' {
         $Results = @(Select-GitCommit -Contains 'TODO' -RepoPath $script:RepoPath -Where {
-            $args[0].Author.Name -eq 'Alice'
+            $commit.Author.Name -eq 'Alice'
         })
         $Results | Should -HaveCount 1
         $Results[0].AuthorName | Should -BeExactly 'Alice'
