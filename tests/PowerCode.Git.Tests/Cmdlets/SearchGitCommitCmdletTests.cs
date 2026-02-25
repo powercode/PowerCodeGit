@@ -6,12 +6,12 @@ using PowerCode.Git.Tests.Stubs;
 namespace PowerCode.Git.Tests.Cmdlets;
 
 [TestClass]
-public sealed class SearchGitCommitCmdletTests
+public sealed class SelectGitCommitCmdletTests
 {
     [TestMethod]
     public void BuildOptions_PathNotSpecified_UsesCurrentPath()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService());
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService());
 
         var options = cmdlet.BuildOptions(@"C:\repo");
 
@@ -21,7 +21,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_RepoPathSpecified_UsesRepoPath()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             RepoPath = @"D:\myrepo",
         };
@@ -34,10 +34,10 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_ContainsSet_MapsToOptions()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             Contains = "TODO",
-            BoundParameterOverrides = new HashSet<string> { nameof(SearchGitCommitCmdlet.Contains) },
+            BoundParameterOverrides = new HashSet<string> { nameof(SelectGitCommitCmdlet.Contains) },
         };
 
         var options = cmdlet.BuildOptions(@"C:\repo");
@@ -49,10 +49,10 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_MatchSet_MapsToOptions()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             Match = "TODO|FIXME",
-            BoundParameterOverrides = new HashSet<string> { nameof(SearchGitCommitCmdlet.Match) },
+            BoundParameterOverrides = new HashSet<string> { nameof(SelectGitCommitCmdlet.Match) },
         };
 
         var options = cmdlet.BuildOptions(@"C:\repo");
@@ -64,10 +64,10 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_FirstBound_SetsMaxCount()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             First = 10,
-            BoundParameterOverrides = new HashSet<string> { nameof(SearchGitCommitCmdlet.First) },
+            BoundParameterOverrides = new HashSet<string> { nameof(SelectGitCommitCmdlet.First) },
         };
 
         var options = cmdlet.BuildOptions(@"C:\repo");
@@ -78,7 +78,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_FirstNotBound_MaxCountIsNull()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService());
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService());
 
         var options = cmdlet.BuildOptions(@"C:\repo");
 
@@ -88,7 +88,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_FromSet_MapsToOptions()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             From = "main",
         };
@@ -101,7 +101,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildOptions_PathSet_MapsToOptions()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             Path = ["src/Program.cs", "README.md"],
         };
@@ -116,7 +116,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildPredicate_WhereNull_ReturnsNull()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService());
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService());
 
         var predicate = cmdlet.BuildPredicate();
 
@@ -126,7 +126,7 @@ public sealed class SearchGitCommitCmdletTests
     [TestMethod]
     public void BuildPredicate_WhereNotNull_ReturnsNonNullPredicate()
     {
-        var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
+        var cmdlet = new SelectGitCommitCmdlet(new StubGitCommitSearchService())
         {
             Where = ScriptBlock.Create("$true"),
         };
