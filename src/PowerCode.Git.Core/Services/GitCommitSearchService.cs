@@ -57,8 +57,8 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
     /// <summary>
     /// Builds a <see cref="CommitFilter"/> for the given <paramref name="options"/>,
-    /// resolving the optional starting ref as a branch name first, then as a generic
-    /// committish (tag, SHA, <c>HEAD~N</c>, etc.).
+    /// resolving the optional starting ref as a branch name first, then a tag name
+    /// (peeling annotated tags), then as a generic committish (SHA, <c>HEAD~N</c>, etc.).
     /// </summary>
     /// <exception cref="ArgumentException">
     /// Thrown when <see cref="GitCommitSearchOptions.From"/> is set but not found in the repository.
@@ -75,11 +75,22 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
             return filter;
         }
 
-        // Try as branch name first, then as a generic committish (tag, SHA, HEAD~N, etc.)
+        // Try as branch name first, then tag name, then as a generic committish (SHA, HEAD~N, etc.)
         var branch = repository.Branches[options.From];
         if (branch is not null)
         {
             filter.IncludeReachableFrom = branch;
+        }
+        else if (repository.Tags[options.From] is { } tag)
+        {
+            // Peel annotated tags to the underlying commit.
+            var target = tag.PeeledTarget ?? tag.Target;
+            var tagCommit = target as Commit
+                ?? repository.Lookup<Commit>(target.Id)
+                ?? throw new ArgumentException(
+                    $"The tag '{options.From}' does not point to a commit.",
+                    nameof(options));
+            filter.IncludeReachableFrom = tagCommit;
         }
         else
         {
