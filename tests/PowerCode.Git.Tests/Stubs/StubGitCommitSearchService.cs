@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
@@ -12,7 +13,8 @@ internal sealed class StubGitCommitSearchService : IGitCommitSearchService
 {
     public IEnumerable<GitCommitInfo> Search(
         GitCommitSearchOptions options,
-        Func<object, bool>? predicate = null)
+        Func<object, bool>? predicate = null,
+        CancellationToken cancellationToken = default)
     {
         return Array.Empty<GitCommitInfo>();
     }

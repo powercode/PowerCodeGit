@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using LibGit2Sharp;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
@@ -15,7 +16,7 @@ namespace PowerCode.Git.Core.Services;
 public sealed class GitCommitSearchService : IGitCommitSearchService
 {
     /// <inheritdoc/>
-    public IEnumerable<GitCommitInfo> Search(GitCommitSearchOptions options, Func<object, bool>? predicate = null)
+    public IEnumerable<GitCommitInfo> Search(GitCommitSearchOptions options, Func<object, bool>? predicate = null, CancellationToken cancellationToken = default)
     {
         RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
 
@@ -71,6 +72,9 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         foreach (var commit in commits)
         {
+            // Check for cancellation (e.g. Ctrl+C) before the expensive diff computation.
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Diff-search: plain substring or compiled regex against each changed hunk.
             if (containsSearch is not null)
             {
