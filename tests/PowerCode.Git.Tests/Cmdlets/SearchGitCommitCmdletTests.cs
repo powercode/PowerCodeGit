@@ -1,5 +1,9 @@
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Reflection;
+using System.Threading;
+using PowerCode.Git.Abstractions.Models;
+using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Tests.Stubs;
 

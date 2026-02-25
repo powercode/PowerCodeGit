@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
+using System.Threading;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 using PowerCode.Git.Completers;
@@ -76,6 +77,12 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     private readonly IGitCommitSearchService commitSearchService;
 
     /// <summary>
+    /// Backing field for the <see cref="CancellationTokenSource"/> used to signal
+    /// <see cref="StopProcessing"/> requests (e.g. Ctrl+C) to the search loop.
+    /// </summary>
+    private CancellationTokenSource? cts;
+
+    /// <summary>
     /// Gets or sets a plain-text search string. Only commits whose diff against the
     /// first parent contains this substring (case-sensitive, ordinal) are returned.
     /// </summary>
@@ -138,12 +145,20 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
         var options = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
         var predicate = BuildPredicate();
 
+        cts = new CancellationTokenSource();
+
         try
         {
-            foreach (var commit in commitSearchService.Search(options, predicate))
+            foreach (var commit in commitSearchService.Search(options, predicate, cts.Token))
             {
                 WriteObject(commit);
             }
+        }
+        catch (OperationCanceledException)
+        {
+            // The search was cancelled via StopProcessing() (e.g. Ctrl+C).
+            // This is a clean stop — do not write an error, matching PowerShell's
+            // built-in Ctrl+C behaviour for long-running cmdlets.
         }
         catch (RuntimeException exception)
         {
@@ -158,6 +173,20 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
                 ErrorCategory.InvalidOperation,
                 options.RepositoryPath));
         }
+        finally
+        {
+            cts.Dispose();
+            cts = null;
+        }
+    }
+
+    /// <summary>
+    /// Called by PowerShell on a separate thread when the user presses Ctrl+C or the
+    /// pipeline is stopped. Signals the search loop to abort at the next commit boundary.
+    /// </summary>
+    protected override void StopProcessing()
+    {
+        cts?.Cancel();
     }
 
     /// <summary>

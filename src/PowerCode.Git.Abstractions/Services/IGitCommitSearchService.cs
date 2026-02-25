@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using PowerCode.Git.Abstractions.Models;
 
 namespace PowerCode.Git.Abstractions.Services;
@@ -24,10 +25,15 @@ public interface IGitCommitSearchService
     /// When <see langword="null"/>, all candidates that pass the compiled filters
     /// in <paramref name="options"/> are included.
     /// </param>
+    /// <param name="cancellationToken">
+    /// A token that can be used to abort the search early. When cancelled, the enumeration
+    /// stops at the next commit boundary and throws <see cref="OperationCanceledException"/>.
+    /// The default value is <see cref="CancellationToken.None"/>, which never cancels.
+    /// </param>
     /// <returns>
     /// A lazily evaluated sequence of <see cref="GitCommitInfo"/> objects for each
     /// matching commit. Enumeration stops automatically when
     /// <see cref="GitCommitSearchOptions.MaxCount"/> matches have been yielded.
     /// </returns>
-    IEnumerable<GitCommitInfo> Search(GitCommitSearchOptions options, Func<object, bool>? predicate = null);
+    IEnumerable<GitCommitInfo> Search(GitCommitSearchOptions options, Func<object, bool>? predicate = null, CancellationToken cancellationToken = default);
 }
