@@ -16,13 +16,19 @@ public sealed class GitStatusResult
     /// <param name="stagedCount">The number of staged changes.</param>
     /// <param name="modifiedCount">The number of unstaged modifications.</param>
     /// <param name="untrackedCount">The number of untracked files.</param>
+    /// <param name="trackedBranchName">The name of the upstream tracking branch, or <see langword="null"/>.</param>
+    /// <param name="aheadBy">The number of commits ahead of the tracked branch, or <see langword="null"/>.</param>
+    /// <param name="behindBy">The number of commits behind the tracked branch, or <see langword="null"/>.</param>
     public GitStatusResult(
         string repositoryPath,
         string currentBranch,
         IReadOnlyList<GitStatusEntry> entries,
         int stagedCount,
         int modifiedCount,
-        int untrackedCount)
+        int untrackedCount,
+        string? trackedBranchName = null,
+        int? aheadBy = null,
+        int? behindBy = null)
     {
         RepositoryPath = repositoryPath;
         CurrentBranch = currentBranch;
@@ -30,6 +36,9 @@ public sealed class GitStatusResult
         StagedCount = stagedCount;
         ModifiedCount = modifiedCount;
         UntrackedCount = untrackedCount;
+        TrackedBranchName = trackedBranchName;
+        AheadBy = aheadBy;
+        BehindBy = behindBy;
     }
 
     /// <summary>
@@ -62,7 +71,27 @@ public sealed class GitStatusResult
     /// </summary>
     public int UntrackedCount { get; }
 
+    /// <summary>
+    /// Gets the name of the upstream tracking branch (e.g. <c>origin/main</c>),
+    /// or <see langword="null"/> when the current branch does not track a remote branch.
+    /// </summary>
+    public string? TrackedBranchName { get; }
+
+    /// <summary>
+    /// Gets the number of commits the current branch is ahead of the tracked branch,
+    /// or <see langword="null"/> when no tracking branch is configured.
+    /// </summary>
+    public int? AheadBy { get; }
+
+    /// <summary>
+    /// Gets the number of commits the current branch is behind the tracked branch,
+    /// or <see langword="null"/> when no tracking branch is configured.
+    /// </summary>
+    public int? BehindBy { get; }
+
     /// <inheritdoc/>
     public override string ToString() =>
-        $"[{CurrentBranch}] staged: {StagedCount}, modified: {ModifiedCount}, untracked: {UntrackedCount}";
+        TrackedBranchName is not null
+            ? $"[{CurrentBranch}...{TrackedBranchName}] ahead: {AheadBy ?? 0}, behind: {BehindBy ?? 0}, staged: {StagedCount}, modified: {ModifiedCount}, untracked: {UntrackedCount}"
+            : $"[{CurrentBranch}] staged: {StagedCount}, modified: {ModifiedCount}, untracked: {UntrackedCount}";
 }

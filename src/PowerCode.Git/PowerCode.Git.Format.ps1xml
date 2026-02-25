@@ -154,6 +154,11 @@
                 <PropertyName>CurrentBranch</PropertyName>
               </ListItem>
               <ListItem>
+                <ItemSelectionCondition><ScriptBlock>$_.TrackedBranchName</ScriptBlock></ItemSelectionCondition>
+                <Label>Tracking</Label>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatTracking($_)</ScriptBlock>
+              </ListItem>
+              <ListItem>
                 <Label>Modified</Label>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatModifiedCount($_.ModifiedCount)</ScriptBlock>
               </ListItem>
@@ -189,6 +194,10 @@
             <Width>25</Width>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>Tracking</Label>
+            <Width>35</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>Staged</Label>
             <Width>8</Width>
           </TableColumnHeader>
@@ -206,6 +215,9 @@
             <TableColumnItems>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatBranch($_.CurrentBranch)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatTracking($_)</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <ScriptBlock>[PowerCode.Git.Formatting.GitStatusFormatter]::FormatStagedCount($_.StagedCount)</ScriptBlock>
