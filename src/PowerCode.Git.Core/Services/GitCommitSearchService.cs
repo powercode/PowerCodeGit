@@ -22,73 +22,21 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         using var repository = new Repository(options.RepositoryPath);
 
-        var filter = new CommitFilter
-        {
-            SortBy = CommitSortStrategies.Time,
-        };
-
-        if (!string.IsNullOrWhiteSpace(options.From))
-        {
-            // Try as branch name first, then as a generic committish (tag, SHA, HEAD~N, etc.)
-            var branch = repository.Branches[options.From];
-            if (branch is not null)
-            {
-                filter.IncludeReachableFrom = branch;
-            }
-            else
-            {
-                var commit = repository.Lookup<Commit>(options.From)
-                    ?? throw new ArgumentException(
-                        $"The ref '{options.From}' was not found in the repository.",
-                        nameof(options));
-                filter.IncludeReachableFrom = commit;
-            }
-        }
-
-        var commits = repository.Commits.QueryBy(filter).AsEnumerable();
-
-        // Path filter: only walk commits that touch at least one specified path
-        if (options.Paths is { Length: > 0 })
-        {
-            var paths = options.Paths;
-            commits = commits.Where(commit => CommitMapper.CommitTouchesAnyPath(repository, commit, paths));
-        }
-
+        var filter = BuildCommitFilter(repository, options);
+        var candidates = BuildCandidates(repository, filter, options.Paths);
         var decorationMap = CommitMapper.BuildDecorationMap(repository);
-
-        // Build the diff-search filter once, outside the per-commit loop.
-        // -Contains → plain case-sensitive substring match (no regex needed).
-        // -Match    → compile the caller-supplied regex directly.
-        string? containsSearch = !string.IsNullOrEmpty(options.Contains) ? options.Contains : null;
-        Regex? diffRegex = null;
-        if (!string.IsNullOrEmpty(options.Match))
-        {
-            diffRegex = new Regex(
-                options.Match,
-                RegexOptions.Compiled | RegexOptions.Multiline);
-        }
+        var (containsSearch, diffRegex) = CompileDiffFilter(options);
 
         var matched = 0;
 
-        foreach (var commit in commits)
+        foreach (var commit in candidates)
         {
             // Check for cancellation (e.g. Ctrl+C) before the expensive diff computation.
             cancellationToken.ThrowIfCancellationRequested();
 
-            // Diff-search: plain substring or compiled regex against each changed hunk.
-            if (containsSearch is not null)
+            if (!MatchesDiffFilter(repository, commit, containsSearch, diffRegex))
             {
-                if (!PatchContainsText(repository, commit, containsSearch))
-                {
-                    continue;
-                }
-            }
-            else if (diffRegex is not null)
-            {
-                if (!PatchMatchesRegex(repository, commit, diffRegex))
-                {
-                    continue;
-                }
+                continue;
             }
 
             // Caller-supplied predicate (wraps the PowerShell -Where ScriptBlock)
@@ -105,6 +53,101 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
                 yield break;
             }
         }
+    }
+
+    /// <summary>
+    /// Builds a <see cref="CommitFilter"/> for the given <paramref name="options"/>,
+    /// resolving the optional starting ref as a branch name first, then as a generic
+    /// committish (tag, SHA, <c>HEAD~N</c>, etc.).
+    /// </summary>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <see cref="GitCommitSearchOptions.From"/> is set but not found in the repository.
+    /// </exception>
+    private static CommitFilter BuildCommitFilter(Repository repository, GitCommitSearchOptions options)
+    {
+        var filter = new CommitFilter
+        {
+            SortBy = CommitSortStrategies.Time,
+        };
+
+        if (string.IsNullOrWhiteSpace(options.From))
+        {
+            return filter;
+        }
+
+        // Try as branch name first, then as a generic committish (tag, SHA, HEAD~N, etc.)
+        var branch = repository.Branches[options.From];
+        if (branch is not null)
+        {
+            filter.IncludeReachableFrom = branch;
+        }
+        else
+        {
+            var commit = repository.Lookup<Commit>(options.From)
+                ?? throw new ArgumentException(
+                    $"The ref '{options.From}' was not found in the repository.",
+                    nameof(options));
+            filter.IncludeReachableFrom = commit;
+        }
+
+        return filter;
+    }
+
+    /// <summary>
+    /// Returns the candidate commit sequence for the given <paramref name="filter"/>,
+    /// optionally narrowed to commits that touch at least one of <paramref name="paths"/>.
+    /// </summary>
+    private static IEnumerable<Commit> BuildCandidates(Repository repository, CommitFilter filter, string[]? paths)
+    {
+        var commits = repository.Commits.QueryBy(filter).AsEnumerable();
+
+        if (paths is { Length: > 0 })
+        {
+            commits = commits.Where(commit => CommitMapper.CommitTouchesAnyPath(repository, commit, paths));
+        }
+
+        return commits;
+    }
+
+    /// <summary>
+    /// Compiles the diff-search parameters from <paramref name="options"/> once, outside
+    /// the per-commit loop. Returns a plain-text needle for <c>-Contains</c> or a compiled
+    /// <see cref="Regex"/> for <c>-Match</c>; both are <see langword="null"/> when the
+    /// corresponding option is absent.
+    /// </summary>
+    private static (string? ContainsSearch, Regex? DiffRegex) CompileDiffFilter(GitCommitSearchOptions options)
+    {
+        // -Contains → plain case-sensitive substring match (no regex needed).
+        var containsSearch = !string.IsNullOrEmpty(options.Contains) ? options.Contains : null;
+
+        // -Match → compile the caller-supplied regex directly.
+        Regex? diffRegex = null;
+        if (!string.IsNullOrEmpty(options.Match))
+        {
+            diffRegex = new Regex(options.Match, RegexOptions.Compiled | RegexOptions.Multiline);
+        }
+
+        return (containsSearch, diffRegex);
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the commit passes the active diff filter.
+    /// When neither <paramref name="containsSearch"/> nor <paramref name="diffRegex"/> is
+    /// set, the commit is unconditionally accepted.
+    /// </summary>
+    private static bool MatchesDiffFilter(Repository repository, Commit commit, string? containsSearch, Regex? diffRegex)
+    {
+        if (containsSearch is not null)
+        {
+            return PatchContainsText(repository, commit, containsSearch);
+        }
+
+        if (diffRegex is not null)
+        {
+            return PatchMatchesRegex(repository, commit, diffRegex);
+        }
+
+        return true;
     }
 
     /// <summary>
