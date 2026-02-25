@@ -55,12 +55,20 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         var decorationMap = CommitMapper.BuildDecorationMap(repository);
 
-        // Compile content-search regex once, outside the per-commit loop
-        Regex? contentRegex = null;
-        if (!string.IsNullOrEmpty(options.ContentSearch) && options.ContentSearchIsRegex)
+        // Compile the diff-search pattern once, outside the per-commit loop.
+        // -Like  → convert the PowerShell wildcard to a case-sensitive regex.
+        // -Match → compile the caller-supplied regex directly.
+        Regex? diffRegex = null;
+        if (!string.IsNullOrEmpty(options.Like))
         {
-            contentRegex = new Regex(
-                options.ContentSearch,
+            diffRegex = new Regex(
+                WildcardToRegex(options.Like),
+                RegexOptions.Compiled | RegexOptions.Multiline);
+        }
+        else if (!string.IsNullOrEmpty(options.Match))
+        {
+            diffRegex = new Regex(
+                options.Match,
                 RegexOptions.Compiled | RegexOptions.Multiline);
         }
 
@@ -68,10 +76,10 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
 
         foreach (var commit in commits)
         {
-            // Pickaxe content search: diff commit against first parent and scan patch text
-            if (!string.IsNullOrEmpty(options.ContentSearch))
+            // Diff-search: match the compiled regex against each changed hunk.
+            if (diffRegex is not null)
             {
-                if (!PatchContainsSearch(repository, commit, options.ContentSearch, contentRegex))
+                if (!PatchMatchesRegex(repository, commit, diffRegex))
                 {
                     continue;
                 }
@@ -94,15 +102,11 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
     }
 
     /// <summary>
-    /// Returns <see langword="true"/> if the unified diff of <paramref name="commit"/>
-    /// against its first parent contains <paramref name="search"/>. Each file's patch
-    /// text is inspected independently so the search short-circuits on the first hit.
+    /// Returns <see langword="true"/> if any hunk in the unified diff of
+    /// <paramref name="commit"/> against its first parent matches
+    /// <paramref name="regex"/>. Inspection short-circuits on the first hit.
     /// </summary>
-    private static bool PatchContainsSearch(
-        Repository repository,
-        Commit commit,
-        string search,
-        Regex? regex)
+    private static bool PatchMatchesRegex(Repository repository, Commit commit, Regex regex)
     {
         var parentTree = commit.Parents.FirstOrDefault()?.Tree;
 
@@ -111,27 +115,31 @@ public sealed class GitCommitSearchService : IGitCommitSearchService
         foreach (var entry in patch)
         {
             var patchText = entry.Patch;
-            if (string.IsNullOrEmpty(patchText))
+            if (!string.IsNullOrEmpty(patchText) && regex.IsMatch(patchText))
             {
-                continue;
-            }
-
-            if (regex is not null)
-            {
-                if (regex.IsMatch(patchText))
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (patchText.Contains(search, StringComparison.Ordinal))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Converts a PowerShell wildcard pattern (<c>*</c> and <c>?</c>) to an
+    /// equivalent .NET regular expression string.
+    /// All regex metacharacters in the original pattern are escaped first so that
+    /// only the wildcard characters retain special meaning.
+    /// </summary>
+    /// <param name="pattern">A PowerShell-style wildcard pattern, e.g. <c>*TODO*</c>.</param>
+    /// <returns>A regex string that is semantically equivalent to the wildcard pattern.</returns>
+    private static string WildcardToRegex(string pattern)
+    {
+        // Escape all regex metacharacters, then restore * and ? wildcard semantics.
+        var escaped = Regex.Escape(pattern);
+
+        // Regex.Escape turns * into \* and ? into \? — convert those back to .* and .
+        return escaped
+            .Replace(@"\*", ".*", StringComparison.Ordinal)
+            .Replace(@"\?", ".", StringComparison.Ordinal);
     }
 }

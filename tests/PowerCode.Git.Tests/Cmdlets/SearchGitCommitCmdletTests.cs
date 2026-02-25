@@ -32,30 +32,33 @@ public sealed class SearchGitCommitCmdletTests
     }
 
     [TestMethod]
-    public void BuildOptions_ContentSearchSet_MapsToOptions()
+    public void BuildOptions_LikeSet_MapsToOptions()
     {
         var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
         {
-            ContentSearch = "TODO",
+            Like = "*TODO*",
+            BoundParameterOverrides = new HashSet<string> { nameof(SearchGitCommitCmdlet.Like) },
         };
 
         var options = cmdlet.BuildOptions(@"C:\repo");
 
-        Assert.AreEqual("TODO", options.ContentSearch);
+        Assert.AreEqual("*TODO*", options.Like);
+        Assert.IsNull(options.Match);
     }
 
     [TestMethod]
-    public void BuildOptions_ContentSearchIsRegexSet_SetsFlag()
+    public void BuildOptions_MatchSet_MapsToOptions()
     {
         var cmdlet = new SearchGitCommitCmdlet(new StubGitCommitSearchService())
         {
-            ContentSearch = "TODO|FIXME",
-            ContentSearchIsRegex = new SwitchParameter(true),
+            Match = "TODO|FIXME",
+            BoundParameterOverrides = new HashSet<string> { nameof(SearchGitCommitCmdlet.Match) },
         };
 
         var options = cmdlet.BuildOptions(@"C:\repo");
 
-        Assert.IsTrue(options.ContentSearchIsRegex);
+        Assert.AreEqual("TODO|FIXME", options.Match);
+        Assert.IsNull(options.Like);
     }
 
     [TestMethod]

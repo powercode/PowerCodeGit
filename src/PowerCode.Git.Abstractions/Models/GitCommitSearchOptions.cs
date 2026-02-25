@@ -29,25 +29,32 @@ public sealed class GitCommitSearchOptions
     public string[]? Paths { get; set; }
 
     /// <summary>
-    /// Gets or sets the pickaxe content search string. When set, only commits
-    /// whose diff (against the first parent) contains this string in the patch
-    /// output are candidates. Interpreted as a regex when
-    /// <see cref="ContentSearchIsRegex"/> is <see langword="true"/>.
+    /// Gets or sets a PowerShell wildcard pattern (e.g. <c>*TODO*</c>). When set, only
+    /// commits whose diff against the first parent contains a line that matches the
+    /// pattern are candidates. <c>*</c> matches any sequence of characters; <c>?</c>
+    /// matches a single character. The match is case-sensitive and corresponds
+    /// conceptually to <c>git log -G &lt;wildcard-as-regex&gt;</c>.
     /// </summary>
-    public string? ContentSearch { get; set; }
+    /// <remarks>
+    /// Mutually exclusive with <see cref="Match"/>. Set at most one of the two.
+    /// </remarks>
+    public string? Like { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether <see cref="ContentSearch"/> is
-    /// treated as a regular expression. When <see langword="false"/> (the default),
-    /// a plain case-sensitive substring match is performed.
+    /// Gets or sets a .NET regular expression. When set, only commits whose diff
+    /// against the first parent contains a match for this pattern are candidates.
+    /// Equivalent to <c>git log -G &lt;pattern&gt;</c>.
     /// </summary>
-    public bool ContentSearchIsRegex { get; set; }
+    /// <remarks>
+    /// Mutually exclusive with <see cref="Like"/>. Set at most one of the two.
+    /// </remarks>
+    public string? Match { get; set; }
 
     /// <inheritdoc/>
     public override string ToString()
     {
         return $"RepositoryPath={RepositoryPath}, From={From}, MaxCount={MaxCount}, " +
-               $"ContentSearch={ContentSearch}, ContentSearchIsRegex={ContentSearchIsRegex}, " +
+               $"Like={Like}, Match={Match}, " +
                $"Paths=[{string.Join(", ", Paths ?? [])}]";
     }
 }
