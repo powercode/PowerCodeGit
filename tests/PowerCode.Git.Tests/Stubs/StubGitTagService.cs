@@ -13,4 +13,9 @@ internal sealed class StubGitTagService : IGitTagService
 
     public GitTagInfo CreateTag(GitTagCreateOptions options) =>
         new(options.Name, "abc1234abc1234abc1234abc1234abc1234abc1234", isAnnotated: options.Message is not null, null, null, null, options.Message);
+
+    public void DeleteTag(GitTagDeleteOptions options)
+    {
+        // No-op stub — records nothing by default.
+    }
 }
