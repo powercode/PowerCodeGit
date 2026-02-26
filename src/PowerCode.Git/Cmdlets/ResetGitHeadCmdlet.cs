@@ -52,7 +52,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
     [Parameter(Position = 0, ParameterSetName = MixedParameterSet)]
     [Parameter(Position = 0, ParameterSetName = SoftParameterSet)]
     [Parameter(Position = 0, ParameterSetName = HardParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Revision { get; set; }
 
     /// <summary>

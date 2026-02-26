@@ -70,7 +70,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
     /// Gets or sets a committish to filter only tags that contain the specified commit.
     /// </summary>
     [Parameter(ParameterSetName = TagParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? ContainsCommit { get; set; }
 
     /// <summary>

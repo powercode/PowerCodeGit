@@ -60,7 +60,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// Gets or sets an optional starting committish for the new branch.
     /// </summary>
     [Parameter(ParameterSetName = CreateParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeTags = true)]
     public string? StartPoint { get; set; }
 
     // ── Detach parameter set ─────────────────────────────────────────────────
@@ -75,7 +75,7 @@ public sealed class SwitchGitBranchCmdlet : GitCmdlet
     /// Gets or sets the committish to check out in detached HEAD mode.
     /// </summary>
     [Parameter(Position = 0, ParameterSetName = DetachParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Committish { get; set; }
 
     // ── Shared optional ──────────────────────────────────────────────────────

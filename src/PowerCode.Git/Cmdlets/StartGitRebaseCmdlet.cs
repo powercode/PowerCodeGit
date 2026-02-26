@@ -136,7 +136,7 @@ public sealed class StartGitRebaseCmdlet : GitCmdlet
     [Parameter(ParameterSetName = RebaseParameterSet)]
     [Parameter(ParameterSetName = InteractiveParameterSet)]
     [Parameter(ParameterSetName = InputObjectParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeTags = true)]
     public string? Onto { get; set; }
 
     /// <summary>
