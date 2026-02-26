@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Management.Automation;
 using PowerCode.Git.Abstractions.Models;
@@ -135,7 +135,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
     [Parameter(ParameterSetName = PathParameterSet)]
     [Parameter(ParameterSetName = AllParameterSet)]
     [Parameter(ParameterSetName = InputObjectParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Source { get; set; }
 
     // ------------------------------------------------------------------------

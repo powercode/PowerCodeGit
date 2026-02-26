@@ -58,7 +58,7 @@ public sealed class SetGitTagCmdlet : GitCmdlet
     /// Defaults to HEAD when not specified.
     /// </summary>
     [Parameter(Position = 1, ParameterSetName = TagParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Target { get; set; }
 
     /// <summary>

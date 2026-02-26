@@ -250,6 +250,7 @@ public sealed class GitCommittishCompleterTests
     [TestMethod]
     public void CompleteArgument_IncludeRelativeRefs_Tooltip_ContainsDescription()
     {
+        // When no ancestry commits are available, fall back to generic description.
         var historyService = new StubGitHistoryService([]);
         var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
             100, false, false, false, false, true, historyService, null, null);
@@ -258,6 +259,69 @@ public sealed class GitCommittishCompleterTests
 
         Assert.HasCount(1, results);
         Assert.Contains("parent of HEAD", results[0].ToolTip);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_IncludeRelativeRefs_WithCommits_TooltipContainsCommitShortSha()
+    {
+        var commits = new[]
+        {
+            CreateCommit("aaa0000000000000000000000000000000000000", "HEAD commit"),
+            CreateCommit("bbb1111111111111111111111111111111111111", "Parent commit"),
+            CreateCommit("ccc2222222222222222222222222222222222222", "Grandparent commit"),
+        };
+        var historyService = new StubGitHistoryService(commits);
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, false, false, false, true, historyService, null, null);
+
+        var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "HEAD^", null!, BoundParameters).ToList();
+
+        // HEAD^ tooltip should contain the parent's short SHA and message
+        Assert.HasCount(1, results);
+        Assert.Contains("bbb1111", results[0].ToolTip);
+        Assert.Contains("Parent commit", results[0].ToolTip);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_IncludeRelativeRefs_WithCommits_Head1TooltipContainsCommitInfo()
+    {
+        var commits = new[]
+        {
+            CreateCommit("aaa0000000000000000000000000000000000000", "HEAD commit"),
+            CreateCommit("bbb1111111111111111111111111111111111111", "Parent commit"),
+            CreateCommit("ccc2222222222222222222222222222222222222", "Grandparent commit"),
+        };
+        var historyService = new StubGitHistoryService(commits);
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, false, false, false, true, historyService, null, null);
+
+        var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "HEAD~1", null!, BoundParameters).ToList();
+
+        // "HEAD~1" is a prefix of both "HEAD~1" and "HEAD~10" so multiple results are expected.
+        // Verify specifically that the HEAD~1 entry carries the resolved commit info.
+        var head1 = results.Single(r => r.CompletionText == "HEAD~1");
+        Assert.Contains("bbb1111", head1.ToolTip);
+        Assert.Contains("Parent commit", head1.ToolTip);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_IncludeRelativeRefs_WithCommits_OutOfRangeDepth_FallsBackToDescription()
+    {
+        // Only 2 commits (HEAD + one ancestor); HEAD~2 has no resolved commit.
+        var commits = new[]
+        {
+            CreateCommit("aaa0000000000000000000000000000000000000", "HEAD commit"),
+            CreateCommit("bbb1111111111111111111111111111111111111", "Parent commit"),
+        };
+        var historyService = new StubGitHistoryService(commits);
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, false, false, false, true, historyService, null, null);
+
+        var results = completer.CompleteArgument("Start-GitRebase", "Upstream", "HEAD~2", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.Contains("HEAD~2", results[0].ToolTip);
+        Assert.Contains("2 commits before HEAD", results[0].ToolTip);
     }
 
     [TestMethod]
@@ -511,6 +575,192 @@ public sealed class GitCommittishCompleterTests
         Assert.IsTrue(results.All(r => r.ResultType == CompletionResultType.ParameterValue));
     }
 
+    // ── Decoration / logical-name completions ─────────────────────────────
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithLocalBranchDecoration_NoBranchCompleter_EmitsBranchName()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Initial commit",
+                [new GitDecoration("main", GitDecorationType.LocalBranch)]),
+        ]);
+        // includeBranches = false  ⇒ logical name is NOT covered elsewhere
+        var completer = CreateCommitOnlyCompleter(100, false, service);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual("main", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithLocalBranchDecoration_WithBranchCompleter_NoDuplicate()
+    {
+        var sha = "abc1234def5678abc1234def5678abc1234def567";
+        var historyService = new StubGitHistoryService(
+        [
+            CreateCommit(sha, "Initial commit",
+                [new GitDecoration("main", GitDecorationType.LocalBranch)]),
+        ]);
+        var branchService = new StubGitBranchService(
+        [
+            CreateBranch("main", isHead: true),
+        ]);
+        // includeBranches = true  ⇒ "main" is already offered by GetBranchCompletions
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, true, false, false, false, historyService, branchService, null);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        // Only "main" from the branch completer; the commit section must not add another entry
+        Assert.HasCount(1, results);
+        Assert.AreEqual("main", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithLocalBranchDecoration_WithBranchCompleter_ShaPrefixTyped_EmitsSha()
+    {
+        var sha = "abc1234def5678abc1234def5678abc1234def567";
+        var historyService = new StubGitHistoryService(
+        [
+            CreateCommit(sha, "Initial commit",
+                [new GitDecoration("main", GitDecorationType.LocalBranch)]),
+        ]);
+        var branchService = new StubGitBranchService(
+        [
+            CreateBranch("main", isHead: true),
+        ]);
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, true, false, false, false, historyService, branchService, null);
+
+        // User typed "abc" — a SHA prefix; the branch completer won't match so the
+        // commit section must fall back to the raw SHA.
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "abc", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual("abc1234", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithHeadDecoration_AlwaysEmitsHead()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Latest",
+                [new GitDecoration("HEAD", GitDecorationType.Head)]),
+        ]);
+        // No branch/tag completers enabled
+        var completer = CreateCommitOnlyCompleter(100, false, service);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual("HEAD", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithHeadAndBranchDecoration_BranchCompleterEnabled_EmitsHead()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Latest",
+                [
+                    new GitDecoration("HEAD", GitDecorationType.Head),
+                    new GitDecoration("main", GitDecorationType.LocalBranch),
+                ]),
+        ]);
+        var branchService = new StubGitBranchService([CreateBranch("main", isHead: true)]);
+        // includeBranches = true covers "main", but HEAD has no dedicated completer
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, true, false, false, false, service, branchService, null);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        // "main" from branch completer + "HEAD" from commit completer
+        Assert.HasCount(2, results);
+        Assert.IsTrue(results.Any(r => r.CompletionText == "HEAD"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "main"));
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithTagDecoration_NoTagCompleter_EmitsTagName()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Release",
+                [new GitDecoration("v1.0.0", GitDecorationType.Tag)]),
+        ]);
+        // includeTags = false  ⇒ logical name is NOT covered elsewhere
+        var completer = CreateCommitOnlyCompleter(100, false, service);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual("v1.0.0", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithTagDecoration_WithTagCompleter_NoDuplicate()
+    {
+        var historyService = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Release",
+                [new GitDecoration("v1.0.0", GitDecorationType.Tag)]),
+        ]);
+        var tagService = new StubGitTagService([CreateTag("v1.0.0")]);
+        // includeTags = true  ⇒ "v1.0.0" is already offered by GetTagCompletions
+        var completer = new GitCommittishCompleterAttribute.CommittishCompleter(
+            100, false, false, false, true, false, historyService, null, tagService);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        // Only the tag completer entry; commit section must not add another
+        Assert.HasCount(1, results);
+        Assert.AreEqual("v1.0.0", results[0].CompletionText);
+    }
+
+    [TestMethod]
+    public void CompleteArgument_CommitWithMultipleDecorations_NoExternalCompleters_EmitsAllNames()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Merge",
+                [
+                    new GitDecoration("HEAD", GitDecorationType.Head),
+                    new GitDecoration("main", GitDecorationType.LocalBranch),
+                    new GitDecoration("v2.0.0", GitDecorationType.Tag),
+                ]),
+        ]);
+        var completer = CreateCommitOnlyCompleter(100, false, service);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "", null!, BoundParameters).ToList();
+
+        Assert.HasCount(3, results);
+        Assert.IsTrue(results.Any(r => r.CompletionText == "HEAD"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "main"));
+        Assert.IsTrue(results.Any(r => r.CompletionText == "v2.0.0"));
+    }
+
+    [TestMethod]
+    public void CompleteArgument_DecoratedCommit_LogicalNamePrefixFilter_OnlyMatchingNamesEmitted()
+    {
+        var service = new StubGitHistoryService(
+        [
+            CreateCommit("abc1234def5678abc1234def5678abc1234def567", "Latest",
+                [
+                    new GitDecoration("HEAD", GitDecorationType.Head),
+                    new GitDecoration("main", GitDecorationType.LocalBranch),
+                ]),
+        ]);
+        var completer = CreateCommitOnlyCompleter(100, false, service);
+
+        var results = completer.CompleteArgument("Get-GitLog", "Commit", "ma", null!, BoundParameters).ToList();
+
+        Assert.HasCount(1, results);
+        Assert.AreEqual("main", results[0].CompletionText);
+    }
+
     // ── Factory helpers ───────────────────────────────────────────────────
 
     /// <summary>
@@ -520,7 +770,8 @@ public sealed class GitCommittishCompleterTests
         int maxCount, bool allBranches, IGitHistoryService service) =>
         new(maxCount, allBranches, false, false, false, false, service, null, null);
 
-    private static GitCommitInfo CreateCommit(string sha, string message)
+    private static GitCommitInfo CreateCommit(string sha, string message,
+        IReadOnlyList<GitDecoration>? decorations = null)
     {
         return new GitCommitInfo(
             sha,
@@ -532,7 +783,8 @@ public sealed class GitCommittishCompleterTests
             FixedDate,
             message,
             message,
-            []);
+            [],
+            decorations);
     }
 
     private static GitBranchInfo CreateBranch(string name, bool isHead = false, bool isRemote = false)

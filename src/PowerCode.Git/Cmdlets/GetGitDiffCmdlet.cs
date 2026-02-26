@@ -86,7 +86,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     /// Gets or sets a committish to diff the working tree against.
     /// </summary>
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = CommitParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Commit { get; set; }
 
     // ── Range parameter set ──────────────────────────────────────────────────
@@ -95,14 +95,14 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     /// Gets or sets the starting committish for a range diff.
     /// </summary>
     [Parameter(Mandatory = true, Position = 0, ParameterSetName = RangeParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? FromCommit { get; set; }
 
     /// <summary>
     /// Gets or sets the ending committish for a range diff.
     /// </summary>
     [Parameter(Mandatory = true, Position = 1, ParameterSetName = RangeParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? ToCommit { get; set; }
 
     // ── Options parameter set ────────────────────────────────────────────────

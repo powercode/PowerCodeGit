@@ -127,7 +127,7 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     /// When omitted, the walk starts from <c>HEAD</c>.
     /// </summary>
     [Parameter]
-    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true)]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? From { get; set; }
 
     /// <summary>
