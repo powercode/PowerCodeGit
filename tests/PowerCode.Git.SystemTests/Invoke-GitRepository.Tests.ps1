@@ -205,3 +205,64 @@ Describe 'Invoke-GitRepository — ref counting with explicit RepoPath' {
         $Result.HeadSha  | Should -Match '^[0-9a-f]{40}$'
     }
 }
+
+# ── Type Accelerators ─────────────────────────────────────────────────────────
+
+Describe 'Type accelerators — LibGit2Sharp types resolve after module import' {
+
+    It '[GitSignature] resolves to a Type' {
+        [GitSignature] | Should -Not -BeNullOrEmpty
+        ([GitSignature].FullName) | Should -Be 'LibGit2Sharp.Signature'
+    }
+
+    It '[GitIdentity] resolves to a Type' {
+        [GitIdentity] | Should -Not -BeNullOrEmpty
+        ([GitIdentity].FullName) | Should -Be 'LibGit2Sharp.Identity'
+    }
+
+    It '[GitObjectId] resolves to a Type' {
+        [GitObjectId] | Should -Not -BeNullOrEmpty
+        ([GitObjectId].FullName) | Should -Be 'LibGit2Sharp.ObjectId'
+    }
+
+    It '[GitMergeOptions] resolves to a Type' {
+        [GitMergeOptions] | Should -Not -BeNullOrEmpty
+        ([GitMergeOptions].FullName) | Should -Be 'LibGit2Sharp.MergeOptions'
+    }
+
+    It '[GitCheckoutOptions] resolves to a Type' {
+        [GitCheckoutOptions] | Should -Not -BeNullOrEmpty
+        ([GitCheckoutOptions].FullName) | Should -Be 'LibGit2Sharp.CheckoutOptions'
+    }
+
+    It '[GitStageOptions] resolves to a Type' {
+        [GitStageOptions] | Should -Not -BeNullOrEmpty
+        ([GitStageOptions].FullName) | Should -Be 'LibGit2Sharp.StageOptions'
+    }
+}
+
+Describe 'Type accelerators — construct LibGit2Sharp objects in ScriptBlocks' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+    }
+
+    It 'Constructs a GitSignature inside Invoke-GitRepository' {
+        $Result = Invoke-GitRepository -RepoPath $script:RepoPath -Action {
+            $sig = [GitSignature]::new('Test User', 'test@example.com', [DateTimeOffset]::Now)
+            $sig.Name
+        }
+        $Result | Should -Be 'Test User'
+    }
+
+    It 'Constructs a GitIdentity inside Invoke-GitRepository' {
+        $Result = Invoke-GitRepository -RepoPath $script:RepoPath -Action {
+            $id = [GitIdentity]::new('Bot', 'bot@example.com')
+            $id.Name
+        }
+        $Result | Should -Be 'Bot'
+    }
+}
