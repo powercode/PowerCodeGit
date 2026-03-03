@@ -1,3 +1,4 @@
+<!-- Synced from: https://github.com/powercode/awesome-copilot/blob/main/instructions/csharp.instructions.md -->
 ---
 description: 'Guidelines for building C# applications'
 applyTo: '**/*.cs'

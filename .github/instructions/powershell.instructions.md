@@ -1,3 +1,4 @@
+<!-- Synced from: https://github.com/powercode/awesome-copilot/blob/main/instructions/powershell.instructions.md -->
 ---
 applyTo: '**/*.ps1,**/*.psm1'
 description: 'PowerShell cmdlet and scripting best practices based on Microsoft guidelines'
