@@ -32,6 +32,7 @@ internal static class DependencyContext
     private const string ConfigServiceTypeName = "PowerCode.Git.Core.Services.GitConfigService";
     private const string CommitSearchServiceTypeName = "PowerCode.Git.Core.Services.GitCommitSearchService";
     private const string TreeComparisonServiceTypeName = "PowerCode.Git.Core.Services.GitTreeComparisonService";
+    private const string HistoryRewriteServiceTypeName = "PowerCode.Git.Core.Services.GitHistoryRewriteService";
 
     private static readonly object Gate = new();
     private static PowerCodeGitDependencyLoadContext? loadContext;
@@ -143,6 +144,7 @@ internal static class DependencyContext
             var t when t == typeof(IGitConfigService) => ConfigServiceTypeName,
             var t when t == typeof(IGitCommitSearchService) => CommitSearchServiceTypeName,
             var t when t == typeof(IGitTreeComparisonService) => TreeComparisonServiceTypeName,
+            var t when t == typeof(IGitHistoryRewriteService) => HistoryRewriteServiceTypeName,
             _ => throw new NotSupportedException($"No mapping for service type '{typeof(T).FullName}'")
         };
     }

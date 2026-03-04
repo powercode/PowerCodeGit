@@ -46,6 +46,7 @@
         'Select-GitCommit'
         'Get-GitPromptStatus'
         'Compare-GitTree'
+        'Edit-GitHistory'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

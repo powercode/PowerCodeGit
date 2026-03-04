@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
 using System.Threading;
 using PowerCode.Git.Abstractions.Models;
@@ -213,19 +211,5 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     /// The commit is injected into the ScriptBlock scope as a <c>$commit</c> variable
     /// and is also available as <c>$args[0]</c>.
     /// </summary>
-    internal Func<object, bool>? BuildPredicate()
-    {
-        if (Where is null)
-        {
-            return null;
-        }
-
-        var scriptBlock = Where;
-        return commit =>
-        {
-            var variables = new List<PSVariable> { new PSVariable("commit", commit) };
-            var results = scriptBlock.InvokeWithContext(null, variables, commit);
-            return results.Count > 0 && LanguagePrimitives.IsTrue(results.First());
-        };
-    }
+    internal Func<object, bool>? BuildPredicate() => Where?.ToPredicate("commit");
 }
