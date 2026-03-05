@@ -11,6 +11,20 @@ internal sealed class StubGitRemoteService : IGitRemoteService
     public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>
         Array.Empty<GitRemoteInfo>();
 
+    public IReadOnlyList<GitRemoteInfo> GetRemotes(GitRemoteListOptions options) =>
+        Array.Empty<GitRemoteInfo>();
+
+    public GitRemoteInfo AddRemote(GitRemoteAddOptions options) =>
+        new(options.Name, options.Url, options.PushUrl ?? options.Url);
+
+    public void RemoveRemote(GitRemoteRemoveOptions options) { }
+
+    public GitRemoteInfo RenameRemote(string repositoryPath, string oldName, string newName) =>
+        new(newName, string.Empty, string.Empty);
+
+    public GitRemoteInfo UpdateRemoteUrl(GitRemoteUpdateOptions options) =>
+        new(options.Name, options.Url ?? string.Empty, options.PushUrl ?? options.Url ?? string.Empty);
+
     public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
         options.LocalPath ?? "cloned-repo";
 
