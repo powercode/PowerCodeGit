@@ -59,8 +59,10 @@ public sealed class GitHistoryRewriteService : IGitHistoryRewriteService
         // Simulate first so we can skip the destructive rewrite when nothing would change.
         // LibGit2Sharp's RewriteHistory rewrites every commit (new SHAs) even when callbacks
         // return identical values, so calling it unnecessarily would silently corrupt history.
+        // Exception: when a tagNameRewriter is provided we must always call RewriteHistory so
+        // that the tag renaming takes effect even if no commits themselves are modified.
         var preview = SimulateDryRun(commitsToRewrite, commitFilter, treeFilter, parentsRewriter, cancellationToken);
-        if (preview.Count == 0)
+        if (preview.Count == 0 && tagNameRewriter is null)
         {
             return [];
         }
@@ -375,7 +377,28 @@ public sealed class GitHistoryRewriteService : IGitHistoryRewriteService
             .Distinct()
             .ToList();
 
-        return QueryCommitsTopological(repository, tipCommits);
+        // Exclude commits that are also reachable from refs we are NOT rewriting, mirroring
+        // git-filter-branch behaviour: only commits exclusive to the targeted refs are touched.
+        // This prevents LibGit2Sharp from updating unrelated branches that share ancestors.
+        var targetedShas = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var tip in tipCommits)
+            targetedShas.Add(tip.Sha);
+
+        var excludedTips = repository.Branches
+            .Where(b => !b.IsRemote && b.Tip is not null)
+            .Where(b => !targetedShas.Contains(b.Tip.Sha)
+                        && !refs.Contains(b.FriendlyName, StringComparer.Ordinal)
+                        && !refs.Contains(b.CanonicalName, StringComparer.Ordinal))
+            .Select(b => b.Tip)
+            .ToList();
+
+        var filter = new CommitFilter
+        {
+            SortBy = CommitSortStrategies.Topological | CommitSortStrategies.Reverse,
+            IncludeReachableFrom = tipCommits,
+            ExcludeReachableFrom = excludedTips.Count > 0 ? excludedTips : null,
+        };
+        return repository.Commits.QueryBy(filter).ToList();
     }
 
     private static IReadOnlyList<Commit> GatherCommitsByLocalBranches(Repository repository)
@@ -402,11 +425,20 @@ public sealed class GitHistoryRewriteService : IGitHistoryRewriteService
 
     private static Commit? ResolveRef(Repository repository, string refName)
     {
-        // Try as a direct ref name first, then as a branch, tag, or committish.
-        var gitRef = repository.Refs[refName];
-        if (gitRef is not null)
+        // Try as a fully-qualified ref name first, then fall back to branch/tag/committish.
+        // repository.Refs[] throws InvalidSpecificationException for short names like "feature",
+        // so we guard the lookup and silently continue to the branch-based fallbacks.
+        try
         {
-            return repository.Lookup<Commit>(gitRef.TargetIdentifier);
+            var gitRef = repository.Refs[refName];
+            if (gitRef is not null)
+            {
+                return repository.Lookup<Commit>(gitRef.TargetIdentifier);
+            }
+        }
+        catch (InvalidSpecificationException)
+        {
+            // refName is not a valid fully-qualified ref; fall through to branch/tag lookup.
         }
 
         var branch = repository.Branches[refName];
