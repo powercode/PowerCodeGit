@@ -109,7 +109,7 @@ public sealed class GitBranchServiceTests
         {
             var service = new GitBranchService();
 
-                Assert.Throws<ArgumentException>(() => service.SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = string.Empty }));
+            Assert.Throws<ArgumentException>(() => service.SwitchBranch(new GitSwitchOptions { RepositoryPath = repositoryPath, BranchName = string.Empty }));
         }
         finally
         {
@@ -343,7 +343,8 @@ public sealed class GitBranchServiceTests
     }
 
     [TestMethod]
-    public void GetBranches_OptionsWithNoFilters_ReturnsAllLocalBranches()    {
+    public void GetBranches_OptionsWithNoFilters_ReturnsAllLocalBranches()
+    {
         var repositoryPath = CreateRepositoryWithBranches();
 
         try

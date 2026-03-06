@@ -43,7 +43,7 @@ public sealed class GitScriptBlockCompleterAttribute : ArgumentCompleterFactoryA
     /// </summary>
     /// <param name="CompletionText">
     /// The ScriptBlock literal inserted on selection (e.g.
-    /// <c>{ $args[0].Author.Name -eq 'name' }</c>).
+    /// <c>{ $commit.Author.Name -eq 'name' }</c>).
     /// </param>
     /// <param name="ListItemText">
     /// Short label shown in the completion list (e.g. "Author name equals").
@@ -154,32 +154,33 @@ public sealed class GitScriptBlockCompleterAttribute : ArgumentCompleterFactoryA
 
     /// <summary>
     /// Example predicates for <c>Select-GitCommit -Where</c> demonstrating
-    /// properties available on the raw <c>LibGit2Sharp.Commit</c> object.
+    /// properties available on the raw <c>LibGit2Sharp.Commit</c> object
+    /// via the injected <c>$commit</c> variable.
     /// </summary>
     internal static readonly IReadOnlyList<Example> SelectGitCommitWhereExamples =
     [
-        new("{ $args[0].Author.Name -eq 'name' }",
+        new("{ $commit.Author.Name -eq 'name' }",
             "Author name equals",
             "Filter commits by exact author name. Replace 'name' with the desired author."),
-        new("{ $args[0].Author.Email -like '*@domain.com' }",
+        new("{ $commit.Author.Email -like '*@domain.com' }",
             "Author email domain",
             "Filter commits by author email domain. Replace 'domain.com' with the desired domain."),
-        new("{ $args[0].Author.When.DateTime -gt (Get-Date).AddDays(-7) }",
+        new("{ $commit.Author.When.DateTime -gt (Get-Date).AddDays(-7) }",
             "Authored in last 7 days",
             "Filter commits authored within the last 7 days. Adjust AddDays(-7) for a different window."),
-        new("{ $args[0].Committer.Name -ne $args[0].Author.Name }",
+        new("{ $commit.Committer.Name -ne $commit.Author.Name }",
             "Committer differs from author",
             "Find commits where the committer is not the same person as the author (e.g. cherry-picks, rebases)."),
-        new("{ $args[0].Parents.Count() -gt 1 }",
+        new("{ $commit.Parents.Count() -gt 1 }",
             "Merge commits",
             "Find merge commits — commits with more than one parent."),
-        new("{ $args[0].Parents.Count() -eq 1 }",
+        new("{ $commit.Parents.Count() -eq 1 }",
             "Non-merge commits",
             "Exclude merge commits — only return commits with exactly one parent."),
-        new("{ $args[0].MessageShort -match 'pattern' }",
+        new("{ $commit.MessageShort -match 'pattern' }",
             "Message matches regex",
             "Filter commits whose short message matches a regular expression. Replace 'pattern' with the desired regex."),
-        new("{ $args[0].Message -match '(?m)^BREAKING CHANGE:' }",
+        new("{ $commit.Message -match '(?m)^BREAKING CHANGE:' }",
             "Breaking changes",
             "Find commits with a 'BREAKING CHANGE:' trailer in the full commit message."),
     ];

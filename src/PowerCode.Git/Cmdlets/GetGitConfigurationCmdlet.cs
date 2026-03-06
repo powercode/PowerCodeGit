@@ -58,7 +58,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
     public GitConfigScope? Scope { get; set; }
-    
+
     /// <summary>
     /// Gets or sets a pre-built <see cref="GitConfigGetOptions"/> instance.
     /// When specified, all other parameters are ignored.
@@ -85,7 +85,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
         {
             RepositoryPath = ResolveRepositoryPath(currentFileSystemPath),
             Name = Name,
-            Scope = Scope,            
+            Scope = Scope,
         };
     }
 

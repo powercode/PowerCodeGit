@@ -83,6 +83,18 @@ internal static class ServiceFactory
     public static IGitCommitSearchService CreateGitCommitSearchService() => DependencyContext.CreateService<IGitCommitSearchService>();
 
     /// <summary>
+    /// Creates a git tree comparison service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitTreeComparisonService"/> instance.</returns>
+    public static IGitTreeComparisonService CreateGitTreeComparisonService() => DependencyContext.CreateService<IGitTreeComparisonService>();
+
+    /// <summary>
+    /// Creates a git history rewrite service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitHistoryRewriteService"/> instance.</returns>
+    public static IGitHistoryRewriteService CreateGitHistoryRewriteService() => DependencyContext.CreateService<IGitHistoryRewriteService>();
+
+    /// <summary>
     /// Creates a <c>LibGit2Sharp.Repository</c> instance from the isolated
     /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
     /// </summary>

@@ -243,3 +243,68 @@ Describe 'Get-GitStatus -Options' {
         $Status.CurrentBranch | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Get-GitStatus branch tracking' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+
+        Push-Location -Path $script:RepoPath
+        try {
+            # Set up a bare remote and push to it so we have an upstream
+            $script:RemotePath = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "remote-$(New-Guid)"
+            git clone --bare . $script:RemotePath 2>&1 | Out-Null
+            git remote add origin $script:RemotePath 2>&1 | Out-Null
+            git fetch origin 2>&1 | Out-Null
+            git branch --set-upstream-to=origin/main main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path $script:RemotePath) {
+            Remove-Item -Path $script:RemotePath -Recurse -Force
+        }
+    }
+
+    It 'Reports the tracked branch name' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.TrackedBranchName | Should -BeExactly 'origin/main'
+    }
+
+    It 'Reports zero ahead/behind when up to date' {
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.AheadBy | Should -Be 0
+        $Status.BehindBy | Should -Be 0
+    }
+
+    It 'Reports ahead count after a local commit' {
+        Push-Location -Path $script:RepoPath
+        try {
+            Set-Content -Path 'ahead.txt' -Value 'new'
+            git add ahead.txt 2>&1 | Out-Null
+            git commit -m 'Local commit' 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $Status = Get-GitStatus -RepoPath $script:RepoPath
+        $Status.AheadBy | Should -BeGreaterOrEqual 1
+    }
+
+    It 'Has null tracking info when no upstream is configured' {
+        $LocalOnly = New-TestGitRepository -CommitMessages @('No remote')
+        try {
+            $Status = Get-GitStatus -RepoPath $LocalOnly
+            $Status.TrackedBranchName | Should -BeNullOrEmpty
+            $Status.AheadBy | Should -BeNullOrEmpty
+            $Status.BehindBy | Should -BeNullOrEmpty
+        }
+        finally {
+            Remove-TestGitRepository -Path $LocalOnly
+        }
+    }
+}

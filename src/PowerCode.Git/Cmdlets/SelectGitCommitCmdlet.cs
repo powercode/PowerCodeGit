@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
 using System.Threading;
 using PowerCode.Git.Abstractions.Models;
@@ -32,8 +30,9 @@ namespace PowerCode.Git.Cmdlets;
 ///   </item>
 ///   <item>
 ///     <description><b>Where</b> — filters via an arbitrary PowerShell ScriptBlock. The
-///     block receives the raw <c>LibGit2Sharp.Commit</c> as <c>$args[0]</c>, giving access
-///     to the full LibGit2Sharp object graph (Author, Tree, Parents, Notes, etc.).</description>
+///     block receives the raw <c>LibGit2Sharp.Commit</c> as both a <c>$commit</c> variable
+///     and <c>$args[0]</c>, giving access to the full LibGit2Sharp object graph
+///     (Author, Tree, Parents, Notes, etc.).</description>
 ///   </item>
 /// </list>
 /// <para>
@@ -107,8 +106,8 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
 
     /// <summary>
     /// Gets or sets a ScriptBlock predicate. The block receives the raw
-    /// <c>LibGit2Sharp.Commit</c> as <c>$args[0]</c>. Return <see langword="$true"/>
-    /// to include the commit in results.
+    /// <c>LibGit2Sharp.Commit</c> as an injected <c>$commit</c> variable and as
+    /// <c>$args[0]</c>. Return <see langword="$true"/> to include the commit in results.
     /// </summary>
     [Parameter(Mandatory = true, ParameterSetName = WhereParameterSet)]
     [GitScriptBlockCompleter]
@@ -126,7 +125,7 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     /// When omitted, the walk starts from <c>HEAD</c>.
     /// </summary>
     [Parameter]
-    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true)]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? From { get; set; }
 
     /// <summary>
@@ -209,19 +208,8 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     /// <summary>
     /// Wraps the <see cref="Where"/> ScriptBlock as a <c>Func&lt;object, bool&gt;</c>
     /// predicate, or returns <see langword="null"/> when no ScriptBlock was supplied.
+    /// The commit is injected into the ScriptBlock scope as a <c>$commit</c> variable
+    /// and is also available as <c>$args[0]</c>.
     /// </summary>
-    internal Func<object, bool>? BuildPredicate()
-    {
-        if (Where is null)
-        {
-            return null;
-        }
-
-        var scriptBlock = Where;
-        return commit =>
-        {
-            var results = scriptBlock.InvokeWithContext(null, [], commit);
-            return results.Count > 0 && LanguagePrimitives.IsTrue(results.First());
-        };
-    }
+    internal Func<object, bool>? BuildPredicate() => Where?.ToPredicate("commit");
 }

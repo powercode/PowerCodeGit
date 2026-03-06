@@ -131,7 +131,7 @@ public sealed class GitConfigServiceTests
             var entries = service.GetConfigEntries(new GitConfigGetOptions
             {
                 RepositoryPath = repoPath,
-                Scope = GitConfigScope.Local,                
+                Scope = GitConfigScope.Local,
             });
 
             var match = entries.FirstOrDefault(e => e.Name == "user.name");
@@ -232,7 +232,7 @@ public sealed class GitConfigServiceTests
             {
                 RepositoryPath = repoPath,
                 Name = "user.name",
-                Scope = GitConfigScope.Local,                
+                Scope = GitConfigScope.Local,
             });
 
             Assert.IsNotNull(entry);

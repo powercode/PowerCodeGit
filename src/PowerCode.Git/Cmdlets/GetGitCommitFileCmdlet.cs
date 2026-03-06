@@ -43,7 +43,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     /// neither this parameter nor <see cref="InputObject"/> is specified.
     /// </summary>
     [Parameter(Position = 0, ParameterSetName = CommitParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Commit { get; set; }
 
     /// <summary>

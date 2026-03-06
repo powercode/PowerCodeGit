@@ -159,14 +159,8 @@ public sealed class SendGitBranchCmdlet : GitCmdlet
                 return;
             }
 
-            var result = remoteService.Push(options, (percent, message) =>
-            {
-                var progressRecord = new ProgressRecord(1, "Pushing to remote", message)
-                {
-                    PercentComplete = percent,
-                };
-                WriteProgress(progressRecord);
-            });
+            using var progress = new ProgressWriter(WriteProgress, 1, "Pushing to remote");
+            var result = remoteService.Push(options, progress.AsCallback());
 
             WriteObject(result);
         }

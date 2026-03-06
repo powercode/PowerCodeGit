@@ -222,7 +222,8 @@ public sealed class GitTagServiceTests
         }
     }
 
-    private static string CreateRepositoryWithCommit()    {
+    private static string CreateRepositoryWithCommit()
+    {
         var repositoryPath = CreateTemporaryDirectory();
         Repository.Init(repositoryPath);
 

@@ -76,4 +76,25 @@ public interface IGitWorkingTreeService
     /// </summary>
     /// <param name="options">The hunk restore options.</param>
     void RestoreHunks(GitRestoreHunkOptions options);
+
+    /// <summary>
+    /// Gets the number of stash entries in the repository.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <returns>
+    /// The count of stashes, or <c>0</c> when there are no stashes or when
+    /// the repository does not support stashes.
+    /// </returns>
+    int GetStashCount(string repositoryPath) => 0;
+
+    /// <summary>
+    /// Gets a lightweight snapshot of repository state optimised for shell prompt generation.
+    /// All data is gathered in a single repository open to minimise I/O overhead.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <returns>
+    /// A <see cref="GitWorkingTreePromptInfo"/> containing branch name, tracking status,
+    /// working-tree counts, and stash count.
+    /// </returns>
+    GitWorkingTreePromptInfo GetPromptInfo(string repositoryPath);
 }

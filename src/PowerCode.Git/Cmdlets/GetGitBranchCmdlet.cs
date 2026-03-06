@@ -62,7 +62,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Equivalent to <c>git branch --contains &lt;commit&gt;</c>.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Contains { get; set; }
 
     /// <summary>
@@ -70,7 +70,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Equivalent to <c>git branch --merged [&lt;commit&gt;]</c>.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? Merged { get; set; }
 
     /// <summary>
@@ -78,7 +78,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// Equivalent to <c>git branch --no-merged [&lt;commit&gt;]</c>.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeTags = true, IncludeRelativeRefs = true)]
     public string? NoMerged { get; set; }
 
     /// <summary>
@@ -87,6 +87,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet, Position = 0)]
     [SupportsWildcards]
+    [GitBranchCompleter(IncludeRemote = true)]
     public string[]? Include { get; set; }
 
     /// <summary>
@@ -95,6 +96,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
     [SupportsWildcards]
+    [GitBranchCompleter(IncludeRemote = true)]
     public string[]? Exclude { get; set; }
 
     /// <summary>
@@ -104,7 +106,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
     /// <see cref="GitBranchInfo.ReferenceComparison"/> property populated.
     /// </summary>
     [Parameter(ParameterSetName = ListParameterSet)]
-    [GitCommittishCompleter]
+    [GitBranchCompleter(IncludeRemote = true)]
     public string? ReferenceBranch { get; set; }
 
     /// <summary>

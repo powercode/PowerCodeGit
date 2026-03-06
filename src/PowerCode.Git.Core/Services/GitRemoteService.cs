@@ -27,6 +27,145 @@ public sealed class GitRemoteService : IGitRemoteService
     }
 
     /// <inheritdoc/>
+    public IReadOnlyList<GitRemoteInfo> GetRemotes(GitRemoteListOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateRepositoryPath(options.RepositoryPath, nameof(options));
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        if (options.Name is not null)
+        {
+            var remote = repository.Network.Remotes[options.Name];
+            return remote is null
+                ? []
+                : [new GitRemoteInfo(remote.Name, remote.Url, remote.PushUrl ?? remote.Url)];
+        }
+
+        return repository.Network.Remotes
+            .Select(remote => new GitRemoteInfo(remote.Name, remote.Url, remote.PushUrl ?? remote.Url))
+            .ToList();
+    }
+
+    /// <inheritdoc/>
+    public GitRemoteInfo AddRemote(GitRemoteAddOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateRepositoryPath(options.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Remote name is required.");
+        RepositoryGuard.ValidateRequiredString(options.Url, nameof(options), "Remote URL is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        // Add the remote with its fetch URL
+        repository.Network.Remotes.Add(options.Name, options.Url);
+
+        // Set a separate push URL if specified
+        if (options.PushUrl is not null)
+        {
+            repository.Network.Remotes.Update(options.Name, r => r.PushUrl = options.PushUrl);
+        }
+
+        var created = repository.Network.Remotes[options.Name]!;
+        return new GitRemoteInfo(created.Name, created.Url, created.PushUrl ?? created.Url);
+    }
+
+    /// <inheritdoc/>
+    public void RemoveRemote(GitRemoteRemoveOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateRepositoryPath(options.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Remote name is required.");
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var existing = repository.Network.Remotes[options.Name];
+        if (existing is null)
+        {
+            throw new ArgumentException($"Remote '{options.Name}' does not exist.", nameof(options));
+        }
+
+        repository.Network.Remotes.Remove(options.Name);
+    }
+
+    /// <inheritdoc/>
+    public GitRemoteInfo RenameRemote(string repositoryPath, string oldName, string newName)
+    {
+        RepositoryGuard.ValidateRepositoryPath(repositoryPath, nameof(repositoryPath));
+        RepositoryGuard.ValidateRequiredString(oldName, nameof(oldName), "Old remote name is required.");
+        RepositoryGuard.ValidateRequiredString(newName, nameof(newName), "New remote name is required.");
+
+        using var repository = new Repository(repositoryPath);
+
+        var existing = repository.Network.Remotes[oldName];
+        if (existing is null)
+        {
+            throw new ArgumentException($"Remote '{oldName}' does not exist.", nameof(oldName));
+        }
+
+        // Normalize Windows-style backslash paths to forward slashes before renaming.
+        // git.exe on Windows stores local paths with unescaped backslashes in .git/config,
+        // which is valid for git.exe but triggers "invalid escape" errors in libgit2's
+        // stricter config parser during the rename operation. Remotes.Update() does not
+        // share this problem and is used here as a pre-pass to sanitize the stored URL.
+        bool urlHasBackslash = existing.Url?.Contains('\\') ?? false;
+        bool pushUrlHasBackslash = existing.PushUrl?.Contains('\\') ?? false;
+        if (urlHasBackslash || pushUrlHasBackslash)
+        {
+            repository.Network.Remotes.Update(oldName, updater =>
+            {
+                if (urlHasBackslash) updater.Url = existing.Url!.Replace('\\', '/');
+                if (pushUrlHasBackslash) updater.PushUrl = existing.PushUrl!.Replace('\\', '/');
+            });
+        }
+
+        // Ignore rename problems (stale non-default refspecs) — git remote rename warns about these
+        // but does not fail. We follow the same behaviour.
+        repository.Network.Remotes.Rename(oldName, newName, _ => { });
+
+        var renamed = repository.Network.Remotes[newName]!;
+        return new GitRemoteInfo(renamed.Name, renamed.Url, renamed.PushUrl ?? renamed.Url);
+    }
+
+    /// <inheritdoc/>
+    public GitRemoteInfo UpdateRemoteUrl(GitRemoteUpdateOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        RepositoryGuard.ValidateRepositoryPath(options.RepositoryPath, nameof(options));
+        RepositoryGuard.ValidateRequiredString(options.Name, nameof(options), "Remote name is required.");
+
+        if (options.Url is null && options.PushUrl is null)
+        {
+            throw new ArgumentException(
+                "At least one of Url or PushUrl must be specified.", nameof(options));
+        }
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var existing = repository.Network.Remotes[options.Name];
+        if (existing is null)
+        {
+            throw new ArgumentException($"Remote '{options.Name}' does not exist.", nameof(options));
+        }
+
+        repository.Network.Remotes.Update(options.Name, r =>
+        {
+            if (options.Url is not null)
+            {
+                r.Url = options.Url;
+            }
+
+            if (options.PushUrl is not null)
+            {
+                r.PushUrl = options.PushUrl;
+            }
+        });
+
+        var updated = repository.Network.Remotes[options.Name]!;
+        return new GitRemoteInfo(updated.Name, updated.Url, updated.PushUrl ?? updated.Url);
+    }
+
+    /// <inheritdoc/>
     public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null)
     {
         ArgumentNullException.ThrowIfNull(options, nameof(options));

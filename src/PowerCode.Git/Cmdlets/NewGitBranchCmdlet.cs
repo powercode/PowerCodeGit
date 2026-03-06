@@ -54,7 +54,7 @@ public sealed class NewGitBranchCmdlet : GitCmdlet
     /// Equivalent to the <c>[&lt;start-point&gt;]</c> argument of <c>git branch</c>.
     /// </summary>
     [Parameter(Position = 1, ParameterSetName = CreateParameterSet)]
-    [GitCommittishCompleter]
+    [GitCommittishCompleter(IncludeBranches = true, IncludeRemoteBranches = true, IncludeRelativeRefs = true)]
     public string? StartPoint { get; set; }
 
     /// <summary>

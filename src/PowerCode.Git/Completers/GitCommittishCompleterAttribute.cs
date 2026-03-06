@@ -136,7 +136,8 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
 
                 if (includeRelativeRefs)
                 {
-                    results.AddRange(GetRelativeRefCompletions(wordToComplete));
+                    var headCommits = GetHeadCommits(repositoryPath);
+                    results.AddRange(GetRelativeRefCompletions(wordToComplete, headCommits));
                 }
 
                 if (includeBranches && branchService is not null)
@@ -170,13 +171,65 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
 
             var commits = historyService.GetLog(options);
 
-            return commits
-                .Where(c => MatchesCommit(c, wordToComplete))
-                .Select(c => new CompletionResult(
-                    c.ShortSha,
-                    $"{c.ShortSha} {c.MessageShort}",
+            foreach (var commit in commits)
+            {
+                // Collect logical names (branches, tags, HEAD) from this commit's
+                // decorations that are NOT already offered by the dedicated branch/tag
+                // completers.  HEAD is always uncovered because no dedicated completer
+                // offers it.
+                var logicalNames = commit.Decorations
+                    .Where(d => d.Type is GitDecorationType.Head
+                             || (d.Type is GitDecorationType.LocalBranch && !includeBranches)
+                             || (d.Type is GitDecorationType.RemoteBranch && !includeRemoteBranches)
+                             || (d.Type is GitDecorationType.Tag && !includeTags))
+                    .Select(d => d.Name)
+                    .ToList();
+
+                // Check logical names first — they take priority over SHA and must be
+                // evaluated before MatchesCommit so that prefix-typing a ref name
+                // (e.g. "ma" for "main") still surfaces the commit.
+                var nameMatches = logicalNames
+                    .Where(n => string.IsNullOrEmpty(wordToComplete)
+                             || n.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (nameMatches.Count > 0)
+                {
+                    // Prefer logical names over the raw SHA.
+                    foreach (var name in nameMatches)
+                    {
+                        yield return new CompletionResult(
+                            name,
+                            $"{name} {commit.MessageShort}",
+                            CompletionResultType.ParameterValue,
+                            $"{name} - {commit.MessageShort} ({commit.AuthorName}, {commit.AuthorDate:yyyy-MM-dd})");
+                    }
+                    continue; // Don't also emit the SHA for this commit.
+                }
+
+                // No logical name matched; fall back to SHA / message matching.
+                if (!MatchesCommit(commit, wordToComplete))
+                    continue;
+
+                // Every decoration is already covered by the dedicated branch/tag completers.
+                // Only emit the SHA when the user is explicitly typing a SHA prefix to avoid
+                // duplicating completions already offered above.
+                if (commit.Decorations.Count > 0 && logicalNames.Count == 0)
+                {
+                    var shaPrefix = !string.IsNullOrEmpty(wordToComplete)
+                        && (commit.ShortSha.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase)
+                            || commit.Sha.StartsWith(wordToComplete, StringComparison.OrdinalIgnoreCase));
+
+                    if (!shaPrefix)
+                        continue;
+                }
+
+                yield return new CompletionResult(
+                    commit.ShortSha,
+                    $"{commit.ShortSha} {commit.MessageShort}",
                     CompletionResultType.ParameterValue,
-                    $"{c.ShortSha} - {c.MessageShort} ({c.AuthorName}, {c.AuthorDate:yyyy-MM-dd})"));
+                    $"{commit.ShortSha} - {commit.MessageShort} ({commit.AuthorName}, {commit.AuthorDate:yyyy-MM-dd})");
+            }
         }
 
         private IEnumerable<CompletionResult> GetBranchCompletions(string repositoryPath, string wordToComplete)
@@ -206,18 +259,37 @@ public sealed class GitCommittishCompleterAttribute : ArgumentCompleterFactoryAt
                     t.IsAnnotated ? $"Tag: {t.Name} ({t.Message})" : $"Tag: {t.Name}"));
         }
 
-        private static IEnumerable<CompletionResult> GetRelativeRefCompletions(string wordToComplete)
+        private IReadOnlyList<GitCommitInfo> GetHeadCommits(string repositoryPath)
+        {
+            var options = new GitLogOptions
+            {
+                RepositoryPath = repositoryPath,
+                MaxCount = MaxRelativeDepth + 1,
+                AllBranches = false,
+            };
+            return historyService.GetLog(options);
+        }
+
+        private static IEnumerable<CompletionResult> GetRelativeRefCompletions(
+            string wordToComplete, IReadOnlyList<GitCommitInfo> headCommits)
         {
             var refs = new List<CompletionResult>();
 
-            // HEAD^ (parent of HEAD)
-            AddIfMatches(refs, "HEAD^", "HEAD^ — parent of HEAD", wordToComplete);
+            // HEAD^ (parent of HEAD) = ancestor at index 1
+            var parent = headCommits.Count > 1 ? headCommits[1] : null;
+            var caretTooltip = parent is not null
+                ? $"HEAD^ — {parent.ShortSha} {parent.MessageShort}"
+                : "HEAD^ — parent of HEAD";
+            AddIfMatches(refs, "HEAD^", caretTooltip, wordToComplete);
 
             // HEAD~1 through HEAD~N
             for (var i = 1; i <= MaxRelativeDepth; i++)
             {
                 var refText = $"HEAD~{i}";
-                var tooltip = $"{refText} — {i} commit{(i > 1 ? "s" : "")} before HEAD";
+                var commit = headCommits.Count > i ? headCommits[i] : null;
+                var tooltip = commit is not null
+                    ? $"{refText} — {commit.ShortSha} {commit.MessageShort}"
+                    : $"{refText} — {i} commit{(i > 1 ? "s" : "")} before HEAD";
                 AddIfMatches(refs, refText, tooltip, wordToComplete);
             }
 

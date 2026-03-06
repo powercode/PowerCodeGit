@@ -28,7 +28,7 @@ public sealed class GitConfigGetOptions
     {
         var parts = new System.Collections.Generic.List<string>();
         if (Name is not null) parts.Add($"Name={Name}");
-        if (Scope.HasValue) parts.Add($"Scope={Scope.Value}");        
+        if (Scope.HasValue) parts.Add($"Scope={Scope.Value}");
         return $"GitConfigGetOptions({string.Join(", ", parts)})";
     }
 }

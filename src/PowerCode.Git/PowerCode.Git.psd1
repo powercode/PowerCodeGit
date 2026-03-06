@@ -18,6 +18,10 @@
         'Get-GitTag'
         'Set-GitTag'
         'Remove-GitTag'
+        'Get-GitRemote'
+        'New-GitRemote'
+        'Set-GitRemote'
+        'Remove-GitRemote'
         'Add-GitItem'
         'Save-GitCommit'
         'Invoke-GitRepository'
@@ -44,6 +48,9 @@
         'Get-GitModuleConfiguration'
         'Set-GitModuleConfiguration'
         'Select-GitCommit'
+        'Get-GitPromptStatus'
+        'Compare-GitTree'
+        'Edit-GitHistory'
     )
     FunctionsToExport    = @()
     AliasesToExport      = @()

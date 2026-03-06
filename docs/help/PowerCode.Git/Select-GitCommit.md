@@ -53,7 +53,7 @@ Three parameter sets are available, following the same operator convention as `W
 
 - **Match** — matches commits whose diff against the first parent contains a line matching a .NET regular expression (e.g. `-Match 'TODO|FIXME'`). Equivalent to `git log -G <pattern>`.
 
-- **Where** — filters commits using an arbitrary PowerShell ScriptBlock. The block receives the raw `LibGit2Sharp.Commit` as `$args[0]`, which exposes the full object graph including `Author`, `Committer`, `Tree`, `Parents`, and `Notes`.
+- **Where** — filters commits using an arbitrary PowerShell ScriptBlock. The block receives the raw `LibGit2Sharp.Commit` as the `$commit` variable, which exposes the full object graph including `Author`, `Committer`, `Tree`, `Parents`, and `Notes`.
 
 `-Where` can be combined with either `-Contains` or `-Match`: the diff filter runs first, and the ScriptBlock predicate is only evaluated on the commits that survive it.
 
@@ -102,10 +102,10 @@ Select-GitCommit -Contains 'FIXME' -First 2
 
 ### Example 5 — Filter by author using -Where
 
-Returns every commit authored by Alice. The `-Where` ScriptBlock receives the raw `LibGit2Sharp.Commit` as `$args[0]`, mirroring `Where-Object` semantics.
+Returns every commit authored by Alice. The `-Where` ScriptBlock receives the raw `LibGit2Sharp.Commit` as the `$commit` variable.
 
 ```powershell
-Select-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
+Select-GitCommit -Where { $commit.Author.Name -eq 'Alice' }
 ```
 
 ### Example 6 — Combine -Contains and -Where
@@ -113,7 +113,7 @@ Select-GitCommit -Where { $args[0].Author.Name -eq 'Alice' }
 Finds commits whose diff contains `TODO` **and** that were authored by Alice. The substring filter runs first; `-Where` is only evaluated on the surviving commits.
 
 ```powershell
-Select-GitCommit -Contains 'TODO' -Where { $args[0].Author.Name -eq 'Alice' }
+Select-GitCommit -Contains 'TODO' -Where { $commit.Author.Name -eq 'Alice' }
 ```
 
 ### Example 7 — Restrict candidates to a specific file
@@ -277,7 +277,7 @@ HelpMessage: ''
 
 ### -Where
 
-A PowerShell ScriptBlock used as a per-commit predicate, following the same convention as `Where-Object -FilterScript`. The block receives the raw `LibGit2Sharp.Commit` object as `$args[0]`. Return `$true` (or any truthy value) to include the commit in results.
+A PowerShell ScriptBlock used as a per-commit predicate, following the same convention as `Where-Object -FilterScript`. The block receives the raw `LibGit2Sharp.Commit` object as an injected `$commit` variable. Return `$true` (or any truthy value) to include the commit in results.
 
 The `LibGit2Sharp.Commit` object exposes properties such as `Author`, `Committer`, `Message`, `Tree`, `Parents`, and `Notes`, giving access to the full commit object graph.
 

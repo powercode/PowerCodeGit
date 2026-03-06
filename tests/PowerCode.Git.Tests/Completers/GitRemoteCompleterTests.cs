@@ -121,6 +121,20 @@ public sealed class GitRemoteCompleterTests
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) => remotes;
 
+        public IReadOnlyList<GitRemoteInfo> GetRemotes(GitRemoteListOptions options) => remotes;
+
+        public GitRemoteInfo AddRemote(GitRemoteAddOptions options) =>
+            throw new NotImplementedException();
+
+        public void RemoveRemote(GitRemoteRemoveOptions options) =>
+            throw new NotImplementedException();
+
+        public GitRemoteInfo RenameRemote(string repositoryPath, string oldName, string newName) =>
+            throw new NotImplementedException();
+
+        public GitRemoteInfo UpdateRemoteUrl(GitRemoteUpdateOptions options) =>
+            throw new NotImplementedException();
+
         public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
             throw new NotImplementedException();
 
@@ -135,6 +149,21 @@ public sealed class GitRemoteCompleterTests
     {
         public IReadOnlyList<GitRemoteInfo> GetRemotes(string repositoryPath) =>
             throw new InvalidOperationException("Not a git repository");
+
+        public IReadOnlyList<GitRemoteInfo> GetRemotes(GitRemoteListOptions options) =>
+            throw new InvalidOperationException("Not a git repository");
+
+        public GitRemoteInfo AddRemote(GitRemoteAddOptions options) =>
+            throw new NotImplementedException();
+
+        public void RemoveRemote(GitRemoteRemoveOptions options) =>
+            throw new NotImplementedException();
+
+        public GitRemoteInfo RenameRemote(string repositoryPath, string oldName, string newName) =>
+            throw new NotImplementedException();
+
+        public GitRemoteInfo UpdateRemoteUrl(GitRemoteUpdateOptions options) =>
+            throw new NotImplementedException();
 
         public string Clone(GitCloneOptions options, Action<int, string>? onProgress = null) =>
             throw new NotImplementedException();

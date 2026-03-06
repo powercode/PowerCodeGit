@@ -31,6 +31,8 @@ internal static class DependencyContext
     private const string CommitFileServiceTypeName = "PowerCode.Git.Core.Services.GitCommitFileService";
     private const string ConfigServiceTypeName = "PowerCode.Git.Core.Services.GitConfigService";
     private const string CommitSearchServiceTypeName = "PowerCode.Git.Core.Services.GitCommitSearchService";
+    private const string TreeComparisonServiceTypeName = "PowerCode.Git.Core.Services.GitTreeComparisonService";
+    private const string HistoryRewriteServiceTypeName = "PowerCode.Git.Core.Services.GitHistoryRewriteService";
 
     private static readonly object Gate = new();
     private static PowerCodeGitDependencyLoadContext? loadContext;
@@ -70,6 +72,21 @@ internal static class DependencyContext
     }
 
     /// <summary>
+    /// Returns the LibGit2Sharp assembly loaded from the isolated AssemblyLoadContext.
+    /// </summary>
+    /// <remarks>
+    /// Used by <see cref="CreateRepository"/> and by <c>ModuleInitializer</c> to
+    /// register PowerShell type accelerators for commonly-needed LibGit2Sharp types.
+    /// The assembly is loaded once and cached by the <see cref="PowerCodeGitDependencyLoadContext"/>.
+    /// </remarks>
+    /// <returns>The LibGit2Sharp <see cref="Assembly"/> from the isolated context.</returns>
+    internal static Assembly LoadLibGit2SharpAssembly()
+    {
+        EnsureInitialized();
+        return loadContext!.LoadFromAssemblyName(new AssemblyName("LibGit2Sharp"));
+    }
+
+    /// <summary>
     /// Creates a <c>LibGit2Sharp.Repository</c> instance loaded from the isolated
     /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
     /// </summary>
@@ -93,8 +110,7 @@ internal static class DependencyContext
     /// </returns>
     internal static object CreateRepository(string repositoryPath)
     {
-        EnsureInitialized();
-        var libgit2Assembly = loadContext!.LoadFromAssemblyName(new AssemblyName("LibGit2Sharp"));
+        var libgit2Assembly = LoadLibGit2SharpAssembly();
         var repositoryType = libgit2Assembly.GetType("LibGit2Sharp.Repository")
             ?? throw new InvalidOperationException("Could not locate LibGit2Sharp.Repository type in the isolated assembly.");
         return Activator.CreateInstance(repositoryType, new object[] { repositoryPath })
@@ -127,6 +143,8 @@ internal static class DependencyContext
             var t when t == typeof(IGitCommitFileService) => CommitFileServiceTypeName,
             var t when t == typeof(IGitConfigService) => ConfigServiceTypeName,
             var t when t == typeof(IGitCommitSearchService) => CommitSearchServiceTypeName,
+            var t when t == typeof(IGitTreeComparisonService) => TreeComparisonServiceTypeName,
+            var t when t == typeof(IGitHistoryRewriteService) => HistoryRewriteServiceTypeName,
             _ => throw new NotSupportedException($"No mapping for service type '{typeof(T).FullName}'")
         };
     }
