@@ -137,14 +137,8 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
         {
             var cloneOptions = BuildOptions();
 
-            var resultPath = remoteService.Clone(cloneOptions, (percent, message) =>
-            {
-                var progressRecord = new ProgressRecord(1, "Cloning repository", message)
-                {
-                    PercentComplete = percent,
-                };
-                WriteProgress(progressRecord);
-            });
+            using var progress = new ProgressWriter(WriteProgress, 1, "Cloning repository");
+            var resultPath = remoteService.Clone(cloneOptions, progress.AsCallback());
 
             WriteObject(resultPath);
         }
