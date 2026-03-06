@@ -5,17 +5,13 @@
         "dotnet publish": true,
         "dotnet restore": true,
         "dotnet test": true,
-        "/^pwsh -NoProfile -ExecutionPolicy Bypass -Command \"& \\{ \\.\\\\scripts\\\\clean\\.ps1; dotnet build PowerCodeGit\\.slnx -v minimal \\}\"$/": {
-            "approve": true,
-            "matchCommandLine": true
-        },
-        "/^pwsh -NoProfile -ExecutionPolicy Bypass -File \\.\\\\scripts\\\\Invoke-SystemTests\\.ps1 -NoBuild$/": {
-            "approve": true,
-            "matchCommandLine": true
-        },
         ".\\scripts\\Invoke-SystemTests.ps1": true,
         "gh": true,
-        "Test-Path": true
+        "Test-Path": true,
+        "Get-Command": true,
+        "ForEach-Object": true,
+        "Get-ChildItem": true,
+        "Get-Help": true,
     },
     "FSharp.suggestGitignore": false,
     "pester.runTestsInNewProcess": true,
@@ -23,6 +19,13 @@
         {
             "pattern": "**/PowerCode.Git.Format.ps1xml",
             "systemId": "https://raw.githubusercontent.com/PowerShell/PowerShell/refs/heads/master/src/Schemas/Format.xsd"
+        }
+    ],
+    "awesome-copilot-sync.repositories": [
+        {
+            "label": "powercode/awesome-copilot",
+            "repository": "powercode/awesome-copilot",
+            "branch": "main"
         }
     ]
 }
