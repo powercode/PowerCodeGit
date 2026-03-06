@@ -1,4 +1,4 @@
-﻿using PowerCode.Git.Cmdlets;
+using PowerCode.Git.Cmdlets;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Tests.Stubs;
 

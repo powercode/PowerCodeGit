@@ -167,7 +167,7 @@ public sealed class GitDiffHunk
             }
 
             var sigil = raw[0];
-            var text  = raw.Length > 1 ? raw[1..] : string.Empty;
+            var text = raw.Length > 1 ? raw[1..] : string.Empty;
 
             switch (sigil)
             {

@@ -286,29 +286,29 @@ public sealed class GitHistoryRewriteService : IGitHistoryRewriteService
             switch (entry.TargetType)
             {
                 case TreeEntryTargetType.Blob:
-                {
-                    // Wrap the entry in a context object so the ScriptBlock can access
-                    // Path alongside the standard TreeEntry properties. Since this object
-                    // is passed as `object` across the ALC boundary, PowerShell ETS reads
-                    // its properties via reflection.
-                    var context = new TreeEntryContext(fullPath, entry.Mode.ToString(), entry.Target.Id.Sha);
-                    if (!predicate(context))
                     {
-                        treeDef.Remove(fullPath);
-                        anyRemoved = true;
+                        // Wrap the entry in a context object so the ScriptBlock can access
+                        // Path alongside the standard TreeEntry properties. Since this object
+                        // is passed as `object` across the ALC boundary, PowerShell ETS reads
+                        // its properties via reflection.
+                        var context = new TreeEntryContext(fullPath, entry.Mode.ToString(), entry.Target.Id.Sha);
+                        if (!predicate(context))
+                        {
+                            treeDef.Remove(fullPath);
+                            anyRemoved = true;
+                        }
+
+                        break;
                     }
 
-                    break;
-                }
-
                 case TreeEntryTargetType.Tree:
-                {
-                    var subtree = (Tree)entry.Target;
-                    anyRemoved |= RemoveFilteredEntries(treeDef, subtree, predicate, fullPath);
-                    break;
-                }
+                    {
+                        var subtree = (Tree)entry.Target;
+                        anyRemoved |= RemoveFilteredEntries(treeDef, subtree, predicate, fullPath);
+                        break;
+                    }
 
-                // TreeLink (submodule) entries are passed through unchanged.
+                    // TreeLink (submodule) entries are passed through unchanged.
             }
         }
 
@@ -329,26 +329,26 @@ public sealed class GitHistoryRewriteService : IGitHistoryRewriteService
             switch (entry.TargetType)
             {
                 case TreeEntryTargetType.Blob:
-                {
-                    var context = new TreeEntryContext(fullPath, entry.Mode.ToString(), entry.Target.Id.Sha);
-                    if (!predicate(context))
                     {
-                        return true;
-                    }
+                        var context = new TreeEntryContext(fullPath, entry.Mode.ToString(), entry.Target.Id.Sha);
+                        if (!predicate(context))
+                        {
+                            return true;
+                        }
 
-                    break;
-                }
+                        break;
+                    }
 
                 case TreeEntryTargetType.Tree:
-                {
-                    var subtree = (Tree)entry.Target;
-                    if (WouldRemoveAnyEntry(subtree, predicate, fullPath))
                     {
-                        return true;
-                    }
+                        var subtree = (Tree)entry.Target;
+                        if (WouldRemoveAnyEntry(subtree, predicate, fullPath))
+                        {
+                            return true;
+                        }
 
-                    break;
-                }
+                        break;
+                    }
             }
         }
 

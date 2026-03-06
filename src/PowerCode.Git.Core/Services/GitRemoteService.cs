@@ -108,13 +108,13 @@ public sealed class GitRemoteService : IGitRemoteService
         // which is valid for git.exe but triggers "invalid escape" errors in libgit2's
         // stricter config parser during the rename operation. Remotes.Update() does not
         // share this problem and is used here as a pre-pass to sanitize the stored URL.
-        bool urlHasBackslash    = existing.Url?.Contains('\\') ?? false;
+        bool urlHasBackslash = existing.Url?.Contains('\\') ?? false;
         bool pushUrlHasBackslash = existing.PushUrl?.Contains('\\') ?? false;
         if (urlHasBackslash || pushUrlHasBackslash)
         {
             repository.Network.Remotes.Update(oldName, updater =>
             {
-                if (urlHasBackslash)     updater.Url     = existing.Url!.Replace('\\', '/');
+                if (urlHasBackslash) updater.Url = existing.Url!.Replace('\\', '/');
                 if (pushUrlHasBackslash) updater.PushUrl = existing.PushUrl!.Replace('\\', '/');
             });
         }

@@ -207,7 +207,7 @@ public sealed class GitDiffHunkTests
     {
         var hunk = MakeHunk("@@ -1,1 +1,1 @@\n-old\n+new\n", oldStart: 1, newStart: 1);
 
-        var first  = hunk.Lines;
+        var first = hunk.Lines;
         var second = hunk.Lines;
 
         Assert.AreSame(first, second);
