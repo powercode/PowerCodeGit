@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
+using PowerCode.Git.Abstractions;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
@@ -44,11 +45,10 @@ public sealed class GitTreeComparisonService : IGitTreeComparisonService
 
         if (options.Paths is { Length: > 0 })
         {
-            var paths = options.Paths;
+            var matchers = PathspecMatcher.CompilePatterns(options.Paths);
             entries = entries.Where(change =>
-                paths.Any(p =>
-                    string.Equals(change.Path, p, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
+                PathspecMatcher.IsMatch(change.Path, matchers) ||
+                PathspecMatcher.IsMatch(change.OldPath, matchers));
         }
 
         return entries.Select(MapDiffEntry).ToList();
