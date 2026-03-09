@@ -42,10 +42,13 @@ public sealed class GetGitLogCmdlet : GitCmdlet
     public string? Branch { get; set; }
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to filter
-    /// the log to commits that touched those files.
+    /// Gets or sets one or more pathspec patterns to filter
+    /// the log to commits that touched matching files.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter(ParameterSetName = LogParameterSet, Position = 2)]
+    [SupportsWildcards]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

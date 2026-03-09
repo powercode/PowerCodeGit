@@ -45,9 +45,12 @@ public sealed class GetGitStatusCmdlet : GitCmdlet
     public SwitchParameter IncludeIgnored { get; set; }
 
     /// <summary>
-    /// Gets or sets an optional array of paths to restrict the status query to.
+    /// Gets or sets an optional array of pathspec patterns to restrict the status query to.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter(ParameterSetName = StatusParameterSet)]
+    [SupportsWildcards]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

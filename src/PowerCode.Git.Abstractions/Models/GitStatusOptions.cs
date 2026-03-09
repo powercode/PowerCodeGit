@@ -19,8 +19,10 @@ public sealed class GitStatusOptions
     public bool IncludeIgnored { get; set; }
 
     /// <summary>
-    /// Gets or sets an optional array of paths to restrict the status query to
+    /// Gets or sets an optional array of pathspec patterns to restrict the status query to
     /// (equivalent to <c>git status -- &lt;pathspec&gt;…</c>).
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// When <see langword="null"/> or empty, all tracked and untracked paths are included.
     /// </summary>
     public string[]? Paths { get; set; }

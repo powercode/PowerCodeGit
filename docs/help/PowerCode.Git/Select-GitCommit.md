@@ -230,14 +230,16 @@ HelpMessage: ''
 
 ### -Path
 
-One or more repository-relative file paths. When specified, only commits that touch at least one of the given paths are considered as candidates. This is equivalent to appending `-- <path>…` to a `git log` command.
+One or more pathspec patterns. When specified, only commits that touch files matching at least one of the given patterns are considered as candidates. This is equivalent to appending `-- <pathspec>…` to a `git log` command.
+Supports git-style glob patterns: `*` matches within a single directory, `**` matches across directory boundaries, and `?` matches a single character.
+For example, `**/*.cs` matches all C# files and `src/` matches everything under `src/`.
 
 Reducing the candidate set with `-Path` significantly improves performance when searching large repositories. Accepts tab-completion for tracked file paths.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)

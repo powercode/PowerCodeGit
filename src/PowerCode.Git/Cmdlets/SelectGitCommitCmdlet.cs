@@ -129,10 +129,13 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
     public string? From { get; set; }
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths. When set,
-    /// only commits that touch at least one of these paths are candidates.
+    /// Gets or sets one or more pathspec patterns. When set,
+    /// only commits that touch files matching at least one pattern are candidates.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter]
+    [SupportsWildcards]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

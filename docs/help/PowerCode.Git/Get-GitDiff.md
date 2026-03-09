@@ -115,6 +115,22 @@ Returns the diff with zero context lines around each change, equivalent to `git 
 Get-GitDiff -Context 0
 ```
 
+### Example 7 - Filter diff output using a glob pattern
+
+Shows unstaged changes only for C# files anywhere in the repository, equivalent to `git diff -- **/*.cs`.
+
+```powershell
+Get-GitDiff -Path '**/*.cs'
+```
+
+### Example 8 - Diff staged changes in a specific directory
+
+Shows staged changes only for files under the `src/Models` directory.
+
+```powershell
+Get-GitDiff -Staged -Path 'src/Models/'
+```
+
 ## PARAMETERS
 
 ### -Commit
@@ -299,12 +315,14 @@ HelpMessage: ''
 
 ### -Path
 
-One or more repository-relative file paths to restrict the diff output.
+One or more pathspec patterns to restrict the diff output (equivalent to `git diff -- <pathspec>…`).
+Supports git-style glob patterns: `*` matches within a single directory, `**` matches across directory boundaries, and `?` matches a single character.
+For example, `**/*.cs` matches all C# files, `src/` matches everything under `src/`, and `**/foo/bar.*` matches `bar.*` in any `foo/` directory.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: WorkingTree

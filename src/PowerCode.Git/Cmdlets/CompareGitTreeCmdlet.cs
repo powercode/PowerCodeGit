@@ -93,10 +93,13 @@ public sealed class CompareGitTreeCmdlet : GitCmdlet
     public SwitchParameter IgnoreWhitespace { get; set; }
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to restrict
+    /// Gets or sets one or more pathspec patterns to restrict
     /// the comparison output.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter]
+    [SupportsWildcards]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

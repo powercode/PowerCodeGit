@@ -58,6 +58,22 @@ Gets the status including files matched by .gitignore.
 Get-GitStatus -IncludeIgnored
 ```
 
+### Example 3 - Filter status to C# files using a glob pattern
+
+Returns status entries only for C# files anywhere in the repository, equivalent to `git status -- **/*.cs`.
+
+```powershell
+Get-GitStatus -Path '**/*.cs'
+```
+
+### Example 4 - Filter status to a directory
+
+Returns status entries for files under the `src/Models` directory.
+
+```powershell
+Get-GitStatus -Path 'src/Models/'
+```
+
 ## PARAMETERS
 
 ### -IncludeIgnored
@@ -104,12 +120,14 @@ HelpMessage: ''
 
 ### -Path
 
-One or more paths to restrict the status query to.
+One or more pathspec patterns to restrict the status query to (equivalent to `git status -- <pathspec>…`).
+Supports git-style glob patterns: `*` matches within a single directory, `**` matches across directory boundaries, and `?` matches a single character.
+For example, `**/*.cs` matches all C# files, `src/` matches everything under `src/`, and `**/foo/bar.*` matches `bar.*` in any `foo/` directory.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: Status

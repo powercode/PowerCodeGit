@@ -44,8 +44,9 @@ public sealed class GitDiffOptions
     public bool IgnoreWhitespace { get; set; }
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to restrict
-    /// the diff output.
+    /// Gets or sets one or more pathspec patterns to restrict the diff output.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     public string[]? Paths { get; set; }
 
