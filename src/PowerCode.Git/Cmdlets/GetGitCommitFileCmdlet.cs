@@ -54,9 +54,12 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
     public GitCommitInfo? InputObject { get; set; }
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to restrict the output.
+    /// Gets or sets one or more pathspec patterns to restrict the output.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter(ParameterSetName = CommitParameterSet)]
+    [SupportsWildcards]
     [GitPathCompleter]
     public string[]? Path { get; set; }
 

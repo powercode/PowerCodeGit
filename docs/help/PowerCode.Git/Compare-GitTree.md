@@ -138,12 +138,14 @@ HelpMessage: ''
 
 ### -Path
 
-One or more repository-relative file paths to restrict the comparison output.
+One or more pathspec patterns to restrict the comparison output (equivalent to `git diff <base> <compare> -- <pathspec>…`).
+Supports git-style glob patterns: `*` matches within a single directory, `**` matches across directory boundaries, and `?` matches a single character.
+For example, `**/*.cs` matches all C# files and `src/` matches everything under `src/`.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)

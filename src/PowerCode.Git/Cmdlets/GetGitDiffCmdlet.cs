@@ -42,12 +42,15 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
     // ── WorkingTree parameter set ────────────────────────────────────────────
 
     /// <summary>
-    /// Gets or sets one or more repository-relative file paths to restrict the diff output.
+    /// Gets or sets one or more pathspec patterns to restrict the diff output.
+    /// Supports git-style globs: <c>*</c> (single segment), <c>**</c> (cross-directory),
+    /// <c>?</c> (single character), and directory prefixes (e.g. <c>src/</c>).
     /// </summary>
     [Parameter(ParameterSetName = WorkingTreeParameterSet)]
     [Parameter(ParameterSetName = StagedParameterSet)]
     [Parameter(ParameterSetName = CommitParameterSet)]
     [Parameter(ParameterSetName = RangeParameterSet)]
+    [SupportsWildcards]
     [GitModifiedPathCompleter(StagedParameterName = nameof(Staged))]
     public string[]? Path { get; set; }
 
