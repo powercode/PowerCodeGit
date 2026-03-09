@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using LibGit2Sharp;
+using PowerCode.Git.Abstractions;
 using PowerCode.Git.Abstractions.Models;
 using PowerCode.Git.Abstractions.Services;
 
@@ -53,14 +54,12 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
             MapStatusEntry(entry, entries);
         }
 
-        // Filter by paths if specified
+        // Filter by pathspec patterns if specified
         if (options.Paths is { Length: > 0 })
         {
-            var paths = options.Paths;
+            var matchers = PathspecMatcher.CompilePatterns(options.Paths);
             entries = entries
-                .Where(e => paths.Any(p =>
-                    string.Equals(e.FilePath, p, StringComparison.OrdinalIgnoreCase) ||
-                    e.FilePath.StartsWith(p.TrimEnd('/') + "/", StringComparison.OrdinalIgnoreCase)))
+                .Where(e => PathspecMatcher.IsMatch(e.FilePath, matchers))
                 .ToList();
         }
 
@@ -136,11 +135,10 @@ public sealed class GitWorkingTreeService : IGitWorkingTreeService
 
         if (options.Paths is { Length: > 0 })
         {
-            var paths = options.Paths;
+            var matchers = PathspecMatcher.CompilePatterns(options.Paths);
             entries = entries.Where(change =>
-                paths.Any(p =>
-                    string.Equals(change.Path, p, StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
+                PathspecMatcher.IsMatch(change.Path, matchers) ||
+                PathspecMatcher.IsMatch(change.OldPath, matchers));
         }
 
         var result = entries

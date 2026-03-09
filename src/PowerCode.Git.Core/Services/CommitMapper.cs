@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LibGit2Sharp;
+using PowerCode.Git.Abstractions;
 using PowerCode.Git.Abstractions.Models;
 
 namespace PowerCode.Git.Core.Services;
@@ -87,13 +88,13 @@ internal static class CommitMapper
     internal static bool CommitTouchesAnyPath(Repository repository, Commit commit, string[] paths)
     {
         var parentTree = commit.Parents.FirstOrDefault()?.Tree;
+        var matchers = PathspecMatcher.CompilePatterns(paths);
 
         using var changes = repository.Diff.Compare<TreeChanges>(parentTree, commit.Tree);
 
         return changes.Any(change =>
-            paths.Any(p =>
-                string.Equals(change.Path, p, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(change.OldPath, p, StringComparison.OrdinalIgnoreCase)));
+            PathspecMatcher.IsMatch(change.Path, matchers) ||
+            PathspecMatcher.IsMatch(change.OldPath, matchers));
     }
 
     private static List<GitDecoration> GetOrCreate(Dictionary<string, List<GitDecoration>> map, string sha)
