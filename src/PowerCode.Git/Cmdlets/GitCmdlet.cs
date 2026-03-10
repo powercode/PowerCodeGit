@@ -67,25 +67,31 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
 
     /// <summary>
     /// Resolves the repository path from <see cref="RepoPath"/> or the
-    /// current PowerShell location.
+    /// current PowerShell location. If the resolved path is a subdirectory
+    /// of a git working tree, it is resolved up to the repository root.
     /// </summary>
     /// <param name="currentFileSystemPath">
     /// Optional override for the current directory, used by unit tests.
     /// </param>
-    /// <returns>The resolved repository path.</returns>
+    /// <returns>The resolved repository root path.</returns>
     internal string ResolveRepositoryPath(string? currentFileSystemPath = null)
     {
+        string raw;
+
         if (!string.IsNullOrWhiteSpace(RepoPath))
         {
-            return ResolvePSPath(RepoPath);
+            raw = ResolvePSPath(RepoPath);
         }
-
-        if (!string.IsNullOrWhiteSpace(currentFileSystemPath))
+        else if (!string.IsNullOrWhiteSpace(currentFileSystemPath))
         {
-            return ResolvePSPath(currentFileSystemPath);
+            raw = ResolvePSPath(currentFileSystemPath);
+        }
+        else
+        {
+            raw = GetCurrentFileSystemLocation();
         }
 
-        return GetCurrentFileSystemLocation();
+        return RepositoryDiscovery.ResolveRoot(raw);
     }
 
     /// <summary>
