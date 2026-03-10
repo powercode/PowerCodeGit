@@ -196,3 +196,154 @@ Describe 'Receive-GitBranch -Options' {
         $Result | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Receive-GitBranch pipeline -Action Create' {
+    BeforeAll {
+        $BareDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitBare_$([System.Guid]::NewGuid().ToString('N'))"
+        $WorkDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitWork_$([System.Guid]::NewGuid().ToString('N'))"
+
+        git init --bare --initial-branch main $BareDir 2>&1 | Out-Null
+
+        git clone $BareDir $WorkDir 2>&1 | Out-Null
+        Push-Location -Path $WorkDir
+        try {
+            git config user.name 'Test Author'
+            git config user.email 'test@example.com'
+            Set-Content -Path 'README.md' -Value '# Test'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Initial commit' 2>&1 | Out-Null
+            git checkout -b feature/alpha 2>&1 | Out-Null
+            git push origin main feature/alpha 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+            # Delete the local feature/alpha so it only exists as a remote-tracking branch
+            git branch -D feature/alpha 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $script:BareDir = $BareDir
+        $script:WorkDir = $WorkDir
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:WorkDir
+        Remove-TestGitRepository -Path $script:BareDir
+    }
+
+    It 'Creates a local tracking branch from a remote-tracking branch' {
+        $RemoteBranches = Get-GitBranch -Remote -RepoPath $script:WorkDir
+        $FeatureBranch  = $RemoteBranches | Where-Object { $_.LocalName -eq 'feature/alpha' }
+        $FeatureBranch  | Should -Not -BeNullOrEmpty
+
+        $Result = $FeatureBranch | Receive-GitBranch -Action Create -RepoPath $script:WorkDir
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -Be 'feature/alpha'
+        $Result.IsRemote | Should -BeFalse
+    }
+
+    It 'Skips existing local branch when Action is Create' {
+        # feature/alpha was created by the previous test; running again should skip silently
+        $FeatureBranch = Get-GitBranch -Remote -RepoPath $script:WorkDir |
+            Where-Object { $_.LocalName -eq 'feature/alpha' }
+
+        $Result = $FeatureBranch | Receive-GitBranch -Action Create -RepoPath $script:WorkDir
+
+        # No output because branch already existed
+        $Result | Should -BeNullOrEmpty
+    }
+
+    It 'Writes an error when a local branch is piped' {
+        $LocalBranch = Get-GitBranch -RepoPath $script:WorkDir | Select-Object -First 1
+
+        { $LocalBranch | Receive-GitBranch -Action Create -RepoPath $script:WorkDir -ErrorAction Stop } |
+            Should -Throw
+    }
+}
+
+Describe 'Receive-GitBranch pipeline -Action UpdateOnly' {
+    BeforeAll {
+        $BareDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitBare_$([System.Guid]::NewGuid().ToString('N'))"
+        $WorkDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitWork_$([System.Guid]::NewGuid().ToString('N'))"
+
+        git init --bare --initial-branch main $BareDir 2>&1 | Out-Null
+
+        git clone $BareDir $WorkDir 2>&1 | Out-Null
+        Push-Location -Path $WorkDir
+        try {
+            git config user.name 'Test Author'
+            git config user.email 'test@example.com'
+            Set-Content -Path 'README.md' -Value '# Test'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Initial commit' 2>&1 | Out-Null
+            git push origin main 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $script:BareDir = $BareDir
+        $script:WorkDir = $WorkDir
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:WorkDir
+        Remove-TestGitRepository -Path $script:BareDir
+    }
+
+    It 'Skips checked-out branches and produces no output' {
+        # The only remote branch is origin/main, whose local counterpart 'main' is the
+        # current HEAD. FastForward is skipped for checked-out branches → no output, no error.
+        $RemoteBranches = Get-GitBranch -Remote -RepoPath $script:WorkDir
+        $Result = $RemoteBranches | Receive-GitBranch -Action UpdateOnly -RepoPath $script:WorkDir
+
+        $Result | Should -BeNullOrEmpty
+    }
+}
+
+Describe 'Receive-GitBranch pipeline -Action CreateOrUpdate' {
+    BeforeAll {
+        $BareDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitBare_$([System.Guid]::NewGuid().ToString('N'))"
+        $WorkDir = Join-Path -Path ([System.IO.Path]::GetTempPath()) -ChildPath "PowerCode.GitWork_$([System.Guid]::NewGuid().ToString('N'))"
+
+        git init --bare --initial-branch main $BareDir 2>&1 | Out-Null
+
+        git clone $BareDir $WorkDir 2>&1 | Out-Null
+        Push-Location -Path $WorkDir
+        try {
+            git config user.name 'Test Author'
+            git config user.email 'test@example.com'
+            Set-Content -Path 'README.md' -Value '# Test'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Initial commit' 2>&1 | Out-Null
+            git checkout -b feature/beta 2>&1 | Out-Null
+            git push origin main feature/beta 2>&1 | Out-Null
+            git checkout main 2>&1 | Out-Null
+            git branch -D feature/beta 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+
+        $script:BareDir = $BareDir
+        $script:WorkDir = $WorkDir
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:WorkDir
+        Remove-TestGitRepository -Path $script:BareDir
+    }
+
+    It 'Creates missing local branch and returns GitBranchInfo' {
+        $FeatureBranch = Get-GitBranch -Remote -RepoPath $script:WorkDir |
+            Where-Object { $_.LocalName -eq 'feature/beta' }
+
+        $Result = $FeatureBranch | Receive-GitBranch -Action CreateOrUpdate -RepoPath $script:WorkDir
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -Be 'feature/beta'
+        $Result.IsRemote | Should -BeFalse
+    }
+}
+

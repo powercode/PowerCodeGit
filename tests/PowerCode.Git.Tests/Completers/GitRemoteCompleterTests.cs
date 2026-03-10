@@ -141,6 +141,9 @@ public sealed class GitRemoteCompleterTests
         public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
             throw new NotImplementedException();
 
+        public void Fetch(GitFetchOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
         public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>
             throw new NotImplementedException();
     }
@@ -169,6 +172,9 @@ public sealed class GitRemoteCompleterTests
             throw new NotImplementedException();
 
         public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
+            throw new NotImplementedException();
+
+        public void Fetch(GitFetchOptions options, Action<int, string>? onProgress = null) =>
             throw new NotImplementedException();
 
         public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>

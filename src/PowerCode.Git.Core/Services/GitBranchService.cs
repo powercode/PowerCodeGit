@@ -383,6 +383,48 @@ public sealed class GitBranchService : IGitBranchService
         return mergeBase?.Sha == branch.Tip.Sha;
     }
 
+    /// <inheritdoc/>
+    public GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha)
+    {
+        RepositoryGuard.ValidateRequiredString(repositoryPath, nameof(repositoryPath), "Repository path is required.");
+        RepositoryGuard.ValidateRequiredString(branchName, nameof(branchName), "Branch name is required.");
+        RepositoryGuard.ValidateRequiredString(targetSha, nameof(targetSha), "Target SHA is required.");
+
+        using var repository = new Repository(repositoryPath);
+
+        var branch = repository.Branches[branchName]
+            ?? throw new ArgumentException($"Branch '{branchName}' was not found.", nameof(branchName));
+
+        // Cannot advance a branch that is checked out — doing so would leave the
+        // working tree detached from the new ref without a merge/reset.
+        var worktreePaths = BuildWorktreeLookup(repository);
+        if (worktreePaths.ContainsKey(branchName))
+        {
+            return null;
+        }
+
+        var targetCommit = repository.Lookup<Commit>(targetSha)
+            ?? throw new ArgumentException($"Commit '{targetSha}' was not found.", nameof(targetSha));
+
+        // Guard against rewinding: the local branch must not have commits
+        // that are not reachable from the target.
+        if (branch.Tip is not null)
+        {
+            var divergence = repository.ObjectDatabase.CalculateHistoryDivergence(branch.Tip, targetCommit);
+            if (divergence.AheadBy > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Cannot fast-forward branch '{branchName}': it has {divergence.AheadBy} commit(s) not in the target. " +
+                    "Only a true fast-forward (no divergence) is supported.");
+            }
+        }
+
+        repository.Refs.UpdateTarget(branch.Reference, targetCommit.Id);
+
+        var updated = repository.Branches[branchName]!;
+        return MapBranch(updated);
+    }
+
     private static GitBranchInfo MapBranch(Branch branch, Dictionary<string, string>? worktreePaths = null, GitBranchComparisonInfo? referenceComparison = null, Dictionary<string, string>? descriptions = null)
     {
         string? worktreePath = null;

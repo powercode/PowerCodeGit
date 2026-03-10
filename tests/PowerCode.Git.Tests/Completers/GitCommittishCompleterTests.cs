@@ -845,6 +845,9 @@ public sealed class GitCommittishCompleterTests
 
         public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
             throw new NotImplementedException();
+
+        public GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha) =>
+            throw new NotImplementedException();
     }
 
     private sealed class StubGitTagService(IReadOnlyList<GitTagInfo> tags) : IGitTagService

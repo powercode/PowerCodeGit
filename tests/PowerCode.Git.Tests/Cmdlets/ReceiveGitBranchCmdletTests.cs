@@ -8,10 +8,13 @@ namespace PowerCode.Git.Tests.Cmdlets;
 [TestClass]
 public sealed class ReceiveGitBranchCmdletTests
 {
+    private static ReceiveGitBranchCmdlet MakeCmdlet() =>
+        new(new StubGitRemoteService(), new StubGitBranchService());
+
     [TestMethod]
     public void ResolveRepositoryPath_PathNotSpecified_UsesCurrentPath()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService());
+        var cmdlet = MakeCmdlet();
 
         var resolvedPath = cmdlet.ResolveRepositoryPath("C:\\repo");
 
@@ -21,10 +24,8 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void ResolveRepositoryPath_PathSpecified_UsesProvidedPath()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
-        {
-            RepoPath = "D:\\other-repo",
-        };
+        var cmdlet = MakeCmdlet();
+        cmdlet.RepoPath = "D:\\other-repo";
 
         var resolvedPath = cmdlet.ResolveRepositoryPath("C:\\ignored");
 
@@ -34,7 +35,7 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void MergeStrategy_DefaultsToMerge()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService());
+        var cmdlet = MakeCmdlet();
 
         Assert.AreEqual(GitMergeStrategy.Merge, cmdlet.MergeStrategy);
     }
@@ -42,10 +43,8 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void MergeStrategy_IsSetCorrectly()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
-        {
-            MergeStrategy = GitMergeStrategy.FastForward,
-        };
+        var cmdlet = MakeCmdlet();
+        cmdlet.MergeStrategy = GitMergeStrategy.FastForward;
 
         Assert.AreEqual(GitMergeStrategy.FastForward, cmdlet.MergeStrategy);
     }
@@ -53,7 +52,7 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void Prune_DefaultsToFalse()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService());
+        var cmdlet = MakeCmdlet();
 
         Assert.IsFalse(cmdlet.Prune.IsPresent);
     }
@@ -61,7 +60,7 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void BuildOptions_DefaultSet_MergeStrategyAndPathMapped()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService());
+        var cmdlet = MakeCmdlet();
 
         var options = cmdlet.BuildOptions("C:\\repo");
 
@@ -74,10 +73,8 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void BuildOptions_AutoStashSet_AutoStashMapped()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
-        {
-            AutoStash = new System.Management.Automation.SwitchParameter(true),
-        };
+        var cmdlet = MakeCmdlet();
+        cmdlet.AutoStash = new System.Management.Automation.SwitchParameter(true);
 
         var options = cmdlet.BuildOptions("C:\\repo");
 
@@ -87,10 +84,8 @@ public sealed class ReceiveGitBranchCmdletTests
     [TestMethod]
     public void BuildOptions_TagsSet_TagsTrueInOptions()
     {
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
-        {
-            Tags = new System.Management.Automation.SwitchParameter(true),
-        };
+        var cmdlet = MakeCmdlet();
+        cmdlet.Tags = new System.Management.Automation.SwitchParameter(true);
 
         var options = cmdlet.BuildOptions("C:\\repo");
 
@@ -101,14 +96,50 @@ public sealed class ReceiveGitBranchCmdletTests
     public void BuildOptions_OptionsParameterSet_ReturnsOptionsDirectly()
     {
         var predefined = new GitPullOptions { RepositoryPath = "D:\\repo", AutoStash = true };
-        var cmdlet = new ReceiveGitBranchCmdlet(new StubGitRemoteService())
-        {
-            Options = predefined,
-        };
+        var cmdlet = MakeCmdlet();
+        cmdlet.Options = predefined;
 
         var options = cmdlet.BuildOptions("C:\\ignored");
 
         Assert.AreSame(predefined, options);
     }
 
+    [TestMethod]
+    public void Action_DefaultsToCreate()
+    {
+        var cmdlet = MakeCmdlet();
+
+        Assert.AreEqual(ReceiveBranchAction.Create, cmdlet.Action);
+    }
+
+    [TestMethod]
+    public void Action_CanBeSetToCreateOrUpdate()
+    {
+        var cmdlet = MakeCmdlet();
+        cmdlet.Action = ReceiveBranchAction.CreateOrUpdate;
+
+        Assert.AreEqual(ReceiveBranchAction.CreateOrUpdate, cmdlet.Action);
+    }
+
+    [TestMethod]
+    public void Action_CanBeSetToUpdateOnly()
+    {
+        var cmdlet = MakeCmdlet();
+        cmdlet.Action = ReceiveBranchAction.UpdateOnly;
+
+        Assert.AreEqual(ReceiveBranchAction.UpdateOnly, cmdlet.Action);
+    }
+
+    [TestMethod]
+    public void InputBranch_LocalName_StripsRemotePrefix()
+    {
+        // Confirm that a piped GitBranchInfo from Get-GitBranch -Remote carries LocalName
+        var remoteBranch = new GitBranchInfo(
+            "origin/feature/xyz", isHead: false, isRemote: true,
+            tipSha: new string('a', 40), trackedBranchName: null,
+            aheadBy: null, behindBy: null);
+
+        Assert.AreEqual("feature/xyz", remoteBranch.LocalName);
+    }
 }
+
