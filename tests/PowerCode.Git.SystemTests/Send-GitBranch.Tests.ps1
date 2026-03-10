@@ -134,3 +134,41 @@ Describe 'Send-GitBranch -Options' {
         $Result | Should -Not -BeNullOrEmpty
     }
 }
+
+Describe 'Send-GitBranch -Tags' {
+    BeforeAll {
+        $script:Repos = New-TestRepoWithRemote
+        $script:WorkPath = $script:Repos.WorkingPath
+        $script:BarePath = $script:Repos.BarePath
+
+        Push-Location -Path $script:WorkPath
+        try {
+            # Create a second commit and tag it, so there is something to push.
+            Set-Content -Path 'tagged.txt' -Value 'tagged content'
+            git add . 2>&1 | Out-Null
+            git commit -m 'Tagged commit' 2>&1 | Out-Null
+            git tag v1.0.0 2>&1 | Out-Null
+            git tag v2.0.0 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+    }
+
+    AfterAll {
+        Remove-TestGitRepository -Path $script:WorkPath
+        Remove-TestGitRepository -Path $script:BarePath
+    }
+
+    It 'Pushes all tags to the remote and returns GitBranchInfo' {
+        $Result = Send-GitBranch -RepoPath $script:WorkPath -Tags
+
+        $Result | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Both tags are visible on the bare remote after push' {
+        $TagsOnRemote = git -C $script:BarePath tag 2>&1
+        $TagsOnRemote | Should -Contain 'v1.0.0'
+        $TagsOnRemote | Should -Contain 'v2.0.0'
+    }
+}

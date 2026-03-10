@@ -271,19 +271,33 @@ public sealed class GitRemoteService : IGitRemoteService
 
         if (options.All)
         {
-            foreach (var localBranch in repository.Branches.Where(b => !b.IsRemote))
+            // Collect all local branch refspecs and push in a single network call,
+            // matching `git push --all` behaviour (one round-trip, one credential prompt).
+            var branchRefSpecs = repository.Branches
+                .Where(b => !b.IsRemote)
+                .Select(b => options.Force
+                    ? $"+{b.CanonicalName}:{b.CanonicalName}"
+                    : b.CanonicalName)
+                .ToList();
+
+            if (branchRefSpecs.Count > 0)
             {
-                var refSpec = options.Force
-                    ? $"+{localBranch.CanonicalName}:{localBranch.CanonicalName}"
-                    : localBranch.CanonicalName;
-                repository.Network.Push(remote, refSpec, pushOptions);
+                repository.Network.Push(remote, branchRefSpecs, pushOptions);
             }
         }
         else if (options.Tags)
         {
-            foreach (var tag in repository.Tags)
+            // Collect all tag refspecs and push in a single network call,
+            // matching `git push --tags` behaviour (one round-trip, one credential prompt).
+            // Previously this looped per-tag, triggering a separate credential callback
+            // for each tag and hanging when LibGit2Sharp retried on auth failure.
+            var tagRefSpecs = repository.Tags
+                .Select(t => t.CanonicalName)
+                .ToList();
+
+            if (tagRefSpecs.Count > 0)
             {
-                repository.Network.Push(remote, tag.CanonicalName, pushOptions);
+                repository.Network.Push(remote, tagRefSpecs, pushOptions);
             }
         }
         else
@@ -437,11 +451,29 @@ public sealed class GitRemoteService : IGitRemoteService
     /// Creates a credentials handler that uses explicit credentials if provided,
     /// or falls back to the system's Git credential helper via <c>git credential fill</c>.
     /// </summary>
+    /// <remarks>
+    /// LibGit2Sharp retries the credentials callback on every authentication failure, which
+    /// can cause an infinite loop when no credentials are available. The <c>alreadyCalled</c>
+    /// guard breaks this loop by returning <see cref="DefaultCredentials"/> on the second
+    /// invocation, allowing LibGit2Sharp to surface an authentication error to the caller.
+    /// </remarks>
     private static LibGit2Sharp.Handlers.CredentialsHandler CreateCredentialsProvider(
         string? credentialUsername, string? credentialPassword, string remoteUrl)
     {
+        // Captured in the closure — one flag per push/fetch operation.
+        var alreadyCalled = false;
+
         return (_, _, supportedTypes) =>
         {
+            // On the second invocation LibGit2Sharp is retrying after an auth failure.
+            // Return DefaultCredentials to abort the retry loop and propagate the error.
+            if (alreadyCalled)
+            {
+                return new DefaultCredentials();
+            }
+
+            alreadyCalled = true;
+
             if (!supportedTypes.HasFlag(SupportedCredentialTypes.UsernamePassword))
             {
                 return new DefaultCredentials();
