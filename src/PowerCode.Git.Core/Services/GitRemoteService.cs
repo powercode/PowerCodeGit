@@ -315,6 +315,25 @@ public sealed class GitRemoteService : IGitRemoteService
     }
 
     /// <inheritdoc/>
+    public void Fetch(GitFetchOptions options, Action<int, string>? onProgress = null)
+    {
+        RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
+
+        using var repository = new Repository(options.RepositoryPath);
+
+        var fetchOptions = BuildFetchOptions(
+            options.CredentialUsername, options.CredentialPassword,
+            GetRemoteUrl(options.RepositoryPath, options.RemoteName),
+            options.Prune, options.Tags, onProgress);
+
+        var remote = repository.Network.Remotes[options.RemoteName]
+            ?? throw new ArgumentException($"Remote '{options.RemoteName}' was not found.", nameof(options));
+
+        var refSpecs = remote.FetchRefSpecs.Select(r => r.Specification);
+        Commands.Fetch(repository, remote.Name, refSpecs, fetchOptions, null);
+    }
+
+    /// <inheritdoc/>
     public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null)
     {
         RepositoryGuard.ValidateOptions(options, o => o.RepositoryPath, nameof(options));
@@ -339,36 +358,11 @@ public sealed class GitRemoteService : IGitRemoteService
                     _ => FastForwardStrategy.Default,
                 },
             },
-            FetchOptions = new FetchOptions(),
+            FetchOptions = BuildFetchOptions(
+                options.CredentialUsername, options.CredentialPassword,
+                GetRemoteUrl(options.RepositoryPath, options.RemoteName),
+                options.Prune, options.Tags, onProgress),
         };
-
-        if (options.Prune)
-        {
-            pullOptions.FetchOptions.Prune = true;
-        }
-
-        if (options.Tags.HasValue)
-        {
-            pullOptions.FetchOptions.TagFetchMode = options.Tags.Value ? TagFetchMode.All : TagFetchMode.None;
-        }
-
-        pullOptions.FetchOptions.CredentialsProvider = CreateCredentialsProvider(
-            options.CredentialUsername, options.CredentialPassword,
-            GetRemoteUrl(options.RepositoryPath, options.RemoteName));
-
-        if (onProgress is not null)
-        {
-            pullOptions.FetchOptions.OnTransferProgress = progress =>
-            {
-                if (progress.TotalObjects > 0)
-                {
-                    var percent = (int)((double)progress.ReceivedObjects / progress.TotalObjects * 100);
-                    onProgress(percent, $"Receiving objects: {progress.ReceivedObjects}/{progress.TotalObjects}");
-                }
-
-                return true;
-            };
-        }
 
         // AutoStash: save local changes before pulling, reapply after
         Stash? autoStash = null;
@@ -398,6 +392,45 @@ public sealed class GitRemoteService : IGitRemoteService
             headCommit.MessageShort,
             headCommit.Message,
             parentShas);
+    }
+
+    /// <summary>
+    /// Builds a <see cref="FetchOptions"/> instance shared by both <see cref="Fetch"/> and <see cref="Pull"/>.
+    /// </summary>
+    private static FetchOptions BuildFetchOptions(
+        string? credentialUsername,
+        string? credentialPassword,
+        string remoteUrl,
+        bool prune,
+        bool? tags,
+        Action<int, string>? onProgress)
+    {
+        var fetchOptions = new FetchOptions
+        {
+            Prune = prune,
+            CredentialsProvider = CreateCredentialsProvider(credentialUsername, credentialPassword, remoteUrl),
+        };
+
+        if (tags.HasValue)
+        {
+            fetchOptions.TagFetchMode = tags.Value ? TagFetchMode.All : TagFetchMode.None;
+        }
+
+        if (onProgress is not null)
+        {
+            fetchOptions.OnTransferProgress = progress =>
+            {
+                if (progress.TotalObjects > 0)
+                {
+                    var percent = (int)((double)progress.ReceivedObjects / progress.TotalObjects * 100);
+                    onProgress(percent, $"Receiving objects: {progress.ReceivedObjects}/{progress.TotalObjects}");
+                }
+
+                return true;
+            };
+        }
+
+        return fetchOptions;
     }
 
     /// <summary>

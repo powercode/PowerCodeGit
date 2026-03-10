@@ -31,6 +31,8 @@ public sealed class GitBranchInfo
         string? description = null)
     {
         Name = name;
+        var slashIndex = isRemote ? name.IndexOf('/') : -1;
+        LocalName = slashIndex >= 0 ? name[(slashIndex + 1)..] : name;
         IsHead = isHead;
         IsRemote = isRemote;
         TipSha = tipSha;
@@ -47,6 +49,15 @@ public sealed class GitBranchInfo
     /// Gets the branch name.
     /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// Gets the local branch name — the git ref name that identifies this branch under
+    /// <c>refs/heads/</c>. For remote-tracking branches the remote prefix is stripped
+    /// (e.g. <c>origin/main</c> → <c>main</c>, <c>origin/feature/foo</c> →
+    /// <c>feature/foo</c>). For local branches this is identical to <see cref="Name"/>.
+    /// This is the name a local checkout of this branch would use.
+    /// </summary>
+    public string LocalName { get; }
 
     /// <summary>
     /// Gets a value indicating whether this branch is the current HEAD.

@@ -95,6 +95,16 @@ public interface IGitRemoteService
     GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null);
 
     /// <summary>
+    /// Fetches from a remote, updating remote-tracking refs without merging.
+    /// Equivalent to <c>git fetch</c>.
+    /// </summary>
+    /// <param name="options">The fetch options including remote name and prune behaviour.</param>
+    /// <param name="onProgress">
+    /// Optional callback receiving progress percentage (0–100) and a message.
+    /// </param>
+    void Fetch(GitFetchOptions options, Action<int, string>? onProgress = null);
+
+    /// <summary>
     /// Pulls remote changes into the current branch.
     /// </summary>
     /// <param name="options">The pull options including remote and merge strategy.</param>

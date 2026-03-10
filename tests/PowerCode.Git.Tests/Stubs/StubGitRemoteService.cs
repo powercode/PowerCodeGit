@@ -31,6 +31,8 @@ internal sealed class StubGitRemoteService : IGitRemoteService
     public GitBranchInfo Push(GitPushOptions options, Action<int, string>? onProgress = null) =>
         new("main", true, false, "abc1234", null, null, null);
 
+    public void Fetch(GitFetchOptions options, Action<int, string>? onProgress = null) { }
+
     public GitCommitInfo Pull(GitPullOptions options, Action<int, string>? onProgress = null) =>
         new(
             "abc1234",

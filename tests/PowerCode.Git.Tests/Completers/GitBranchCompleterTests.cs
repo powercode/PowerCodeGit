@@ -181,6 +181,9 @@ public sealed class GitBranchCompleterTests
 
         public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
             throw new NotImplementedException();
+
+        public GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha) =>
+            throw new NotImplementedException();
     }
 
     private sealed class ThrowingGitBranchService : IGitBranchService
@@ -198,6 +201,9 @@ public sealed class GitBranchCompleterTests
             throw new NotImplementedException();
 
         public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
+            throw new NotImplementedException();
+
+        public GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha) =>
             throw new NotImplementedException();
     }
 }

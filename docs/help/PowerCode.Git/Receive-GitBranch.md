@@ -13,7 +13,7 @@ title: Receive-GitBranch
 
 ## SYNOPSIS
 
-Pulls remote changes into the current branch, equivalent to git pull.
+Pulls remote changes into the current branch, or creates/updates local tracking branches from piped remote-tracking branches.
 
 ## SYNTAX
 
@@ -22,6 +22,13 @@ Pulls remote changes into the current branch, equivalent to git pull.
 ```
 Receive-GitBranch [-MergeStrategy <GitMergeStrategy>] [-Prune] [-AutoStash] [-Tags]
  [-Credential <pscredential>] [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+
+### Pipeline
+
+```
+Receive-GitBranch -InputBranch <GitBranchInfo> [-Action <ReceiveBranchAction>]
+ [-RepoPath <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Options
@@ -37,7 +44,16 @@ None.
 
 ## DESCRIPTION
 
-The Receive-GitBranch cmdlet fetches from the remote and merges into the current branch. Use `-MergeStrategy` to control the merge behavior (Merge, Rebase, FastForward), `-Prune` to remove stale remote-tracking branches, and `-AutoStash` to automatically stash and reapply local changes.
+The Receive-GitBranch cmdlet has two distinct modes:
+
+**Pull mode (default):** Fetches from the remote and merges into the current branch. Use `-MergeStrategy` to control the merge behavior (Merge, Rebase, FastForward), `-Prune` to remove stale remote-tracking branches, and `-AutoStash` to automatically stash and reapply local changes.
+
+**Pipeline mode:** When remote-tracking branches are piped in (e.g. from `Get-GitBranch -Remote`), Receive-GitBranch creates and/or fast-forwards the corresponding local tracking branches. The `-Action` parameter controls behaviour:
+- `Create` (default) — creates a local tracking branch for each remote branch that does not already exist locally. Existing local branches are skipped.
+- `CreateOrUpdate` — creates missing local branches and fast-forwards existing ones.
+- `UpdateOnly` — only fast-forwards existing local branches. Remote branches without a local counterpart are skipped.
+
+Each branch operation is guarded by `ShouldProcess`, so `-WhatIf` and `-Confirm` work per branch.
 
 ## EXAMPLES
 
@@ -55,6 +71,30 @@ Pulls with fast-forward merge strategy and prunes stale remote-tracking branches
 
 ```powershell
 Receive-GitBranch -MergeStrategy FastForward -Prune
+```
+
+### Example 3 - Create local tracking branches from all remote branches
+
+Pipes all remote-tracking branches and creates a local tracking branch for each one that does not already exist locally.
+
+```powershell
+Get-GitBranch -Remote | Receive-GitBranch -Action Create
+```
+
+### Example 4 - Sync a subset of remote branches
+
+Creates or fast-forwards local tracking branches for all `feature/*` remote branches.
+
+```powershell
+Get-GitBranch -Remote -Include 'origin/feature/*' | Receive-GitBranch -Action CreateOrUpdate
+```
+
+### Example 5 - Preview what would be created (WhatIf)
+
+Shows which local branches would be created without performing the operations.
+
+```powershell
+Get-GitBranch -Remote | Receive-GitBranch -Action Create -WhatIf
 ```
 
 ## PARAMETERS
@@ -77,6 +117,34 @@ ParameterSets:
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Action
+
+Controls how piped remote-tracking branches are handled. Only applies to the Pipeline parameter set.
+
+- `Create` (default) — creates a local tracking branch for each remote branch that does not already have a local counterpart. Existing local branches are skipped.
+- `CreateOrUpdate` — creates missing local branches and fast-forwards existing ones to match the remote-tracking ref.
+- `UpdateOnly` — only fast-forwards existing local branches. Remote branches with no local counterpart are skipped.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.ReceiveBranchAction
+DefaultValue: Create
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Pipeline
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues:
+- Create
+- CreateOrUpdate
+- UpdateOnly
 HelpMessage: ''
 ```
 
@@ -158,6 +226,27 @@ ParameterSets:
   Position: Named
   IsRequired: true
   ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -InputBranch
+
+A remote-tracking branch object received from the pipeline, typically from `Get-GitBranch -Remote`. The `LocalName` property is used to derive the local branch name (e.g. `origin/main` → `main`). Writing a local (non-remote) branch to this parameter produces a non-terminating error.
+
+```yaml
+Type: PowerCode.Git.Abstractions.Models.GitBranchInfo
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: Pipeline
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: true
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
@@ -260,11 +349,19 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
+### PowerCode.Git.Abstractions.Models.GitBranchInfo
+
+A remote-tracking branch from `Get-GitBranch -Remote`. Used by the Pipeline parameter set.
+
 ## OUTPUTS
 
 ### PowerCode.Git.Abstractions.Models.GitCommitInfo
 
-A commit object representing the merge result, or the tip commit after fast-forward.
+Returned by the Pull and Options parameter sets. Represents the merge result or tip commit after fast-forward.
+
+### PowerCode.Git.Abstractions.Models.GitBranchInfo
+
+Returned by the Pipeline parameter set for each branch that was created or updated.
 
 ## NOTES
 

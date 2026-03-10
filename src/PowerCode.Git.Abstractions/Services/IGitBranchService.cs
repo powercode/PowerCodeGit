@@ -80,4 +80,23 @@ public interface IGitBranchService
     /// <param name="options">Options identifying the branch and the configuration values to set.</param>
     /// <returns>The updated branch information.</returns>
     GitBranchInfo SetBranch(GitBranchSetOptions options);
+
+    /// <summary>
+    /// Advances an existing local branch ref to <paramref name="targetSha"/> without
+    /// switching HEAD or touching the working tree. Equivalent to moving a
+    /// non-checked-out branch pointer forward.
+    /// </summary>
+    /// <param name="repositoryPath">The path to the git repository.</param>
+    /// <param name="branchName">The local branch name to fast-forward.</param>
+    /// <param name="targetSha">The full SHA of the commit to advance to.</param>
+    /// <returns>
+    /// The updated <see cref="GitBranchInfo"/>, or <see langword="null"/> when the branch
+    /// is currently checked out in a worktree and cannot be advanced without
+    /// modifying the working tree.
+    /// </returns>
+    /// <exception cref="System.InvalidOperationException">
+    /// Thrown when advancing to <paramref name="targetSha"/> would not be a
+    /// fast-forward (i.e. the local branch has commits not reachable from the target).
+    /// </exception>
+    GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha);
 }

@@ -23,4 +23,7 @@ internal sealed class StubGitBranchService : IGitBranchService
 
     public GitBranchInfo SetBranch(GitBranchSetOptions options) =>
         new(options.Name, false, false, "abc1234", null, null, null);
+
+    public GitBranchInfo? FastForwardBranch(string repositoryPath, string branchName, string targetSha) =>
+        new(branchName, false, false, targetSha, null, null, null);
 }
