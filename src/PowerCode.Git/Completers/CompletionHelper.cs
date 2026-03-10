@@ -39,9 +39,9 @@ internal static class CompletionHelper
             fakeBoundParameters["RepoPath"] is string path &&
             !string.IsNullOrWhiteSpace(path))
         {
-            return path;
+            return RepositoryDiscovery.ResolveRoot(path);
         }
 
-        return locationProvider.GetCurrentFileSystemLocation();
+        return RepositoryDiscovery.ResolveRoot(locationProvider.GetCurrentFileSystemLocation());
     }
 }

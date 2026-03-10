@@ -11,7 +11,10 @@ internal static class RepositoryGuard
 {
     /// <summary>
     /// Validates that <paramref name="repositoryPath"/> is a non-empty string
-    /// pointing to a valid git repository.
+    /// pointing to (or inside) a valid git repository. The path may be the
+    /// repository root or any subdirectory — the method discovers the
+    /// <c>.git</c> directory by walking parent directories, matching the
+    /// behaviour of the <c>git</c> CLI.
     /// </summary>
     /// <param name="repositoryPath">The path to validate.</param>
     /// <param name="paramName">
@@ -19,7 +22,7 @@ internal static class RepositoryGuard
     /// </param>
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="repositoryPath"/> is null, empty, whitespace,
-    /// or does not reference a valid git repository.
+    /// or is not inside a valid git repository.
     /// </exception>
     public static void ValidateRepositoryPath(string repositoryPath, string paramName)
     {
@@ -28,7 +31,7 @@ internal static class RepositoryGuard
             throw new ArgumentException("RepositoryPath is required.", paramName);
         }
 
-        if (!Repository.IsValid(repositoryPath))
+        if (Repository.Discover(repositoryPath) is null)
         {
             throw new ArgumentException(
                 "RepositoryPath does not reference a valid git repository.", paramName);
