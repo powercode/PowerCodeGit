@@ -111,7 +111,7 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
         return new GitCloneOptions
         {
             Url = Url,
-            LocalPath = LocalPath,
+            LocalPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(LocalPath),
             CredentialUsername = Credential?.UserName,
             CredentialPassword = Credential?.GetNetworkCredential()?.Password,
             SingleBranch = SingleBranch.IsPresent,
