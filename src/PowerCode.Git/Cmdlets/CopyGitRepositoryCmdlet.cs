@@ -101,7 +101,14 @@ public sealed class CopyGitRepositoryCmdlet : GitPSCmdletBase
     /// <summary>
     /// Builds the <see cref="GitCloneOptions"/> from current parameter values.
     /// </summary>
-    internal GitCloneOptions BuildOptions()
+    /// <param name="currentDirectory">
+    /// The current PowerShell file-system location.  Used as the base directory when
+    /// <see cref="LocalPath"/> is not specified, so that the derived clone path lands
+    /// relative to the PS working directory rather than the process working directory.
+    /// Unit tests can pass an explicit value; at runtime <see cref="ProcessRecord"/>
+    /// supplies <c>SessionState.Path.CurrentFileSystemLocation.Path</c>.
+    /// </param>
+    internal GitCloneOptions BuildOptions(string? currentDirectory = null)
     {
         if (Options is not null)
         {
@@ -112,6 +119,7 @@ public sealed class CopyGitRepositoryCmdlet : GitPSCmdletBase
         {
             Url = Url,
             LocalPath = LocalPath is not null ? PathResolver?.ResolvePath(LocalPath) ?? LocalPath : null,
+            BaseDirectory = currentDirectory,
             CredentialUsername = Credential?.UserName,
             CredentialPassword = Credential?.GetNetworkCredential()?.Password,
             SingleBranch = SingleBranch.IsPresent,
@@ -135,7 +143,7 @@ public sealed class CopyGitRepositoryCmdlet : GitPSCmdletBase
 
         try
         {
-            var cloneOptions = BuildOptions();
+            var cloneOptions = BuildOptions(SessionState.Path.CurrentFileSystemLocation.Path);
 
             using var progress = new ProgressWriter(WriteProgress, 1, "Cloning repository");
             var resultPath = remoteService.Clone(cloneOptions, progress.AsCallback());

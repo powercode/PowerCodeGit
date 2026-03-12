@@ -171,7 +171,7 @@ public sealed class GitRemoteService : IGitRemoteService
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         RepositoryGuard.ValidateRequiredString(options.Url, nameof(options), "Clone URL is required.");
 
-        var localPath = options.LocalPath ?? DeriveLocalPath(options.Url);
+        var localPath = options.LocalPath ?? DeriveLocalPath(options.Url, options.BaseDirectory);
 
         var cloneOptions = new CloneOptions
         {
@@ -478,7 +478,7 @@ public sealed class GitRemoteService : IGitRemoteService
         return remote?.Url ?? string.Empty;
     }
 
-    private static string DeriveLocalPath(string url)
+    private static string DeriveLocalPath(string url, string? baseDirectory)
     {
         // Extract repository name from URL, stripping .git suffix
         var lastSegment = url.TrimEnd('/').Split('/')[^1];
@@ -488,6 +488,8 @@ public sealed class GitRemoteService : IGitRemoteService
             lastSegment = lastSegment[..^4];
         }
 
-        return Path.GetFullPath(lastSegment);
+        return baseDirectory is not null
+            ? Path.Combine(baseDirectory, lastSegment)
+            : Path.GetFullPath(lastSegment);
     }
 }
