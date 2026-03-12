@@ -17,6 +17,17 @@ public sealed class GitCloneOptions
     public string? LocalPath { get; init; }
 
     /// <summary>
+    /// Gets or sets the base directory used to resolve a derived <see cref="LocalPath"/>
+    /// when <see cref="LocalPath"/> is <see langword="null"/>.
+    /// Set this to the PowerShell current file-system location so that the clone
+    /// destination is resolved relative to the PS working directory rather than the
+    /// process working directory.
+    /// When <see langword="null"/>, the service falls back to <see cref="System.IO.Path.GetFullPath(string)"/>
+    /// (i.e. the process working directory).
+    /// </summary>
+    public string? BaseDirectory { get; init; }
+
+    /// <summary>
     /// Gets or sets the optional username for HTTP authentication.
     /// </summary>
     public string? CredentialUsername { get; init; }
