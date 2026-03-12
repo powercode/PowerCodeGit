@@ -15,14 +15,14 @@ namespace PowerCode.Git.Cmdlets;
 /// </example>
 /// </summary>
 /// <remarks>
-/// This cmdlet extends <see cref="PSCmdlet"/> directly rather than <see cref="GitCmdlet"/> because
+/// This cmdlet extends <see cref="GitPSCmdletBase"/> rather than <see cref="GitCmdlet"/> because
 /// <c>git clone</c> always operates on a remote URL to create a new local repository. There is no
 /// pre-existing local repository to resolve, so <see cref="GitCmdlet.RepoPath"/> and the
 /// <c>ResolveRepositoryPath</c> helpers are not applicable here.
 /// </remarks>
 [Cmdlet(VerbsCommon.Copy, "GitRepository", SupportsShouldProcess = true, DefaultParameterSetName = CloneParameterSet)]
 [OutputType(typeof(string))]
-public sealed class CopyGitRepositoryCmdlet : PSCmdlet
+public sealed class CopyGitRepositoryCmdlet : GitPSCmdletBase
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="CopyGitRepositoryCmdlet"/> class.
@@ -111,7 +111,7 @@ public sealed class CopyGitRepositoryCmdlet : PSCmdlet
         return new GitCloneOptions
         {
             Url = Url,
-            LocalPath = SessionState.Path.GetUnresolvedProviderPathFromPSPath(LocalPath),
+            LocalPath = LocalPath is not null ? PathResolver?.ResolvePath(LocalPath) ?? LocalPath : null,
             CredentialUsername = Credential?.UserName,
             CredentialPassword = Credential?.GetNetworkCredential()?.Password,
             SingleBranch = SingleBranch.IsPresent,
