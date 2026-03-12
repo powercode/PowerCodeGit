@@ -9,7 +9,7 @@ namespace PowerCode.Git.Cmdlets;
 /// Provides a common <see cref="RepoPath"/> parameter that defaults to
 /// the current PowerShell working directory.
 /// </summary>
-public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
+public abstract class GitCmdlet : GitPSCmdletBase, ICurrentLocationProvider
 {
     /// <summary>
     /// Gets or sets the path to the git repository. When omitted the current
@@ -18,17 +18,6 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
     [Parameter]
     [Alias("RepositoryPath")]
     public string? RepoPath { get; set; }
-
-    /// <summary>
-    /// Gets or sets the path resolver used to translate PowerShell provider
-    /// paths to absolute file-system paths.  At runtime this is initialised
-    /// in <see cref="BeginProcessing"/> to a
-    /// <see cref="SessionStatePathResolver"/>.  Unit tests that run outside
-    /// the PowerShell engine can set a stub implementation instead.
-    /// When <c>null</c>, <see cref="ResolvePSPath"/> returns the input path
-    /// unchanged — a safe fallback for unit-test scenarios.
-    /// </summary>
-    internal IPathResolver? PathResolver { get; set; }
 
     /// <summary>
     /// Gets or sets an optional set of parameter names that are treated as
@@ -53,17 +42,6 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
         BoundParameterOverrides?.Contains(parameterName)
         ?? MyInvocation?.BoundParameters?.ContainsKey(parameterName)
         ?? false;
-
-    /// <summary>
-    /// Binds the <see cref="PathResolver"/> to the current
-    /// <see cref="PSCmdlet.SessionState"/> so that subsequent calls to
-    /// <see cref="ResolveRepositoryPath"/> can resolve PS provider paths.
-    /// </summary>
-    protected override void BeginProcessing()
-    {
-        base.BeginProcessing();
-        PathResolver ??= new SessionStatePathResolver(SessionState);
-    }
 
     /// <summary>
     /// Resolves the repository path from <see cref="RepoPath"/> or the
@@ -96,8 +74,8 @@ public abstract class GitCmdlet : PSCmdlet, ICurrentLocationProvider
 
     /// <summary>
     /// Resolves a single PowerShell path using the configured
-    /// <see cref="PathResolver"/>.  When no resolver is available (typical
-    /// in unit tests that do not call <see cref="BeginProcessing"/>), the
+    /// <see cref="GitPSCmdletBase.PathResolver"/>.  When no resolver is available (typical
+    /// in unit tests that do not call <c>BeginProcessing</c>), the
     /// raw <paramref name="path"/> is returned unchanged.
     /// </summary>
     private string ResolvePSPath(string path) =>
