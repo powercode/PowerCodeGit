@@ -1,0 +1,39 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [], 
+			"label": "dotnet: build"
+		},
+		{
+			"type": "dotnet",
+			"task": "test",
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"label": "dotnet: test"
+		},
+		{
+			"type": "dotnet",
+			"task": "clean",
+			"group": "clean",
+			"problemMatcher": [],
+			"label": "dotnet: clean"
+		},
+		{			
+			"type": "shell",			
+			"group": "test",
+			"command": "pwsh -nop -noni -f ${workspaceFolder}/scripts/Invoke-SystemTests.ps1",
+			"problemMatcher": [],
+			"label": "pwsh: system tests"
+		}
+	]
+}
