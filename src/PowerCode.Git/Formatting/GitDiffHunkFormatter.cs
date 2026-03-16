@@ -25,7 +25,7 @@ public static class GitDiffHunkFormatter
     public static string FormatDescription(string verb, GitDiffHunk hunk, int maxPreviewLines = 5)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"{verb} hunk in {hunk.FilePath} {hunk.Header}");
+        sb.AppendLine($"{verb} {hunk.ChangeKind} hunk in {hunk.FilePath} {hunk.Header}");
 
         var contentLines = hunk.Content.Split('\n');
         var shown = 0;
