@@ -85,6 +85,22 @@ public sealed class ModuleConfiguration
     /// </summary>
     public bool? PromptNoColor { get; set; }
 
+    // ── Security ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Gets or sets whether libgit2 owner-validation is disabled for all
+    /// repository operations in this session.
+    /// When <c>true</c>, the "repository not owned by current user" check is
+    /// suppressed — useful in CI, Docker, or cross-account UNC scenarios.
+    /// When <c>false</c> or <c>null</c>, libgit2 enforces the default
+    /// ownership check (matching the behaviour of Git ≥ 2.35.2).
+    /// </summary>
+    /// <remarks>
+    /// This is an in-process setting that does NOT write <c>safe.directory</c>
+    /// to the user's <c>.gitconfig</c>.
+    /// </remarks>
+    public bool? TrustAllRepositoryOwners { get; set; }
+
     /// <summary>
     /// Resets all configuration values to their initial defaults.
     /// </summary>
@@ -98,5 +114,6 @@ public sealed class ModuleConfiguration
         PromptHideCounts = null;
         PromptHideStash = null;
         PromptNoColor = null;
+        TrustAllRepositoryOwners = null;
     }
 }
