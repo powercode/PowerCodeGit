@@ -95,6 +95,12 @@ internal static class ServiceFactory
     public static IGitHistoryRewriteService CreateGitHistoryRewriteService() => DependencyContext.CreateService<IGitHistoryRewriteService>();
 
     /// <summary>
+    /// Creates a git global settings service implementation.
+    /// </summary>
+    /// <returns>An initialized <see cref="IGitGlobalSettingsService"/> instance.</returns>
+    public static IGitGlobalSettingsService CreateGitGlobalSettingsService() => DependencyContext.CreateService<IGitGlobalSettingsService>();
+
+    /// <summary>
     /// Creates a <c>LibGit2Sharp.Repository</c> instance from the isolated
     /// AssemblyLoadContext and opens the repository at <paramref name="repositoryPath"/>.
     /// </summary>

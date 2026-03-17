@@ -57,6 +57,15 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
     public SwitchParameter Reset { get; set; }
 
     /// <summary>
+    /// When specified, disables the libgit2 repository-ownership validation for
+    /// this session. Useful in CI, Docker, or cross-account UNC scenarios where
+    /// the repository owner differs from the current process user (CVE-2022-24765).
+    /// Use <c>-TrustAllRepositoryOwners:$false</c> to re-enable the check.
+    /// </summary>
+    [Parameter]
+    public SwitchParameter TrustAllRepositoryOwners { get; set; }
+
+    /// <summary>
     /// Applies the specified configuration changes.
     /// </summary>
     protected override void ProcessRecord()
@@ -66,6 +75,7 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
         if (Reset.IsPresent)
         {
             config.Reset();
+            ServiceFactory.CreateGitGlobalSettingsService().SetOwnerValidation(enabled: true);
         }
 
         if (MyInvocation.BoundParameters.ContainsKey(nameof(LogMaxCount)))
@@ -86,6 +96,12 @@ public sealed class SetGitModuleConfigurationCmdlet : PSCmdlet
         if (MyInvocation.BoundParameters.ContainsKey(nameof(BranchIncludeDescription)))
         {
             config.BranchIncludeDescription = BranchIncludeDescription.IsPresent;
+        }
+
+        if (MyInvocation.BoundParameters.ContainsKey(nameof(TrustAllRepositoryOwners)))
+        {
+            config.TrustAllRepositoryOwners = TrustAllRepositoryOwners.IsPresent;
+            ServiceFactory.CreateGitGlobalSettingsService().SetOwnerValidation(enabled: !TrustAllRepositoryOwners.IsPresent);
         }
     }
 }
