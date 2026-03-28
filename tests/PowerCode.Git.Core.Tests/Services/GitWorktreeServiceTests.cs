@@ -190,6 +190,64 @@ public sealed class GitWorktreeServiceTests
     }
 
     [TestMethod]
+    public void AddWorktree_WithNonExistentBranch_CreatesBranchAndWorktree()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+        var worktreePath = GenerateTemporaryPath();
+
+        try
+        {
+            var service = new GitWorktreeService();
+
+            var result = service.AddWorktree(new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "new-feature.wt",
+                Path = worktreePath,
+                Branch = "new-feature",
+            });
+
+            Assert.AreEqual("new-feature.wt", result.Name);
+
+            using var repo = new Repository(repositoryPath);
+            Assert.IsNotNull(repo.Branches["new-feature"], "The branch should have been auto-created.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(worktreePath);
+        }
+    }
+
+    [TestMethod]
+    public void AddWorktree_WithNonExistentBranch_DoesNotLeaveAutoCreatedBranch()
+    {
+        var repositoryPath = CreateRepositoryWithCommit();
+        var worktreePath = GenerateTemporaryPath();
+
+        try
+        {
+            var service = new GitWorktreeService();
+
+            service.AddWorktree(new GitWorktreeAddOptions
+            {
+                RepositoryPath = repositoryPath,
+                Name = "new-feature.wt",
+                Path = worktreePath,
+                Branch = "new-feature",
+            });
+
+            using var repo = new Repository(repositoryPath);
+            Assert.IsNull(repo.Branches["new-feature.wt"], "The auto-created branch named after the worktree should be removed.");
+        }
+        finally
+        {
+            DeleteDirectory(repositoryPath);
+            DeleteDirectory(worktreePath);
+        }
+    }
+
+    [TestMethod]
     public void AddWorktree_Locked_CreatesLockedWorktree()
     {
         var repositoryPath = CreateRepositoryWithCommit();

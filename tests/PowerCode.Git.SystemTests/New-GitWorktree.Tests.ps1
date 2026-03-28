@@ -419,6 +419,48 @@ Describe 'New-GitWorktree fails on non-empty target directory' {
     }
 }
 
+Describe 'New-GitWorktree positional branch that does not exist — auto-creates branch' {
+    BeforeAll {
+        $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
+        $script:RepoName = Split-Path -Path $script:RepoPath -Leaf
+        $script:DefaultWorktreePath = Join-Path -Path (Split-Path -Path $script:RepoPath -Parent) -ChildPath "$($script:RepoName)-build_sourcegen"
+    }
+
+    AfterAll {
+        Push-Location -Path $script:RepoPath
+        try {
+            git worktree remove $script:DefaultWorktreePath --force 2>&1 | Out-Null
+        }
+        finally {
+            Pop-Location
+        }
+        Remove-TestGitRepository -Path $script:RepoPath
+        if (Test-Path -Path $script:DefaultWorktreePath) {
+            Remove-Item -Path $script:DefaultWorktreePath -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Help Example 5 - Auto-create a branch when it does not exist
+    It 'Creates a worktree and auto-creates the branch from HEAD' {
+        $Result = New-GitWorktree -RepoPath $script:RepoPath build_sourcegen
+
+        $Result | Should -Not -BeNullOrEmpty
+        $Result.Name | Should -BeExactly 'build_sourcegen.wt'
+        $Result.Path | Should -BeExactly $script:DefaultWorktreePath
+    }
+
+    It 'The auto-created branch exists in the repository' {
+        Push-Location -Path $script:RepoPath
+        try {
+            $Branches = git branch --list 'build_sourcegen' 2>&1
+            $Branches | Should -Not -BeNullOrEmpty
+        }
+        finally {
+            Pop-Location
+        }
+    }
+}
+
 Describe 'New-GitWorktree positional branch -WhatIf' {
     BeforeAll {
         $script:RepoPath = New-TestGitRepository -CommitMessages @('Initial commit')
