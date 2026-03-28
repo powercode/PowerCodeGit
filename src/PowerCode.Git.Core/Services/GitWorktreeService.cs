@@ -64,6 +64,19 @@ public sealed class GitWorktreeService : IGitWorktreeService
 
         using var repository = new Repository(options.RepositoryPath);
 
+        // When the caller specifies a branch name that does not resolve to any
+        // existing git object (branch, tag, or commit), create a new branch from
+        // HEAD — mirroring the behaviour of `git worktree add -b <branch> <path>`.
+        if (options.Branch is not null
+            && repository.Branches[options.Branch] is null
+            && repository.Lookup(options.Branch) is null)
+        {
+            var head = repository.Head.Tip
+                ?? throw new InvalidOperationException(
+                    "Cannot create a branch: the repository has no commits.");
+            repository.CreateBranch(options.Branch, head);
+        }
+
         Worktree? worktree;
         if (options.Branch is not null)
         {

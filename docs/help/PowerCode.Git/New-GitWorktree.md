@@ -80,11 +80,19 @@ Pipes a branch without specifying `-Path`. The worktree is created in a sibling 
 Get-GitBranch -Include develop | New-GitWorktree
 ```
 
+### Example 5 - Create a worktree for a branch that does not exist yet
+
+When the specified branch does not exist and does not resolve to any git object, it is automatically created from HEAD.
+
+```powershell
+New-GitWorktree build_sourcegen
+```
+
 ## PARAMETERS
 
 ### -Branch
 
-The branch or committish to check out in the new worktree. When omitted, the current HEAD is used.
+The branch or committish to check out in the new worktree. When omitted, the current HEAD is used. If the value does not match any existing branch, tag, or commit, a new branch is created from HEAD automatically.
 
 ```yaml
 Type: System.String
