@@ -177,11 +177,11 @@ public sealed class CompareGitTreeCmdlet : GitCmdlet
                 }
             }
         }
-        catch (RuntimeException exception)
+        catch (RuntimeException exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(exception.ErrorRecord);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

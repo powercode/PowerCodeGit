@@ -76,7 +76,7 @@ public sealed class RemoveGitWorktreeCmdlet : GitCmdlet
         {
             worktreeService.RemoveWorktree(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

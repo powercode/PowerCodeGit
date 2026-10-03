@@ -237,7 +237,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
                     Hunks = [hunk],
                 });
             }
-            catch (Exception exception)
+            catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
             {
                 WriteError(new ErrorRecord(exception, "AddGitItemHunkFailed", ErrorCategory.InvalidOperation, repositoryPath));
             }
@@ -263,7 +263,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
         {
             workingTreeService.Stage(options);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(exception, "AddGitItemFailed", ErrorCategory.InvalidOperation, options.RepositoryPath));
         }
@@ -298,7 +298,7 @@ public sealed class AddGitItemCmdlet : GitCmdlet
                 Force = Force.IsPresent,
             });
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,
@@ -309,4 +309,3 @@ public sealed class AddGitItemCmdlet : GitCmdlet
     }
 
 }
-

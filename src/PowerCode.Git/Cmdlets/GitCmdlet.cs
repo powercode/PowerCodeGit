@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Management.Automation;
+using System.Reflection;
 using PowerCode.Git.Services;
 
 namespace PowerCode.Git.Cmdlets;
@@ -26,6 +28,48 @@ public abstract class GitCmdlet : GitPSCmdletBase, ICurrentLocationProvider
     /// the PowerShell engine.
     /// </summary>
     internal ISet<string>? BoundParameterOverrides { get; set; }
+
+    /// <summary>
+    /// Identifies PowerShell control-flow exceptions that must propagate rather
+    /// than be reported as ordinary cmdlet errors.
+    /// </summary>
+    /// <param name="exception">The exception being considered by a catch filter.</param>
+    /// <returns>
+    /// <c>true</c> for flow-control, pipeline-stopped, action-preference-stop, or
+    /// halt-command exceptions, including runtime and reflection wrappers.
+    /// </returns>
+    /// <remarks>
+    /// Compatibility helper for PowerShell/PowerShell#28137. Only PowerShell
+    /// runtime and reflection wrappers are unwrapped; other exceptions retain
+    /// their normal error handling.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="exception"/> is <c>null</c>.
+    /// </exception>
+    internal static bool IsPowerShellControlFlowException(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        while (true)
+        {
+            if (exception is FlowControlException
+                or PipelineStoppedException
+                or ActionPreferenceStopException
+                or HaltCommandException)
+            {
+                return true;
+            }
+
+            if (exception is TargetInvocationException or RuntimeException
+                && exception.InnerException is not null)
+            {
+                exception = exception.InnerException;
+                continue;
+            }
+
+            return false;
+        }
+    }
 
     /// <summary>
     /// Returns <c>true</c> when the user explicitly specified the named

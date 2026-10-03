@@ -54,7 +54,7 @@ public sealed class InvokeGitRepositoryCmdlet : GitCmdlet
         {
             repo = ServiceFactory.CreateRepository(repositoryPath);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,
@@ -73,12 +73,12 @@ public sealed class InvokeGitRepositoryCmdlet : GitCmdlet
             {
                 results = Action.InvokeWithContext(null, variables, repo);
             }
-            catch (RuntimeException exception)
+            catch (RuntimeException exception) when (!IsPowerShellControlFlowException(exception))
             {
                 WriteError(exception.ErrorRecord);
                 return;
             }
-            catch (Exception exception) when (exception is not PipelineStoppedException)
+            catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
             {
                 WriteError(new ErrorRecord(
                     exception,

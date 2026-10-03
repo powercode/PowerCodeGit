@@ -244,7 +244,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
                 Staged = Staged.IsPresent,
             });
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, repositoryPath));
         }
@@ -332,7 +332,7 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
         {
             workingTreeService.Restore(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(exception, "RestoreGitItemFailed", ErrorCategory.InvalidOperation, options.RepositoryPath));
         }
@@ -370,4 +370,3 @@ public sealed class RestoreGitItemCmdlet : GitCmdlet
         };
 
 }
-

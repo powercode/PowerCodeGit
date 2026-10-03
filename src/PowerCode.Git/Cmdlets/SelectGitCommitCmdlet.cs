@@ -162,12 +162,12 @@ public sealed class SelectGitCommitCmdlet : GitCmdlet
             // This is a clean stop — do not write an error, matching PowerShell's
             // built-in Ctrl+C behaviour for long-running cmdlets.
         }
-        catch (RuntimeException exception)
+        catch (RuntimeException exception) when (!IsPowerShellControlFlowException(exception))
         {
             // ScriptBlock errors propagate as RuntimeException through the predicate delegate
             WriteError(exception.ErrorRecord);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

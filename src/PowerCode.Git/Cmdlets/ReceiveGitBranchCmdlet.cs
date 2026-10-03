@@ -156,7 +156,7 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
 
             WriteObject(result);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,
@@ -237,7 +237,7 @@ public sealed class ReceiveGitBranchCmdlet : GitCmdlet
                     : $"Skipping '{InputBranch.Name}': no local branch '{localName}' and Action is '{Action}'.");
             }
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

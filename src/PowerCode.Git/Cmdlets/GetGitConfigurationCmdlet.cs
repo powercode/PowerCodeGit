@@ -117,7 +117,7 @@ public sealed class GetGitConfigurationCmdlet : GitCmdlet
                 }
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

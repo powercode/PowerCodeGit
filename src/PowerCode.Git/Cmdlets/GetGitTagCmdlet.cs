@@ -114,7 +114,7 @@ public sealed class GetGitTagCmdlet : GitCmdlet
                 WriteObject(tag);
             }
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,

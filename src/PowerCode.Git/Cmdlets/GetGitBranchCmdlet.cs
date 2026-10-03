@@ -141,7 +141,7 @@ public sealed class GetGitBranchCmdlet : GitCmdlet
                 WriteObject(CreateOutputObject(branch, hasReference, hasDescription));
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

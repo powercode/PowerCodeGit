@@ -65,7 +65,7 @@ public sealed class RemoveGitTagCmdlet : GitCmdlet
         {
             tagService.DeleteTag(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

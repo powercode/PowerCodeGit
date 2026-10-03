@@ -128,7 +128,7 @@ public sealed class SaveGitCommitCmdlet : GitCmdlet
             var result = historyService.Commit(options);
             WriteObject(result);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,

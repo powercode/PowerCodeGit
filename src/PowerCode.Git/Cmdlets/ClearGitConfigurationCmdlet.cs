@@ -79,7 +79,7 @@ public sealed class ClearGitConfigurationCmdlet : GitCmdlet
                     Scope = Scope,
                 });
             }
-            catch (Exception exception) when (exception is not PipelineStoppedException)
+            catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
             {
                 WriteError(new ErrorRecord(
                     exception,

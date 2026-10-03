@@ -11,6 +11,7 @@ A PowerShell binary module that brings native, idiomatic git commands to your te
 - **Rich formatted output** with ANSI colors matching native git (yellow SHAs, green branches, red remotes, cyan tracking info)
 - **Dual parameter sets** — friendly individual parameters *or* a single `-Options` object for full control
 - **`ShouldProcess` / `-WhatIf`** on every mutating cmdlet
+- **PowerShell control flow** — pipeline stops, script flow control, and `-ErrorAction Stop` propagate without being converted into Git errors
 - **Assembly Load Context isolation** — LibGit2Sharp and its native libraries load in an isolated ALC, avoiding dependency conflicts
 - **Cross-platform** — tested on Ubuntu and Windows via GitHub Actions
 

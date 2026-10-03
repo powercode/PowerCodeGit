@@ -126,7 +126,7 @@ public sealed class SetGitTagCmdlet : GitCmdlet
             var tag = tagService.CreateTag(options);
             WriteObject(tag);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

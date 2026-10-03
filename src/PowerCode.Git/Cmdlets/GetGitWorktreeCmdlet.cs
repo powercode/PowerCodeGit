@@ -83,7 +83,7 @@ public sealed class GetGitWorktreeCmdlet : GitCmdlet
                 WriteObject(worktree);
             }
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

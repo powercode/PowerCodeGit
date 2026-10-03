@@ -150,7 +150,7 @@ public sealed class CopyGitRepositoryCmdlet : GitPSCmdletBase
 
             WriteObject(resultPath);
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!GitCmdlet.IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,

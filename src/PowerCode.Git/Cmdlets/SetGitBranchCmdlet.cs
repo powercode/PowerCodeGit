@@ -116,7 +116,7 @@ public sealed class SetGitBranchCmdlet : GitCmdlet
             var result = branchService.SetBranch(options);
             WriteObject(result);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception, "SetGitBranchFailed", ErrorCategory.InvalidOperation, RepoPath));

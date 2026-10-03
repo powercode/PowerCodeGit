@@ -140,7 +140,7 @@ public sealed class ResetGitHeadCmdlet : GitCmdlet
 
             workingTreeService.Reset(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

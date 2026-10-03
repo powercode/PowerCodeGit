@@ -67,7 +67,7 @@ public sealed class UnlockGitWorktreeCmdlet : GitCmdlet
         {
             worktreeService.UnlockWorktree(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

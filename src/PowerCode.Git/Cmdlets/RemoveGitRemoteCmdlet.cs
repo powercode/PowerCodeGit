@@ -91,7 +91,7 @@ public sealed class RemoveGitRemoteCmdlet : GitCmdlet
         {
             remoteService.RemoveRemote(options);
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception,

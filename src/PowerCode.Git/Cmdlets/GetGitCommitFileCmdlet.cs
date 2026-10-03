@@ -143,7 +143,7 @@ public sealed class GetGitCommitFileCmdlet : GitCmdlet
                 }
             }
         }
-        catch (Exception exception)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,

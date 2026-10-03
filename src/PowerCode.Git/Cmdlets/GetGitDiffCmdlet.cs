@@ -187,7 +187,7 @@ public sealed class GetGitDiffCmdlet : GitCmdlet
                 }
             }
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             var errorRecord = new ErrorRecord(
                 exception,

@@ -250,8 +250,7 @@ public sealed class EditGitHistoryCmdlet : GitCmdlet
                 exception, "EditGitHistoryInvalidArgument",
                 ErrorCategory.InvalidArgument, RepoPath));
         }
-        catch (Exception exception) when (exception is not PipelineStoppedException
-                                       && exception is not TerminateException)
+        catch (Exception exception) when (!IsPowerShellControlFlowException(exception))
         {
             WriteError(new ErrorRecord(
                 exception, "EditGitHistoryFailed",
