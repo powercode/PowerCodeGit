@@ -60,9 +60,9 @@ jobs:
       - name: Install Pester
         shell: pwsh
         run: |
-          $Existing = Get-Module -Name Pester -ListAvailable | Where-Object { $_.Version.Major -ge 5 } | Select-Object -First 1
+          $Existing = Get-Module -Name Pester -ListAvailable | Where-Object { $_.Version.Major -ge 6 } | Select-Object -First 1
           if (-not $Existing) {
-              Install-Module -Name Pester -MinimumVersion 5.0.0 -Force -Scope CurrentUser -SkipPublisherCheck
+              Install-Module -Name Pester -MinimumVersion 6.2.0 -Force -Scope CurrentUser -SkipPublisherCheck
           }
 
       - name: System Tests
